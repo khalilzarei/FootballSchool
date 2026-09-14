@@ -3,9 +3,9 @@ package com.khz.footballschool.domain.model
 data class Enrollment(
     val id: Int,
     val classId: Int,
-    val classItem: FootballClass,
+    val classItem: FootballClass? = null,
     val playerId: Int,
-    val player: Player,
+    val player: Player? = null,
     val status: String,
     val isActive: Boolean,
     val enrolledAt: String?,
@@ -16,4 +16,18 @@ data class Enrollment(
     val notes: String?,
     val createdAt: String?,
     val updatedAt: String?
-)
+) {
+    val playerFullName: String
+        get() = player?.fullName
+                ?: "-"
+
+    val statusLabel: String
+        get() = when (status) {
+            "active"    -> "فعال"
+            "pending"   -> "در انتظار"
+            "waitlist"  -> "لیست انتظار"
+            "completed" -> "پایان‌یافته"
+            "inactive"  -> "غیرفعال"
+            else        -> status
+        }
+}

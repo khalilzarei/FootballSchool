@@ -18,7 +18,7 @@ data class MatchDto(
     @SerializedName("home_score") val homeScore: Int?,
     @SerializedName("away_score") val awayScore: Int?,
     @SerializedName("notes") val notes: String?,
-    @SerializedName("players") val players: List<MatchPlayerDto> = emptyList(),
+    @SerializedName("players") val players: List<MatchPlayerDto>? = null,
     @SerializedName("created_at") val createdAt: String?,
     @SerializedName("updated_at") val updatedAt: String?
 )

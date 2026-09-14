@@ -6,6 +6,7 @@ import com.khz.footballschool.core.network.AuthInterceptor
 import com.khz.footballschool.core.util.Constants
 import com.khz.footballschool.data.remote.*
 import com.khz.footballschool.data.repository.*
+import com.khz.footballschool.core.util.ServerTime
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -42,6 +43,12 @@ class AppContainer(context: Context) {
         OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
             .addInterceptor(authInterceptor)
+            // همگام‌سازی ساعت اپ با ساعت سرور (از هدر Date هر پاسخ)
+            .addInterceptor { chain ->
+                val response = chain.proceed(chain.request())
+                ServerTime.syncFromHttpDate(response.header("Date"))
+                response
+            }
             .connectTimeout(
                 Constants.CONNECT_TIMEOUT,
                 TimeUnit.SECONDS
@@ -109,7 +116,13 @@ class AppContainer(context: Context) {
     val ageGroupRepository: AgeGroupRepository by lazy { AgeGroupRepository(ageGroupApi) }
     val coachRepository: CoachRepository by lazy { CoachRepository(coachApi) }
 
-    val classRepository: ClassRepository by lazy { ClassRepository(classApi) }
+    val classRepository: ClassRepository by lazy {
+        ClassRepository(
+            classApi,
+            classScheduleApi,
+            enrollmentApi
+        )
+    }
     val sessionRepository: SessionRepository by lazy {
         SessionRepository(
             sessionApi,

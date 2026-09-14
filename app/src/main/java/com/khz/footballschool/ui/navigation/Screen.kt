@@ -121,6 +121,7 @@ sealed class Screen(val route: String) {
     // جلسات تمرین و حضور و غیاب
     // ═════════════════════════════════════════════
     object SessionList : Screen("sessions")
+    object MySessions : Screen("my-sessions")
     object SessionDetail : Screen("sessions/{sessionId}") {
         fun createRoute(sessionId: Int) = "sessions/$sessionId"
     }

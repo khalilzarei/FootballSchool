@@ -224,7 +224,7 @@ interface PlayerApi {
     // Related Resources
     // ═════════════════════════════════════════════
     @GET("players/{id}/attendances")
-    suspend fun getPlayerAttendances(@Path("id") id: Int): ApiResponse<List<AttendanceDto>>
+    suspend fun getPlayerAttendances(@Path("id") id: Int): ApiResponse<AttendanceListResponse>
 
     @GET("players/{id}/evaluations")
     suspend fun getPlayerEvaluations(@Path("id") id: Int): ApiResponse<List<EvaluationDto>>
@@ -300,6 +300,13 @@ interface AgeGroupApi {
 
     @POST("age-groups/{id}/deactivate")
     suspend fun deactivateAgeGroup(@Path("id") id: Int): ApiResponse<Unit>
+
+    /**
+     * بازیکنان عضو گروه سنی (بر اساس بازه تاریخ تولد گروه)
+     * پاسخ سرور: data = {"players": [...]}
+     */
+    @GET("age-groups/{id}/players")
+    suspend fun getAgeGroupPlayers(@Path("id") id: Int): ApiResponse<JsonElement>
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -377,7 +384,7 @@ interface ClassApi {
 // ═══════════════════════════════════════════════════════════════
 interface ClassScheduleApi {
     @GET("classes/{classId}/schedules")
-    suspend fun getSchedules(@Path("classId") classId: Int): ApiResponse<List<ClassScheduleDto>>
+    suspend fun getSchedules(@Path("classId") classId: Int): ApiResponse<SchedulesListResponseDto>
 
     @POST("classes/{classId}/schedules")
     suspend fun createSchedule(
@@ -417,6 +424,9 @@ interface EnrollmentApi {
         @Body request: EnrollPlayerRequest
     ): ApiResponse<JsonElement>
 
+    @POST("classes/{classId}/enroll-age-group")
+    suspend fun enrollAgeGroup(@Path("classId") classId: Int): ApiResponse<EnrollAgeGroupResultDto>
+
     @GET("enrollments/{id}")
     suspend fun getEnrollment(@Path("id") id: Int): ApiResponse<JsonElement>
 
@@ -451,7 +461,7 @@ interface SessionApi {
     suspend fun createSession(@Body request: CreateSessionRequest): ApiResponse<JsonElement>
 
     @POST("sessions/generate")
-    suspend fun generateSessions(@Body request: GenerateSessionsRequest): ApiResponse<List<SessionDto>>
+    suspend fun generateSessions(@Body request: GenerateSessionsRequest): ApiResponse<GenerateSessionsResultDto>
 
     @GET("sessions/{id}")
     suspend fun getSession(@Path("id") id: Int): ApiResponse<JsonElement>
@@ -473,14 +483,17 @@ interface SessionApi {
 // ۱۲ - Attendance
 // ═══════════════════════════════════════════════════════════════
 interface AttendanceApi {
+    @GET("sessions/{sessionId}/attendance-sheet")
+    suspend fun getAttendanceSheet(@Path("sessionId") sessionId: Int): ApiResponse<AttendanceSheetResponse>
+
     @GET("sessions/{sessionId}/attendance")
-    suspend fun getSessionAttendance(@Path("sessionId") sessionId: Int): ApiResponse<List<AttendanceDto>>
+    suspend fun getSessionAttendance(@Path("sessionId") sessionId: Int): ApiResponse<AttendanceListResponse>
 
     @POST("sessions/{sessionId}/attendance")
     suspend fun saveBulkAttendance(
         @Path("sessionId") sessionId: Int,
         @Body request: SaveBulkAttendanceRequest
-    ): ApiResponse<List<AttendanceDto>>
+    ): ApiResponse<BulkAttendanceResultDto>
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -803,40 +816,48 @@ interface ChatApi {
 
     // ═════════════════════════════════════════════
     // Chat Rooms
+    // پاسخ سرور: data = {"rooms": [...]} یا {"room": {...}}
     // ═════════════════════════════════════════════
     @GET("chat/rooms")
-    suspend fun getRooms(): ApiResponse<List<ChatRoomDto>>
+    suspend fun getRooms(): ApiResponse<ChatRoomsResponseDto>
 
     @GET("chat/rooms/{id}")
-    suspend fun getRoom(@Path("id") roomId: Int): ApiResponse<ChatRoomDto>
+    suspend fun getRoom(@Path("id") roomId: Int): ApiResponse<ChatRoomResponseDto>
 
     /**
-     * ایجاد یا دریافت room بین کاربر فعلی و کاربر دیگر
+     * ایجاد (یا دریافت) اتاق چت بین کاربر فعلی و کاربر دیگر.
+     * سرور با unique_key اتاق موجود را برمی‌گرداند (idempotent).
      */
     @POST("chat/rooms")
-    suspend fun createRoom(@Body request: CreateChatRoomRequest): ApiResponse<ChatRoomDto>
-
-    /**
-     * پیدا کردن room بین کاربر فعلی و کاربر مشخص‌شده
-     */
-    @GET("chat/rooms/with-user/{userId}")
-    suspend fun getRoomWithUser(@Path("userId") userId: Int): ApiResponse<ChatRoomDto>
+    suspend fun createRoom(@Body request: CreateChatRoomRequest): ApiResponse<ChatRoomResponseDto>
 
     // ═════════════════════════════════════════════
     // Messages
+    // پاسخ سرور: data = {"messages": [...]} یا {"message": {...}}
     // ═════════════════════════════════════════════
     @GET("chat/rooms/{id}/messages")
     suspend fun getMessages(
         @Path("id") roomId: Int,
         @Query("limit") limit: Int = 50,
         @Query("before") before: Int? = null
-    ): ApiResponse<List<ChatMessageDto>>
+    ): ApiResponse<ChatMessagesResponseDto>
 
     @POST("chat/rooms/{id}/messages")
     suspend fun sendMessage(
         @Path("id") roomId: Int,
         @Body request: SendChatMessageRequest
-    ): ApiResponse<ChatMessageDto>
+    ): ApiResponse<ChatMessageResponseDto>
+
+    /**
+     * علامت‌گذاری پیام‌های اتاق به‌عنوان خوانده‌شده
+     * بدنه: { "last_read_message_id": <شناسه آخرین پیام> }
+     * پاسخ سرور: data = {"room_id":1,"last_read_message_id":42}
+     */
+    @POST("chat/rooms/{id}/read")
+    suspend fun markAsRead(
+        @Path("id") roomId: Int,
+        @Body request: MarkChatReadRequest
+    ): ApiResponse<JsonElement>
 
     @DELETE("chat/rooms/{id}/messages/{messageId}")
     suspend fun deleteMessage(
@@ -874,20 +895,21 @@ interface ReportApi {
 // ۲۴ - Client / Me (برای اپ سرپرست و مربی)
 // ═══════════════════════════════════════════════════════════════
 interface ClientApi {
+    // سرور همه را داخل کلید نام‌دار برمی‌گرداند: children/sessions/news/media/finance
     @GET("me/children")
-    suspend fun getMyChildren(): ApiResponse<List<MyChildrenDto>>
+    suspend fun getMyChildren(): ApiResponse<MyChildrenResponseDto>
 
     @GET("me/schedule")
-    suspend fun getMySchedule(): ApiResponse<List<MyScheduleDto>>
+    suspend fun getMySchedule(): ApiResponse<MyScheduleResponseDto>
 
     @GET("me/news")
-    suspend fun getMyNews(): ApiResponse<List<NewsDto>>
+    suspend fun getMyNews(): ApiResponse<MyNewsResponseDto>
 
     @GET("me/media")
-    suspend fun getMyMedia(): ApiResponse<List<MediaDto>>
+    suspend fun getMyMedia(): ApiResponse<MyMediaResponseDto>
 
     @GET("me/finance")
-    suspend fun getMyFinance(): ApiResponse<List<MyFinanceDto>>
+    suspend fun getMyFinance(): ApiResponse<MyFinanceResponseDto>
 }
 
 // ═══════════════════════════════════════════════════════════════

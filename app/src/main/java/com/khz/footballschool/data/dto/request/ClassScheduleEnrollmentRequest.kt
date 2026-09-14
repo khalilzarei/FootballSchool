@@ -4,36 +4,38 @@ import com.google.gson.annotations.SerializedName
 
 data class CreateClassRequest(
     @SerializedName("title") val title: String,
-    @SerializedName("age_group_id") val ageGroupId: Int?,
-    @SerializedName("coach_id") val coachId: Int?,
-    @SerializedName("assistant_coach_id") val assistantCoachId: Int?,
-    @SerializedName("capacity") val capacity: Int?,
-    @SerializedName("status") val status: String,
-    @SerializedName("location") val location: String?,
-    @SerializedName("description") val description: String?,
-    @SerializedName("pricing_type") val pricingType: String?,
-    @SerializedName("monthly_fee") val monthlyFee: Long?,
-    @SerializedName("session_fee") val sessionFee: Long?,
-    @SerializedName("registration_fee") val registrationFee: Long?,
-    @SerializedName("start_date") val startDate: String?,
-    @SerializedName("end_date") val endDate: String?
+    @SerializedName("season_id") val seasonId: Int? = null,
+    @SerializedName("age_group_id") val ageGroupId: Int? = null,
+    @SerializedName("coach_id") val coachId: Int? = null,
+    @SerializedName("assistant_coach_id") val assistantCoachId: Int? = null,
+    @SerializedName("capacity") val capacity: Int? = null,
+    @SerializedName("status") val status: String = "active",
+    @SerializedName("location") val location: String? = null,
+    @SerializedName("description") val description: String? = null,
+    @SerializedName("pricing_type") val pricingType: String? = null,
+    @SerializedName("monthly_fee") val monthlyFee: Long? = null,
+    @SerializedName("session_fee") val sessionFee: Long? = null,
+    @SerializedName("registration_fee") val registrationFee: Long? = null,
+    @SerializedName("start_date") val startDate: String? = null,
+    @SerializedName("end_date") val endDate: String? = null
 )
 
 data class UpdateClassRequest(
-    @SerializedName("title") val title: String?,
-    @SerializedName("age_group_id") val ageGroupId: Int?,
-    @SerializedName("coach_id") val coachId: Int?,
-    @SerializedName("assistant_coach_id") val assistantCoachId: Int?,
-    @SerializedName("capacity") val capacity: Int?,
-    @SerializedName("status") val status: String?,
-    @SerializedName("location") val location: String?,
-    @SerializedName("description") val description: String?,
-    @SerializedName("pricing_type") val pricingType: String?,
-    @SerializedName("monthly_fee") val monthlyFee: Long?,
-    @SerializedName("session_fee") val sessionFee: Long?,
-    @SerializedName("registration_fee") val registrationFee: Long?,
-    @SerializedName("start_date") val startDate: String?,
-    @SerializedName("end_date") val endDate: String?
+    @SerializedName("title") val title: String? = null,
+    @SerializedName("season_id") val seasonId: Int? = null,
+    @SerializedName("age_group_id") val ageGroupId: Int? = null,
+    @SerializedName("coach_id") val coachId: Int? = null,
+    @SerializedName("assistant_coach_id") val assistantCoachId: Int? = null,
+    @SerializedName("capacity") val capacity: Int? = null,
+    @SerializedName("status") val status: String? = null,
+    @SerializedName("location") val location: String? = null,
+    @SerializedName("description") val description: String? = null,
+    @SerializedName("pricing_type") val pricingType: String? = null,
+    @SerializedName("monthly_fee") val monthlyFee: Long? = null,
+    @SerializedName("session_fee") val sessionFee: Long? = null,
+    @SerializedName("registration_fee") val registrationFee: Long? = null,
+    @SerializedName("start_date") val startDate: String? = null,
+    @SerializedName("end_date") val endDate: String? = null
 )
 
 data class CreateScheduleRequest(

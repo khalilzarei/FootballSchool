@@ -46,6 +46,7 @@ import com.khz.footballschool.ui.players.PlayerListScreen
 import com.khz.footballschool.ui.reports.ReportsScreen
 import com.khz.footballschool.ui.seasons.SeasonListScreen
 import com.khz.footballschool.ui.sessions.GenerateSessionsScreen
+import com.khz.footballschool.ui.sessions.MySessionsScreen
 import com.khz.footballschool.ui.sessions.SessionEvaluationsScreen
 import com.khz.footballschool.ui.sessions.SessionListScreen
 import com.khz.footballschool.ui.settings.SettingsScreen
@@ -54,7 +55,6 @@ import com.khz.footballschool.ui.users.UserDetailScreen
 import com.khz.footballschool.ui.users.UserFormScreen
 import com.khz.footballschool.ui.users.UserListScreen
 import kotlinx.coroutines.flow.first
-
 
 @Composable
 fun AppNavigation(viewModelFactory: ViewModelFactory) {
@@ -133,6 +133,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
                 onNavigateToPlayers = { nav.navigate(Screen.PlayerList.route) },
                 onNavigateToClasses = { nav.navigate(Screen.ClassList.route) },
                 onNavigateToSessions = { nav.navigate(Screen.SessionList.route) },
+                onNavigateToMySessions = { nav.navigate(Screen.MySessions.route) },
                 onNavigateToInvoices = { nav.navigate(Screen.InvoiceList.route) },
                 onNavigateToPayments = { nav.navigate(Screen.PaymentList.route) },
                 onNavigateToReports = { nav.navigate(Screen.Reports.route) },
@@ -160,7 +161,9 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
             NewsListScreen(onBack = { nav.popBackStack() })
         }
         composable(Screen.ChatRoomList.route) {
-            ChatRoomListScreen(onBack = { nav.popBackStack() })
+            ChatRoomListScreen(
+                onBack = { nav.popBackStack() },
+                onRoomClick = {})
         }
         composable(Screen.AgeGroupList.route) {
             AgeGroupListScreen(onBack = { nav.popBackStack() })
@@ -334,11 +337,6 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
         // ═════════════════════════════════════════════
         // Classes & Schedules
         // ═════════════════════════════════════════════
-        composable(Screen.ClassList.route) {
-            ClassListScreen(
-                onClassClick = { id -> /* TODO: Class Detail */ },
-                onAddClass = { /* TODO: Class Form */ })
-        }
         composable(
             route = Screen.ScheduleManager.route,
             arguments = listOf(navArgument("classId") { type = NavType.IntType })
@@ -377,15 +375,19 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
         // ═════════════════════════════════════════════
         composable(Screen.SessionList.route) {
             SessionListScreen(
-                onSessionClick = { sessionId ->
-                    // فرض بر این است که classId را از جایی می‌گیریم، فعلا 1 می‌فرستیم یا باید از دیتابیس لوکال بخوانیم
+                onSessionClick = { sessionId, classId ->
                     nav.navigate(
                         Screen.Attendance.createRoute(
                             sessionId,
-                            1
+                            classId
                         )
                     )
                 })
+        }
+
+        // جلسات من — پنل بازیکن/سرپرست/مربی
+        composable(Screen.MySessions.route) {
+            MySessionsScreen(onBack = { nav.popBackStack() })
         }
         composable(
             route = Screen.Attendance.route,
@@ -462,39 +464,36 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
             ReportsScreen()
         }
 
-
-// مسیرها
+        // ═════════════════════════════════════════════
+        // Classes (ثبت‌نام اصلی اینجا انجام می‌شود)
+        // ═════════════════════════════════════════════
         composable(Screen.ClassList.route) {
             ClassListScreen(
-                onClassClick = { id -> nav.navigate(Screen.ClassDetail.createRoute(id)) },
-                onAddClass = { nav.navigate(Screen.ClassForm.route) }
-            )
+                onClassClick = { id -> nav.navigate(Screen.ClassEdit.createRoute(id)) },
+                onAddClass = { nav.navigate(Screen.ClassForm.route) })
         }
 
-//        composable(
-//            route = Screen.ClassForm.route,
-//            arguments = listOf(
-//                navArgument("classId") {
-//                    type = NavType.IntType
-//                    nullable = true
-//                    defaultValue = null
-//                }
-//            )
-//        ) { backStack ->
-//            val classId = backStack.arguments?.getInt("classId")
-//            ClassFormScreen(
-//                classId = classId,
-//                onSaved = { nav.popBackStack() },
-//                onBack = { nav.popBackStack() }
-//            )
-//        }
+        // افزودن کلاس جدید
+        composable(Screen.ClassForm.route) {
+            ClassFormScreen(
+                classId = null,
+                onSaved = { nav.popBackStack() },
+                onBack = { nav.popBackStack() })
+        }
 
+        // ویرایش کلاس
         composable(
-            route = Screen.ClassDetail.route,
+            route = Screen.ClassEdit.route,
             arguments = listOf(navArgument("classId") { type = NavType.IntType })
         ) { backStack ->
-            val classId = backStack.arguments?.getInt("classId") ?: 0
-            // TODO: ClassDetailScreen
+            val classId = backStack.arguments?.getInt("classId")
+                    ?: 0
+            ClassFormScreen(
+                classId = classId,
+                onSaved = { nav.popBackStack() },
+                onBack = { nav.popBackStack() },
+                onManageSchedules = { id -> nav.navigate(Screen.ScheduleManager.createRoute(id)) },
+                onManageEnrollments = { id -> nav.navigate(Screen.EnrollmentManager.createRoute(id)) })
         }
     }
 }

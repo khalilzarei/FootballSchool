@@ -4,7 +4,7 @@ object Constants {
     const val BASE_URL = "https://football.madahinote.ir/api/v1/"
     const val STORAGE_URL = "https://football.madahinote.ir/"
     const val CONNECT_TIMEOUT = 30L
-    const val READ_TIMEOUT = 30L
+    const val READ_TIMEOUT = 60L
     const val WRITE_TIMEOUT = 30L
 
     // User Roles

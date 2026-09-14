@@ -113,5 +113,4 @@ dependencies {
 
     implementation(libs.coil.compose)
 
-    implementation(libs.persian.date.picker.dialog)
 }

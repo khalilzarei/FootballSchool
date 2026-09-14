@@ -2,8 +2,6 @@ package com.khz.footballschool.ui.players
 
 import android.graphics.Color
 import android.net.Uri
-import android.util.Log
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.CircularProgressIndicator
@@ -47,11 +44,9 @@ import com.khz.footballschool.ui.components.GlassCard3D
 import com.khz.footballschool.ui.components.GlassDropdown
 import com.khz.footballschool.ui.components.GlassTextField3D
 import com.khz.footballschool.ui.components.GlassTopBar
+import com.khz.footballschool.ui.components.JalaliDateField
 import com.khz.footballschool.ui.theme.GoldPrimary
 import com.khz.footballschool.ui.users.AvatarPicker
-import ir.hamsaa.persiandatepicker.PersianDatePickerDialog
-import ir.hamsaa.persiandatepicker.api.PersianPickerDate
-import ir.hamsaa.persiandatepicker.api.PersianPickerListener
 import kotlinx.coroutines.launch
 
 private val GENDERS = listOf(
@@ -76,7 +71,6 @@ fun PlayerFormScreen(
     var lastName by remember { mutableStateOf("") }
     var nationalCode by remember { mutableStateOf("") }
 
-    var birthDateJalali by remember { mutableStateOf("") }
     var birthDateGregorian by remember { mutableStateOf("") }
     var ageDisplay by remember { mutableStateOf("") }
 
@@ -91,119 +85,6 @@ fun PlayerFormScreen(
     var error by remember { mutableStateOf<String?>(null) }
     var avatarUploading by remember { mutableStateOf(false) }
 
-    var showDatePicker by remember { mutableStateOf(false) }
-    val picker = PersianDatePickerDialog(context).setPositiveButtonString("باشه")
-        .setTodayButton("امروز")
-        .setTodayButtonVisible(true)
-        .setMinYear(1300)
-        .setMaxYear(PersianDatePickerDialog.THIS_YEAR)
-        .setMaxMonth(PersianDatePickerDialog.THIS_MONTH)
-        .setMaxDay(PersianDatePickerDialog.THIS_DAY)
-        .setInitDate(
-            1370,
-            3,
-            13
-        ) // می‌توانید این را داینامیک کنید
-        .setActionTextColor(Color.GRAY) // از android.graphics.Color استفاده می‌شود
-        // .setTypeFace(typeface) // اگر فونت خاصی دارید، اینجا ست کنید
-        .setTitleType(PersianDatePickerDialog.WEEKDAY_DAY_MONTH_YEAR)
-        .setShowInBottomSheet(true)
-        .setListener(object : PersianPickerListener {
-            override fun onDateSelected(persianPickerDate: PersianPickerDate) {
-                val year = persianPickerDate.persianYear
-                val month = persianPickerDate.persianMonth
-                val day = persianPickerDate.persianDay
-
-                Log.d(
-                    "DatePicker",
-                    "Year: $year, Month: $month, Day: $day"
-                )
-                Log.d(
-                    "DatePicker",
-                    "Gregorian: ${persianPickerDate.gregorianDate}"
-                )
-                Log.d(
-                    "DatePicker",
-                    "Persian Long: ${persianPickerDate.persianLongDate}"
-                )
-
-                // ذخیره تاریخ شمسی برای نمایش
-                birthDateJalali = "$year/${
-                    String.format(
-                        "%02d",
-                        month
-                    )
-                }/${
-                    String.format(
-                        "%02d",
-                        day
-                    )
-                }"
-
-                // تبدیل به میلادی برای ارسال به سرور
-                birthDateGregorian = DateUtils.jalaliToGregorian(
-                    year,
-                    month,
-                    day
-                )
-
-                // محاسبه و نمایش سن
-                ageDisplay = DateUtils.calculateAgeFromGregorian(birthDateGregorian)
-
-                showDatePicker = false
-            }
-
-            override fun onDismissed() {
-                showDatePicker = false
-            }
-        })
-
-    // ═══════════════════════════════════════════════════════
-    // مدیریت نمایش دیالوگ تاریخ
-    // ═══════════════════════════════════════════════════════
-    LaunchedEffect(showDatePicker) {
-        if (showDatePicker) {
-            val picker = PersianDatePickerDialog(context)
-                .setPositiveButtonString("باشه")
-//                .setNegativeButtonString("بیخیال") // ⚠️ نکته مهم: در نسخه‌های جدید "String" دارد
-                .setTodayButton("امروز")
-                .setTodayButtonVisible(true)
-                .setMinYear(1300)
-                .setMaxYear(PersianDatePickerDialog.THIS_YEAR)
-                .setMaxMonth(PersianDatePickerDialog.THIS_MONTH)
-                .setMaxDay(PersianDatePickerDialog.THIS_DAY)
-                .setInitDate(1370, 3, 13)
-                .setActionTextColor(android.graphics.Color.GRAY) // استفاده از Color اندروید
-                .setTitleType(PersianDatePickerDialog.WEEKDAY_DAY_MONTH_YEAR)
-                .setShowInBottomSheet(true)
-                .setListener(object : PersianPickerListener {
-                    override fun onDateSelected(persianPickerDate: PersianPickerDate) {
-                        val y = persianPickerDate.persianYear
-                        val m = persianPickerDate.persianMonth
-                        val d = persianPickerDate.persianDay
-
-                        Log.d("DatePicker", "Selected: $y/$m/$d")
-
-                        birthDateJalali = "$y/${String.format("%02d", m)}/${String.format("%02d", d)}"
-                        birthDateGregorian = DateUtils.jalaliToGregorian(y, m, d)
-                        ageDisplay = DateUtils.calculateAgeFromGregorian(birthDateGregorian)
-
-                        showDatePicker = false
-                    }
-
-                    override fun onDismissed() {
-                        showDatePicker = false
-                    }
-                })
-
-            // نمایش دیالوگ
-            try {
-                picker.show()
-            } catch (e: Exception) {
-                android.util.Log.e("DatePicker", "Error showing dialog: ${e.message}")
-            }
-        }
-    }
     // بارگذاری اطلاعات در حالت ویرایش
     LaunchedEffect(playerId) {
         if (playerId != null) {
@@ -224,7 +105,7 @@ fun PlayerFormScreen(
 
                     if (!birthDateGregorian.isNullOrBlank()) {
                         ageDisplay = DateUtils.calculateAgeFromGregorian(birthDateGregorian)
-                        // نکته: اگر بخواهید تاریخ شمسی را هم در حالت ویرایش نمایش دهید، 
+                        // نکته: اگر بخواهید تاریخ شمسی را هم در حالت ویرایش نمایش دهید،
                         // باید یک تابع gregorianToJalali هم در DateUtils بسازید.
                         // در اینجا برای سادگی، فیلد خالی می‌ماند یا می‌توانید مقدار پیش‌فرض بگذارید.
                     }
@@ -328,30 +209,18 @@ fun PlayerFormScreen(
                                 )
                             })
 
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    Log.d(
-                                        "DatePicker",
-                                        "Click registered! Opening dialog..."
-                                    )
-                                    showDatePicker = true
-                                    picker.show()
-                                }) {
-                            GlassTextField3D(
-                                value = birthDateJalali.ifBlank { "انتخاب تاریخ تولد" },
-                                onValueChange = { }, // جلوگیری از تایپ دستی
-                                label = "تاریخ تولد",
-                                leadingIcon = {
-                                    Icon(
-                                        Icons.Default.CalendarMonth,
-                                        null
-                                    )
-                                },
-                                enabled = false // باید true باشد تا ظاهر آن کمرنگ (Disabled) نشود
-                            )
-                        }
+                        // تاریخ تولد — انتخاب با تقویم شمسی، ارسال میلادی به سرور
+                        JalaliDateField(
+                            label = "تاریخ تولد",
+                            gregorianValue = birthDateGregorian.takeIf { it.isNotBlank() },
+                            onDatePicked = { g ->
+                                birthDateGregorian = g
+                                ageDisplay = DateUtils.calculateAgeFromGregorian(g)
+                            },
+                            minYear = 1360,
+                            maxYear = DateUtils.gregorianToJalali(java.time.LocalDate.now().toString())
+                                .split("/").first().toIntOrNull() ?: 1415
+                        )
 
 
                         // ─── نمایش سن محاسبه‌شده ───
@@ -396,6 +265,9 @@ fun PlayerFormScreen(
                         }
                         if (birthDateGregorian.isBlank()) {
                             error = "تاریخ تولد الزامی است"; return@GlassButton
+                        }
+                        if (birthDateGregorian > java.time.LocalDate.now().toString()) {
+                            error = "تاریخ تولد نمی‌تواند در آینده باشد"; return@GlassButton
                         }
 
                         loading = true

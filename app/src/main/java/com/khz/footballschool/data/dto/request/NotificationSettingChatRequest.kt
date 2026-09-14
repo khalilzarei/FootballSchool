@@ -24,12 +24,6 @@ data class UpdateSettingsRequest(
 
 
 
-data class SendChatMessageRequest(
-    @SerializedName("message_type") val messageType: String,
-    @SerializedName("body") val body: String,
-    @SerializedName("media_id") val mediaId: Int?
-)
-
 data class MarkChatReadRequest(
     @SerializedName("last_read_message_id") val lastReadMessageId: Int
 )

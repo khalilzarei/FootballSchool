@@ -12,18 +12,28 @@ import com.khz.footballschool.domain.model.News
 
 class ClientRepository(private val api: ClientApi) {
 
-    suspend fun getMyChildren(): NetworkResult<List<MyChild>> =
-        safeCall({ api.getMyChildren() }) { it.map { d -> d.toDomain() } }
+    suspend fun getMyChildren(): NetworkResult<List<MyChild>> = safeCall({ api.getMyChildren() }) {
+        it.children.orEmpty()
+            .map { d -> d.toDomain() }
+    }
 
-    suspend fun getMySchedule(): NetworkResult<List<MyScheduleItem>> =
-        safeCall({ api.getMySchedule() }) { it.map { d -> d.toDomain() } }
+    suspend fun getMySchedule(): NetworkResult<List<MyScheduleItem>> = safeCall({ api.getMySchedule() }) {
+        it.sessions.orEmpty()
+            .map { d -> d.toDomain() }
+    }
 
-    suspend fun getMyNews(): NetworkResult<List<News>> =
-        safeCall({ api.getMyNews() }) { it.map { d -> d.toDomain() } }
+    suspend fun getMyNews(): NetworkResult<List<News>> = safeCall({ api.getMyNews() }) {
+        it.news.orEmpty()
+            .map { d -> d.toDomain() }
+    }
 
-    suspend fun getMyMedia(): NetworkResult<List<Media>> =
-        safeCall({ api.getMyMedia() }) { it.map { d -> d.toDomain() } }
+    suspend fun getMyMedia(): NetworkResult<List<Media>> = safeCall({ api.getMyMedia() }) {
+        it.media.orEmpty()
+            .map { d -> d.toDomain() }
+    }
 
-    suspend fun getMyFinance(): NetworkResult<List<MyFinance>> =
-        safeCall({ api.getMyFinance() }) { it.map { d -> d.toDomain() } }
+    suspend fun getMyFinance(): NetworkResult<List<MyFinance>> = safeCall({ api.getMyFinance() }) {
+        it.finance.orEmpty()
+            .map { d -> d.toDomain() }
+    }
 }

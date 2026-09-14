@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -31,7 +29,6 @@ import com.khz.footballschool.FootballSchoolApp
 import com.khz.footballschool.core.network.NetworkResult
 import com.khz.footballschool.data.dto.request.GenerateSessionsRequest
 import com.khz.footballschool.domain.model.FootballClass
-import com.khz.footballschool.domain.model.Session
 import com.khz.footballschool.ui.components.GlassButton
 import com.khz.footballschool.ui.components.GlassCard3D
 import com.khz.footballschool.ui.components.GlassDropdown
@@ -57,7 +54,7 @@ fun GenerateSessionsScreen(onBack: () -> Unit) {
     var toDate by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(true) }
     var generating by remember { mutableStateOf(false) }
-    var result by remember { mutableStateOf<List<Session>?>(null) }
+    var generatedCount by remember { mutableStateOf<Int?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
@@ -127,7 +124,7 @@ fun GenerateSessionsScreen(onBack: () -> Unit) {
                                 GenerateSessionsRequest(classId, fromDate, toDate)
                             )) {
                                 is NetworkResult.Success -> {
-                                    result = r.data
+                                    generatedCount = r.data
                                     generating = false
                                 }
                                 is NetworkResult.Error -> {
@@ -153,27 +150,21 @@ fun GenerateSessionsScreen(onBack: () -> Unit) {
                     }
                 }
 
-                result?.let { sessions ->
+                generatedCount?.let { count ->
                     Spacer(Modifier.height(20.dp))
-                    GlassSectionTitle("${sessions.size} جلسه تولید شد")
-                    Spacer(Modifier.height(8.dp))
-                    LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        items(sessions) { s ->
-                            GlassCard3D {
-                                Column {
-                                    Text(
-                                        s.sessionDate,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = Color.White
-                                    )
-                                    Text(
-                                        s.topic
-                                                ?: "-",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = Color.White.copy(0.6f)
-                                    )
-                                }
-                            }
+                    GlassCard3D {
+                        Column(Modifier.padding(16.dp)) {
+                            Text(
+                                if (count > 0) "$count جلسه با موفقیت تولید شد"
+                                else "جلسه جدیدی تولید نشد (همه در بازه موردنظر قبلاً ایجاد شده‌اند)",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = if (count > 0) Color(0xFF81C784) else GoldPrimary
+                            )
+                            Text(
+                                "از $fromDate تا $toDate — بر اساس برنامه هفتگی فعال کلاس",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.White.copy(0.6f)
+                            )
                         }
                     }
                 }

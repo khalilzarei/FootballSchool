@@ -19,13 +19,11 @@ lifecycleViewmodelCompose = "2.11.0"
 loggingInterceptor = "5.5.0"
 navigationCompose = "2.9.8"
 okhttp = "5.5.0"
-persianDatePickerDialog = "1.8.0"
 retrofit = "3.0.0"
 
 coilCompose = "2.7.0"
 
 [libraries]
-persian-date-picker-dialog = { module = "com.github.aliab:Persian-Date-Picker-Dialog", version.ref = "persianDatePickerDialog" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }

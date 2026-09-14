@@ -32,7 +32,12 @@ class PlayerRepository(private val api: PlayerApi) {
         query: String? = null,
         status: String? = null
     ): NetworkResult<PaginatedResponse<Player>> = try {
-        val r = api.getPlayers(page, perPage, query, status)
+        val r = api.getPlayers(
+            page,
+            perPage,
+            query,
+            status
+        )
         if (r.success && r.data != null) {
             NetworkResult.Success(
                 PaginatedResponse(
@@ -43,7 +48,10 @@ class PlayerRepository(private val api: PlayerApi) {
                 )
             )
         } else {
-            NetworkResult.Error(r.message ?: "خطا در دریافت بازیکنان")
+            NetworkResult.Error(
+                r.message
+                        ?: "خطا در دریافت بازیکنان"
+            )
         }
     } catch (e: Exception) {
         NetworkResult.Error(ApiErrorHandler.extractMessage(e))
@@ -55,7 +63,10 @@ class PlayerRepository(private val api: PlayerApi) {
         if (r.success && dto != null) {
             NetworkResult.Success(dto.toDomain())
         } else {
-            NetworkResult.Error(r.message ?: "خطا در دریافت بازیکن")
+            NetworkResult.Error(
+                r.message
+                        ?: "خطا در دریافت بازیکن"
+            )
         }
     } catch (e: Exception) {
         NetworkResult.Error(ApiErrorHandler.extractMessage(e))
@@ -78,30 +89,77 @@ class PlayerRepository(private val api: PlayerApi) {
     ): NetworkResult<Player> = try {
         val parts = mutableListOf<MultipartBody.Part>()
 
-        MultipartHelper.textPart("first_name", firstName)?.let { parts.add(it) }
-        MultipartHelper.textPart("last_name", lastName)?.let { parts.add(it) }
-        MultipartHelper.textPart("national_code", nationalCode)?.let { parts.add(it) }
-        MultipartHelper.textPart("birth_date", birthDate)?.let { parts.add(it) }
-        MultipartHelper.textPart("gender", gender)?.let { parts.add(it) }
-        MultipartHelper.textPart("status", status)?.let { parts.add(it) }
-        MultipartHelper.textPart("medical_notes", medicalNotes)?.let { parts.add(it) }
-        MultipartHelper.textPart("notes", notes)?.let { parts.add(it) }
+        MultipartHelper.textPart(
+            "first_name",
+            firstName
+        )
+            ?.let { parts.add(it) }
+        MultipartHelper.textPart(
+            "last_name",
+            lastName
+        )
+            ?.let { parts.add(it) }
+        MultipartHelper.textPart(
+            "national_code",
+            nationalCode
+        )
+            ?.let { parts.add(it) }
+        MultipartHelper.textPart(
+            "birth_date",
+            birthDate
+        )
+            ?.let { parts.add(it) }
+        MultipartHelper.textPart(
+            "gender",
+            gender
+        )
+            ?.let { parts.add(it) }
+        MultipartHelper.textPart(
+            "status",
+            status
+        )
+            ?.let { parts.add(it) }
+        MultipartHelper.textPart(
+            "medical_notes",
+            medicalNotes
+        )
+            ?.let { parts.add(it) }
+        MultipartHelper.textPart(
+            "notes",
+            notes
+        )
+            ?.let { parts.add(it) }
 
         if (avatarUri != null) {
-            MultipartHelper.filePart(context, avatarUri, "avatar")?.let { parts.add(it) }
+            MultipartHelper.filePart(
+                context,
+                avatarUri,
+                "avatar"
+            )
+                ?.let { parts.add(it) }
         }
 
-        Log.d(TAG, "createPlayer: ${parts.size} parts")
+        Log.d(
+            TAG,
+            "createPlayer: ${parts.size} parts"
+        )
 
         val r = api.createPlayer(parts)
         val dto = r.data.unwrap<PlayerDto>("player")
         if (r.success && dto != null) {
             NetworkResult.Success(dto.toDomain())
         } else {
-            NetworkResult.Error(r.message ?: "خطا در ایجاد بازیکن")
+            NetworkResult.Error(
+                r.message
+                        ?: "خطا در ایجاد بازیکن"
+            )
         }
     } catch (e: Exception) {
-        Log.e(TAG, "createPlayer error: ${e.message}", e)
+        Log.e(
+            TAG,
+            "createPlayer error: ${e.message}",
+            e
+        )
         NetworkResult.Error(ApiErrorHandler.extractMessage(e))
     }
 
@@ -133,24 +191,49 @@ class PlayerRepository(private val api: PlayerApi) {
             notes = notes
         )
 
-        Log.d(TAG, "updatePlayer: updating info for id=$id")
-        val updateResult = api.updatePlayer(id, request)
+        Log.d(
+            TAG,
+            "updatePlayer: updating info for id=$id"
+        )
+        val updateResult = api.updatePlayer(
+            id,
+            request
+        )
 
         if (!updateResult.success) {
-            return NetworkResult.Error(updateResult.message ?: "خطا در به‌روزرسانی بازیکن")
+            return NetworkResult.Error(
+                updateResult.message
+                        ?: "خطا در به‌روزرسانی بازیکن"
+            )
         }
 
         // ─── مرحله ۲: آپلود آواتار اگر انتخاب شده ───
         if (avatarUri != null) {
-            Log.d(TAG, "updatePlayer: uploading avatar for id=$id")
-            val part = MultipartHelper.filePart(context, avatarUri, "avatar")
+            Log.d(
+                TAG,
+                "updatePlayer: uploading avatar for id=$id"
+            )
+            val part = MultipartHelper.filePart(
+                context,
+                avatarUri,
+                "avatar"
+            )
             if (part != null) {
-                val avatarResult = api.uploadPlayerAvatar(id, part)
+                val avatarResult = api.uploadPlayerAvatar(
+                    id,
+                    part
+                )
                 if (!avatarResult.success) {
-                    Log.w(TAG, "Avatar upload failed (but player updated): ${avatarResult.message}")
+                    Log.w(
+                        TAG,
+                        "Avatar upload failed (but player updated): ${avatarResult.message}"
+                    )
                 }
             } else {
-                Log.w(TAG, "updatePlayer: cannot read avatar file")
+                Log.w(
+                    TAG,
+                    "updatePlayer: cannot read avatar file"
+                )
             }
         }
 
@@ -158,23 +241,41 @@ class PlayerRepository(private val api: PlayerApi) {
         getPlayer(id)
 
     } catch (e: Exception) {
-        Log.e(TAG, "updatePlayer error: ${e.message}", e)
+        Log.e(
+            TAG,
+            "updatePlayer error: ${e.message}",
+            e
+        )
         NetworkResult.Error(ApiErrorHandler.extractMessage(e))
     }
 
     // ═════════════════════════════════════════════
     // Avatar Management
     // ═════════════════════════════════════════════
-    suspend fun uploadAvatar(playerId: Int, imageUri: Uri, context: Context): NetworkResult<Player> = try {
-        val part = MultipartHelper.filePart(context, imageUri, "avatar")
-            ?: return NetworkResult.Error("خطا در خواندن تصویر")
+    suspend fun uploadAvatar(
+        playerId: Int,
+        imageUri: Uri,
+        context: Context
+    ): NetworkResult<Player> = try {
+        val part = MultipartHelper.filePart(
+            context,
+            imageUri,
+            "avatar"
+        )
+                ?: return NetworkResult.Error("خطا در خواندن تصویر")
 
-        val r = api.uploadPlayerAvatar(playerId, part)
+        val r = api.uploadPlayerAvatar(
+            playerId,
+            part
+        )
         val dto = r.data.unwrap<PlayerDto>("player")
         if (r.success && dto != null) {
             NetworkResult.Success(dto.toDomain())
         } else {
-            NetworkResult.Error(r.message ?: "خطا در آپلود آواتار")
+            NetworkResult.Error(
+                r.message
+                        ?: "خطا در آپلود آواتار"
+            )
         }
     } catch (e: Exception) {
         NetworkResult.Error(ApiErrorHandler.extractMessage(e))
@@ -183,7 +284,10 @@ class PlayerRepository(private val api: PlayerApi) {
     suspend fun deleteAvatar(playerId: Int): NetworkResult<Player> = try {
         val r = api.deletePlayerAvatar(playerId)
         if (r.success) getPlayer(playerId)
-        else NetworkResult.Error(r.message ?: "خطا در حذف آواتار")
+        else NetworkResult.Error(
+            r.message
+                    ?: "خطا در حذف آواتار"
+        )
     } catch (e: Exception) {
         NetworkResult.Error(ApiErrorHandler.extractMessage(e))
     }
@@ -191,12 +295,18 @@ class PlayerRepository(private val api: PlayerApi) {
     // ═════════════════════════════════════════════
     // Status Management
     // ═════════════════════════════════════════════
-    suspend fun toggleStatus(id: Int, activate: Boolean): NetworkResult<Unit> = try {
+    suspend fun toggleStatus(
+        id: Int,
+        activate: Boolean
+    ): NetworkResult<Unit> = try {
         val r = if (activate) api.activatePlayer(id) else api.deactivatePlayer(id)
         if (r.success) {
             NetworkResult.Success(Unit)
         } else {
-            NetworkResult.Error(r.message ?: "خطا در تغییر وضعیت")
+            NetworkResult.Error(
+                r.message
+                        ?: "خطا در تغییر وضعیت"
+            )
         }
     } catch (e: Exception) {
         NetworkResult.Error(ApiErrorHandler.extractMessage(e))
@@ -210,28 +320,53 @@ class PlayerRepository(private val api: PlayerApi) {
         if (r.success && r.data != null) {
             NetworkResult.Success(r.data.map { it.toDomain() })
         } else {
-            NetworkResult.Error(r.message ?: "خطا در دریافت سرپرست‌ها")
+            NetworkResult.Error(
+                r.message
+                        ?: "خطا در دریافت سرپرست‌ها"
+            )
         }
     } catch (e: Exception) {
         NetworkResult.Error(ApiErrorHandler.extractMessage(e))
     }
 
-    suspend fun attachGuardian(id: Int, request: AttachGuardianToPlayerRequest): NetworkResult<GuardianPlayer> = try {
-        val r = api.attachGuardian(id, request)
-        val dto = r.data.unwrap<GuardianPlayerDto>("guardian_player", "player", "guardian")
+    suspend fun attachGuardian(
+        id: Int,
+        request: AttachGuardianToPlayerRequest
+    ): NetworkResult<GuardianPlayer> = try {
+        val r = api.attachGuardian(
+            id,
+            request
+        )
+        val dto = r.data.unwrap<GuardianPlayerDto>(
+            "guardian_player",
+            "player",
+            "guardian"
+        )
         if (r.success && dto != null) {
             NetworkResult.Success(dto.toDomain())
         } else {
-            NetworkResult.Error(r.message ?: "خطا در اتصال سرپرست")
+            NetworkResult.Error(
+                r.message
+                        ?: "خطا در اتصال سرپرست"
+            )
         }
     } catch (e: Exception) {
         NetworkResult.Error(ApiErrorHandler.extractMessage(e))
     }
 
-    suspend fun detachGuardian(playerId: Int, guardianId: Int): NetworkResult<Unit> = try {
-        val r = api.detachGuardian(playerId, guardianId)
+    suspend fun detachGuardian(
+        playerId: Int,
+        guardianId: Int
+    ): NetworkResult<Unit> = try {
+        val r = api.detachGuardian(
+            playerId,
+            guardianId
+        )
         if (r.success) NetworkResult.Success(Unit)
-        else NetworkResult.Error(r.message ?: "خطا در قطع ارتباط")
+        else NetworkResult.Error(
+            r.message
+                    ?: "خطا در قطع ارتباط"
+        )
     } catch (e: Exception) {
         NetworkResult.Error(ApiErrorHandler.extractMessage(e))
     }
@@ -241,8 +376,15 @@ class PlayerRepository(private val api: PlayerApi) {
     // ═════════════════════════════════════════════
     suspend fun getPlayerAttendances(id: Int): NetworkResult<List<Attendance>> = try {
         val r = api.getPlayerAttendances(id)
-        if (r.success && r.data != null) NetworkResult.Success(r.data.map { it.toDomain() })
-        else NetworkResult.Error(r.message ?: "خطا در دریافت حضور و غیاب")
+        // سرور لیست را داخل کلید "attendances" برمی‌گرداند
+        if (r.success && r.data != null) {
+            NetworkResult.Success(
+                (r.data.attendances
+                        ?: emptyList()).map { it.toDomain() })
+        } else NetworkResult.Error(
+            r.message
+                    ?: "خطا در دریافت حضور و غیاب"
+        )
     } catch (e: Exception) {
         NetworkResult.Error(ApiErrorHandler.extractMessage(e))
     }
@@ -250,7 +392,10 @@ class PlayerRepository(private val api: PlayerApi) {
     suspend fun getPlayerEvaluations(id: Int): NetworkResult<List<Evaluation>> = try {
         val r = api.getPlayerEvaluations(id)
         if (r.success && r.data != null) NetworkResult.Success(r.data.map { it.toDomain() })
-        else NetworkResult.Error(r.message ?: "خطا در دریافت ارزیابی‌ها")
+        else NetworkResult.Error(
+            r.message
+                    ?: "خطا در دریافت ارزیابی‌ها"
+        )
     } catch (e: Exception) {
         NetworkResult.Error(ApiErrorHandler.extractMessage(e))
     }
@@ -258,7 +403,10 @@ class PlayerRepository(private val api: PlayerApi) {
     suspend fun getPlayerInvoices(id: Int): NetworkResult<List<Invoice>> = try {
         val r = api.getPlayerInvoices(id)
         if (r.success && r.data != null) NetworkResult.Success(r.data.map { it.toDomain() })
-        else NetworkResult.Error(r.message ?: "خطا در دریافت فاکتورها")
+        else NetworkResult.Error(
+            r.message
+                    ?: "خطا در دریافت فاکتورها"
+        )
     } catch (e: Exception) {
         NetworkResult.Error(ApiErrorHandler.extractMessage(e))
     }
@@ -266,7 +414,10 @@ class PlayerRepository(private val api: PlayerApi) {
     suspend fun getPlayerPayments(id: Int): NetworkResult<List<Payment>> = try {
         val r = api.getPlayerPayments(id)
         if (r.success && r.data != null) NetworkResult.Success(r.data.map { it.toDomain() })
-        else NetworkResult.Error(r.message ?: "خطا در دریافت پرداخت‌ها")
+        else NetworkResult.Error(
+            r.message
+                    ?: "خطا در دریافت پرداخت‌ها"
+        )
     } catch (e: Exception) {
         NetworkResult.Error(ApiErrorHandler.extractMessage(e))
     }
@@ -274,7 +425,10 @@ class PlayerRepository(private val api: PlayerApi) {
     suspend fun getPlayerBalance(id: Int): NetworkResult<PlayerBalance> = try {
         val r = api.getPlayerBalance(id)
         if (r.success && r.data != null) NetworkResult.Success(r.data.toDomain())
-        else NetworkResult.Error(r.message ?: "خطا در دریافت مانده حساب")
+        else NetworkResult.Error(
+            r.message
+                    ?: "خطا در دریافت مانده حساب"
+        )
     } catch (e: Exception) {
         NetworkResult.Error(ApiErrorHandler.extractMessage(e))
     }

@@ -15,8 +15,9 @@ data class CreateSessionRequest(
 
 data class GenerateSessionsRequest(
     @SerializedName("class_id") val classId: Int,
-    @SerializedName("from_date") val fromDate: String,
-    @SerializedName("to_date") val toDate: String
+    // نال = سرور از تاریخ شروع کلاس/امروز تا تاریخ پایان کلاس تولید می‌کند
+    @SerializedName("from_date") val fromDate: String? = null,
+    @SerializedName("to_date") val toDate: String? = null
 )
 
 data class UpdateSessionRequest(

@@ -9,5 +9,5 @@ data class MyFinanceDto(
     @SerializedName("total_paid") val totalPaid: Long,
     @SerializedName("balance") val balance: Long,
     @SerializedName("pending_payments") val pendingPayments: Long,
-    @SerializedName("invoices") val invoices: List<InvoiceDto>
+    @SerializedName("invoices") val invoices: List<InvoiceDto>? = null
 )

@@ -40,7 +40,11 @@ class ViewModelFactory(private val container: AppContainer) : ViewModelProvider.
         modelClass.isAssignableFrom(PlayerListViewModel::class.java)       -> PlayerListViewModel(container.playerRepository) as T
         modelClass.isAssignableFrom(PlayerDetailViewModel::class.java)     -> PlayerDetailViewModel(container.playerRepository) as T
         modelClass.isAssignableFrom(ClassFormViewModel::class.java)        -> {
-            ClassFormViewModel(container.classRepository) as T
+            ClassFormViewModel(
+                container.classRepository,
+                container.ageGroupRepository,
+                container.coachRepository
+            ) as T
         }
 
         modelClass.isAssignableFrom(GuardianListViewModel::class.java)     -> GuardianListViewModel(container.guardianRepository) as T
@@ -48,7 +52,7 @@ class ViewModelFactory(private val container: AppContainer) : ViewModelProvider.
         modelClass.isAssignableFrom(AgeGroupListViewModel::class.java)     -> AgeGroupListViewModel(container.ageGroupRepository) as T
         modelClass.isAssignableFrom(CoachListViewModel::class.java)        -> CoachListViewModel(container.coachRepository) as T
         modelClass.isAssignableFrom(ClassListViewModel::class.java)        -> ClassListViewModel(container.classRepository) as T
-        modelClass.isAssignableFrom(SessionListViewModel::class.java)      -> SessionListViewModel(container.sessionRepository) as T
+        modelClass.isAssignableFrom(SessionListViewModel::class.java)      -> SessionListViewModel(container.sessionRepository, container.classRepository) as T
         modelClass.isAssignableFrom(AttendanceViewModel::class.java)       -> AttendanceViewModel(
             container.sessionRepository,
             container.classRepository

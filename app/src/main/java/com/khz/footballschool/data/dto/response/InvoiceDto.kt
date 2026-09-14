@@ -15,10 +15,11 @@ data class InvoiceDto(
     @SerializedName("paid_amount") val paidAmount: Long,
     @SerializedName("remaining_amount") val remainingAmount: Long,
     @SerializedName("notes") val notes: String?,
-    @SerializedName("items") val items: List<InvoiceItemDto> = emptyList(),
-    @SerializedName("discounts") val discounts: List<DiscountDto> = emptyList(),
-    @SerializedName("installments") val installments: List<InstallmentDto> = emptyList(),
-    @SerializedName("payments") val payments: List<PaymentDto> = emptyList(),
+    // نال‌پذیر: Gson برای کلید غایب مقدار پیش‌فرض کاتلین را اعمال نمی‌کند
+    @SerializedName("items") val items: List<InvoiceItemDto>? = null,
+    @SerializedName("discounts") val discounts: List<DiscountDto>? = null,
+    @SerializedName("installments") val installments: List<InstallmentDto>? = null,
+    @SerializedName("payments") val payments: List<PaymentDto>? = null,
     @SerializedName("created_at") val createdAt: String?,
     @SerializedName("updated_at") val updatedAt: String?
 )

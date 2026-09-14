@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Event
+import androidx.compose.material.icons.filled.EventAvailable
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.ManageAccounts
@@ -51,8 +52,6 @@ import com.khz.footballschool.ui.dashboard.components.DashboardMenuItem
 import com.khz.footballschool.ui.dashboard.components.QuickAccessGrid
 import com.khz.footballschool.ui.dashboard.components.RecentMessagesSection
 
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
@@ -61,6 +60,7 @@ fun DashboardScreen(
     onNavigateToPlayers: () -> Unit,
     onNavigateToClasses: () -> Unit,
     onNavigateToSessions: () -> Unit,
+    onNavigateToMySessions: () -> Unit,
     onNavigateToInvoices: () -> Unit,
     onNavigateToPayments: () -> Unit,
     onNavigateToReports: () -> Unit,
@@ -125,6 +125,7 @@ fun DashboardScreen(
                     onNavigateToPlayers = onNavigateToPlayers,
                     onNavigateToClasses = onNavigateToClasses,
                     onNavigateToSessions = onNavigateToSessions,
+                    onNavigateToMySessions = onNavigateToMySessions,
                     onNavigateToInvoices = onNavigateToInvoices,
                     onNavigateToPayments = onNavigateToPayments,
                     onNavigateToReports = onNavigateToReports,
@@ -151,6 +152,7 @@ private fun DashboardContent(
     onNavigateToPlayers: () -> Unit,
     onNavigateToClasses: () -> Unit,
     onNavigateToSessions: () -> Unit,
+    onNavigateToMySessions: () -> Unit,
     onNavigateToInvoices: () -> Unit,
     onNavigateToPayments: () -> Unit,
     onNavigateToReports: () -> Unit,
@@ -206,6 +208,13 @@ private fun DashboardContent(
             greenColor,
             data.sessionsToday.toString(),
             onNavigateToSessions
+        ),
+        DashboardMenuItem(
+            "جلسات من",
+            Icons.Default.EventAvailable,
+            GoldPrimary,
+            null,
+            onNavigateToMySessions
         ),
         DashboardMenuItem(
             "گروه‌بندی سنی",

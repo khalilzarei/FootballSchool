@@ -21,7 +21,6 @@ data class UpdateSeasonRequest(
 )
 
 data class CreateAgeGroupRequest(
-    @SerializedName("season_id") val seasonId: Int,
     @SerializedName("title") val title: String,
     @SerializedName("birth_date_from") val birthDateFrom: String?,
     @SerializedName("birth_date_to") val birthDateTo: String?,

@@ -34,6 +34,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -85,13 +86,17 @@ fun ChatScreen(
 
     val listState = rememberLazyListState()
 
-    // شناسه کاربر لاگین‌شده فعلی
-    val currentUserId = remember { container.sessionManager.userId }
+    // شناسه کاربر لاگین‌شده فعلی (برای تشخیص پیام‌های خود کاربر)
+    var currentUserId by remember { mutableStateOf<Int?>(null) }
 
     // ─── بارگذاری اطلاعات کاربر و ایجاد/دریافت room ───
     LaunchedEffect(userId) {
         loading = true
         error = null
+
+        // شناسه کاربر جاری
+        currentUserId = container.sessionManager.userId.first()
+            ?.toIntOrNull()
 
         // دریافت اطلاعات کاربر
         when (val r = userRepo.getUser(userId)) {
@@ -100,23 +105,42 @@ fun ChatScreen(
                 userAvatar = r.data.avatarUrl
                 userMobile = r.data.mobile
             }
-            else -> userName = "کاربر #$userId"
+
+            else                     -> userName = "کاربر #$userId"
         }
 
         // ایجاد یا دریافت اتاق خصوصی
-        when (val r = chatRepo.getOrCreatePrivateRoomWithUser(userId)) {
+        when (val r = chatRepo.getOrCreatePrivateRoomWithUser(
+            userId,
+            roomType = ""
+        )) {
             is NetworkResult.Success -> {
                 roomId = r.data.id
-                
+
                 // دریافت پیام‌های room
-                when (val msgResult = chatRepo.getMessages(r.data.id, limit = 50)) {
-                    is NetworkResult.Success -> messages = msgResult.data
-                    is NetworkResult.Error -> error = msgResult.message
-                    else -> {}
+                when (val msgResult = chatRepo.getMessages(
+                    r.data.id,
+                    limit = 50
+                )) {
+                    is NetworkResult.Success -> {
+                        messages = msgResult.data
+                        // ثبت خوانده‌شدن پیام‌ها تا آخرین پیام (شمارنده «جدید» صفر شود)
+                        msgResult.data.maxOfOrNull { it.id }
+                            ?.let { lastId ->
+                                chatRepo.markAsRead(
+                                    r.data.id,
+                                    lastId
+                                )
+                            }
+                    }
+
+                    is NetworkResult.Error   -> error = msgResult.message
+                    else                     -> {}
                 }
             }
-            is NetworkResult.Error -> error = r.message
-            else -> {}
+
+            is NetworkResult.Error   -> error = r.message
+            else                     -> {}
         }
 
         loading = false
@@ -126,7 +150,8 @@ fun ChatScreen(
         containerColor = Color.Transparent,
         topBar = {
             GlassTopBar(
-                title = userName ?: "گفتگو",
+                title = userName
+                        ?: "گفتگو",
                 onBack = onBack,
                 actions = {
                     // دکمه تماس (اگر شماره موبایل دارد)
@@ -138,7 +163,8 @@ fun ChatScreen(
                                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                 }
                                 context.startActivity(intent)
-                            } catch (_: Exception) {}
+                            } catch (_: Exception) {
+                            }
                         }) {
                             Icon(
                                 Icons.Default.Call,
@@ -147,10 +173,8 @@ fun ChatScreen(
                             )
                         }
                     }
-                }
-            )
-        }
-    ) { padding ->
+                })
+        }) { padding ->
         Column(
             Modifier
                 .padding(padding)
@@ -170,7 +194,8 @@ fun ChatScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     AvatarView(
-                        name = userName ?: "?",
+                        name = userName
+                                ?: "?",
                         avatarUrl = userAvatar,
                         size = 56.dp,
                         accentColor = GoldPrimary
@@ -178,7 +203,8 @@ fun ChatScreen(
                     Spacer(Modifier.width(12.dp))
                     Column {
                         Text(
-                            userName ?: "در حال بارگذاری...",
+                            userName
+                                    ?: "در حال بارگذاری...",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -203,7 +229,9 @@ fun ChatScreen(
                     }
 
                     error != null && messages.isEmpty() -> Box(
-                        Modifier.fillMaxSize().padding(24.dp),
+                        Modifier
+                            .fillMaxSize()
+                            .padding(24.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -213,31 +241,50 @@ fun ChatScreen(
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             Spacer(Modifier.height(12.dp))
-                            androidx.compose.material3.TextButton(
+                            TextButton(
                                 onClick = {
                                     scope.launch {
                                         error = null
                                         loading = true
-                                        
+
                                         // تلاش مجدد
-                                        when (val r = chatRepo.getOrCreatePrivateRoomWithUser(userId)) {
+                                        when (val r = chatRepo.getOrCreatePrivateRoomWithUser(
+                                            userId,
+                                            roomType = ""
+                                        )) {
                                             is NetworkResult.Success -> {
                                                 roomId = r.data.id
-                                                when (val msgResult = chatRepo.getMessages(r.data.id, limit = 50)) {
-                                                    is NetworkResult.Success -> messages = msgResult.data
-                                                    is NetworkResult.Error -> error = msgResult.message
-                                                    else -> {}
+                                                when (val msgResult = chatRepo.getMessages(
+                                                    r.data.id,
+                                                    limit = 50
+                                                )) {
+                                                    is NetworkResult.Success -> {
+                                                        messages = msgResult.data
+                                                        msgResult.data.maxOfOrNull { it.id }
+                                                            ?.let { lastId ->
+                                                                chatRepo.markAsRead(
+                                                                    r.data.id,
+                                                                    lastId
+                                                                )
+                                                            }
+                                                    }
+
+                                                    is NetworkResult.Error   -> error = msgResult.message
+                                                    else                     -> {}
                                                 }
                                             }
-                                            is NetworkResult.Error -> error = r.message
-                                            else -> {}
+
+                                            is NetworkResult.Error   -> error = r.message
+                                            else                     -> {}
                                         }
-                                        
+
                                         loading = false
                                     }
-                                }
-                            ) {
-                                Text("تلاش مجدد", color = GoldPrimary)
+                                }) {
+                                Text(
+                                    "تلاش مجدد",
+                                    color = GoldPrimary
+                                )
                             }
                         }
                     }
@@ -264,13 +311,16 @@ fun ChatScreen(
                     else -> LazyColumn(
                         state = listState,
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                        contentPadding = PaddingValues(
+                            horizontal = 12.dp,
+                            vertical = 8.dp
+                        ),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(messages) { msg ->
                             MessageBubble(
                                 message = msg,
-                                isMine = false
+                                isMine = msg.senderId == currentUserId
                             )
                         }
                     }
@@ -287,19 +337,22 @@ fun ChatScreen(
                         if (messageText.isBlank() || sending) return@MessageInputBar
                         scope.launch {
                             sending = true
-                            when (val r = chatRepo.sendMessage(currentRoomId, messageText.trim())) {
+                            when (val r = chatRepo.sendMessage(
+                                currentRoomId,
+                                messageText.trim()
+                            )) {
                                 is NetworkResult.Success -> {
                                     messages = messages + r.data
                                     messageText = ""
                                     listState.animateScrollToItem(messages.size - 1)
                                 }
-                                is NetworkResult.Error -> error = r.message
-                                else -> {}
+
+                                is NetworkResult.Error   -> error = r.message
+                                else                     -> {}
                             }
                             sending = false
                         }
-                    }
-                )
+                    })
             }
         }
     }
@@ -313,14 +366,18 @@ fun ChatScreen(
 }
 
 @Composable
-private fun MessageBubble(message: ChatMessage, isMine: Boolean) {
+private fun MessageBubble(
+    message: ChatMessage,
+    isMine: Boolean
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = if (isMine) Arrangement.End else Arrangement.Start
     ) {
         if (!isMine) {
             AvatarView(
-                name = message.senderName ?: "?",
+                name = message.senderName
+                        ?: "?",
                 size = 32.dp,
                 accentColor = Color(0xFF4FC3F7)
             )
@@ -328,9 +385,19 @@ private fun MessageBubble(message: ChatMessage, isMine: Boolean) {
         }
 
         val shape = if (isMine) {
-            RoundedCornerShape(18.dp, 18.dp, 4.dp, 18.dp)
+            RoundedCornerShape(
+                18.dp,
+                18.dp,
+                4.dp,
+                18.dp
+            )
         } else {
-            RoundedCornerShape(18.dp, 18.dp, 18.dp, 4.dp)
+            RoundedCornerShape(
+                18.dp,
+                18.dp,
+                18.dp,
+                4.dp
+            )
         }
 
         val bgBrush = if (isMine) {
@@ -352,8 +419,14 @@ private fun MessageBubble(message: ChatMessage, isMine: Boolean) {
         Box(
             modifier = Modifier
                 .widthIn(max = 280.dp)
-                .background(bgBrush, shape)
-                .padding(horizontal = 14.dp, vertical = 10.dp)
+                .background(
+                    bgBrush,
+                    shape
+                )
+                .padding(
+                    horizontal = 14.dp,
+                    vertical = 10.dp
+                )
         ) {
             Column {
                 Text(
@@ -363,7 +436,9 @@ private fun MessageBubble(message: ChatMessage, isMine: Boolean) {
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
-                    text = message.createdAt?.takeLast(8)?.take(5) ?: "",
+                    text = message.createdAt?.takeLast(8)
+                        ?.take(5)
+                            ?: "",
                     color = if (isMine) Color(0xFF1A0533).copy(0.7f) else Color.White.copy(0.5f),
                     style = MaterialTheme.typography.labelSmall
                 )
@@ -378,7 +453,10 @@ private fun MessageBubble(message: ChatMessage, isMine: Boolean) {
                     .clip(CircleShape)
                     .background(
                         Brush.radialGradient(
-                            listOf(GoldPrimary, GoldPrimary.copy(0.4f))
+                            listOf(
+                                GoldPrimary,
+                                GoldPrimary.copy(0.4f)
+                            )
                         )
                     ),
                 contentAlignment = Alignment.Center
@@ -419,7 +497,10 @@ private fun MessageInputBar(
                         Color.White.copy(alpha = 0.08f),
                         RoundedCornerShape(24.dp)
                     )
-                    .padding(horizontal = 16.dp, vertical = 10.dp)
+                    .padding(
+                        horizontal = 16.dp,
+                        vertical = 10.dp
+                    )
             ) {
                 if (text.isEmpty()) {
                     Text(
@@ -454,11 +535,9 @@ private fun MessageInputBar(
                     )
                     .then(
                         if (text.isNotBlank() && !sending) {
-                            Modifier.clickable { onSend() }
-                        } else Modifier
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
+                        Modifier.clickable { onSend() }
+                    } else Modifier),
+                contentAlignment = Alignment.Center) {
                 if (sending) {
                     CircularProgressIndicator(
                         color = Color(0xFF1A0533),

@@ -32,10 +32,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.khz.footballschool.FootballSchoolApp
 import com.khz.footballschool.core.network.NetworkResult
-import com.khz.footballschool.data.dto.request.EnrollPlayerRequest
 import com.khz.footballschool.domain.model.Player
 import com.khz.footballschool.ui.components.GlassButton
 import com.khz.footballschool.ui.components.GlassCard3D
@@ -49,7 +49,11 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EnrollPlayerScreen(classId: Int, onBack: () -> Unit, onEnrolled: () -> Unit) {
+fun EnrollPlayerScreen(
+    classId: Int,
+    onBack: () -> Unit,
+    onEnrolled: () -> Unit
+) {
     val context = LocalContext.current
     val container = (context.applicationContext as FootballSchoolApp).container
     val playerRepo = container.playerRepository
@@ -68,10 +72,13 @@ fun EnrollPlayerScreen(classId: Int, onBack: () -> Unit, onEnrolled: () -> Unit)
 
     LaunchedEffect(query) {
         loading = true
-        when (val r = playerRepo.getPlayers(query = query.takeIf { it.isNotBlank() }, perPage = 50)) {
+        when (val r = playerRepo.getPlayers(
+            query = query.takeIf { it.isNotBlank() },
+            perPage = 50
+        )) {
             is NetworkResult.Success -> players = r.data.items
-            is NetworkResult.Error -> error = r.message
-            else -> {}
+            is NetworkResult.Error   -> error = r.message
+            else                     -> {}
         }
         loading = false
     }
@@ -79,9 +86,11 @@ fun EnrollPlayerScreen(classId: Int, onBack: () -> Unit, onEnrolled: () -> Unit)
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
-            GlassTopBar(title = "ثبت‌نام بازیکن در کلاس", onBack = onBack)
-        }
-    ) { padding ->
+            GlassTopBar(
+                title = "ثبت‌نام بازیکن در کلاس",
+                onBack = onBack
+            )
+        }) { padding ->
         Column(
             Modifier
                 .padding(padding)
@@ -90,11 +99,20 @@ fun EnrollPlayerScreen(classId: Int, onBack: () -> Unit, onEnrolled: () -> Unit)
         ) {
             GlassSectionTitle("۱. انتخاب بازیکن")
             Spacer(Modifier.height(8.dp))
-            GlassSearchField(value = query, onValueChange = { query = it }, label = "جستجوی بازیکن")
+            GlassSearchField(
+                value = query,
+                onValueChange = { query = it },
+                label = "جستجوی بازیکن"
+            )
             Spacer(Modifier.height(8.dp))
 
             if (loading) {
-                Box(Modifier.fillMaxWidth().height(120.dp), contentAlignment = Alignment.Center) {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(120.dp),
+                    contentAlignment = Alignment.Center
+                ) {
                     CircularProgressIndicator(color = GoldPrimary)
                 }
             } else if (players.isEmpty()) {
@@ -113,8 +131,7 @@ fun EnrollPlayerScreen(classId: Int, onBack: () -> Unit, onEnrolled: () -> Unit)
                         PlayerSelectableItem(
                             player = p,
                             isSelected = selectedPlayer?.id == p.id,
-                            onClick = { selectedPlayer = p }
-                        )
+                            onClick = { selectedPlayer = p })
                     }
                 }
             }
@@ -133,8 +150,9 @@ fun EnrollPlayerScreen(classId: Int, onBack: () -> Unit, onEnrolled: () -> Unit)
                     )
                     GlassTextField(
                         value = monthlyFeeOverride,
-                        onValueChange = { monthlyFeeOverride = it },
-                        label = "شهریه ماهانه اختصاصی (اختیاری)"
+                        onValueChange = { v -> monthlyFeeOverride = v.filter { it.isDigit() } },
+                        label = "شهریه ماهانه اختصاصی (اختیاری، ریال)",
+                        keyboardType = KeyboardType.Number
                     )
                     GlassTextField(
                         value = notes,
@@ -150,29 +168,39 @@ fun EnrollPlayerScreen(classId: Int, onBack: () -> Unit, onEnrolled: () -> Unit)
                 text = "ثبت‌نام",
                 onClick = {
                     val p = selectedPlayer
-                    if (p == null) { error = "ابتدا یک بازیکن انتخاب کنید"; return@GlassButton }
+                    if (p == null) {
+                        error = "ابتدا یک بازیکن انتخاب کنید"; return@GlassButton
+                    }
+
+                    val date = enrolledAt.trim()
+                    if (date.isNotEmpty() && !Regex("^\\d{4}-\\d{2}-\\d{2}$").matches(date)) {
+                        error = "تاریخ ثبت‌نام باید با فرمت YYYY-MM-DD باشد (مثلاً 2026-09-12)"
+                        return@GlassButton
+                    }
+
+                    val fee = monthlyFeeOverride.trim()
+                    if (fee.isNotEmpty() && fee.toLongOrNull() == null) {
+                        error = "شهریه ماهانه اختصاصی باید عدد باشد"
+                        return@GlassButton
+                    }
+
                     saving = true
                     error = null
                     scope.launch {
-//                        val r = classRepo.enrollPlayer(
-//                            classId,
-//                            EnrollPlayerRequest(
-//                                playerId = p.id,
-//                                status = "active",
-//                                enrolledAt = enrolledAt.takeIf { it.isNotBlank() },
-//                                endedAt = null,
-//                                monthlyFeeOverride = monthlyFeeOverride.toLongOrNull(),
-//                                sessionFeeOverride = null,
-//                                registrationFeeOverride = null,
-//                                notes = notes.takeIf { it.isNotBlank() }
-//                            )
-//                        )
-//                        saving = false
-//                        when (r) {
-//                            is NetworkResult.Success -> onEnrolled()
-//                            is NetworkResult.Error -> error = r.message
-//                            else -> {}
-//                        }
+                        when (val r = classRepo.enrollPlayer(
+                            classId = classId,
+                            playerId = p.id,
+                            enrolledAt = date.takeIf { it.isNotEmpty() },
+                            monthlyFeeOverride = fee.takeIf { it.isNotEmpty() }
+                                ?.toLong(),
+                            sessionFeeOverride = null,
+                            registrationFeeOverride = null,
+                            notes = notes.takeIf { it.isNotBlank() })) {
+                            is NetworkResult.Success -> onEnrolled()
+                            is NetworkResult.Error   -> error = r.message
+                            else                     -> {}
+                        }
+                        saving = false
                     }
                 },
                 loading = saving,
@@ -182,7 +210,7 @@ fun EnrollPlayerScreen(classId: Int, onBack: () -> Unit, onEnrolled: () -> Unit)
 
             error?.let {
                 Spacer(Modifier.height(8.dp))
-                GlassCard3D{
+                GlassCard3D {
                     Text(
                         it,
                         color = Color(0xFFFF8A80)
@@ -194,9 +222,15 @@ fun EnrollPlayerScreen(classId: Int, onBack: () -> Unit, onEnrolled: () -> Unit)
 }
 
 @Composable
-private fun PlayerSelectableItem(player: Player, isSelected: Boolean, onClick: () -> Unit) {
+private fun PlayerSelectableItem(
+    player: Player,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
     GlassCard3D(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
     ) {
         Row(
             Modifier.fillMaxWidth(),

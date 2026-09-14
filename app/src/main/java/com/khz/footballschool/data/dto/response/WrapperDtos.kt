@@ -150,15 +150,104 @@ data class NotificationResponseDto(
 )
 
 // ═════════════════════════════════════════════
-// Chat Room Wrapper
+// Class Schedules Wrapper
+// سرور: {"success":true,"data":{"schedules":[...]}}
 // ═════════════════════════════════════════════
-data class ChatRoomResponseDto(
-    @SerializedName("room") val room: ChatRoomDto
+data class SchedulesListResponseDto(
+    @SerializedName("schedules") val schedules: List<ClassScheduleDto>? = null
 )
 
 // ═════════════════════════════════════════════
-// Chat Message Wrapper
+// Generate Sessions Result
+// سرور: {"success":true,"data":{"created_sessions":12,"from_date":"...","to_date":"...","class_id":3}}
 // ═════════════════════════════════════════════
+data class GenerateSessionsResultDto(
+    @SerializedName("created_sessions") val createdSessions: Int = 0,
+    @SerializedName("from_date") val fromDate: String? = null,
+    @SerializedName("to_date") val toDate: String? = null,
+    @SerializedName("class_id") val classId: Int? = null
+)
+
+// ═════════════════════════════════════════════
+// Attendance Wrappers
+// سرور: {"data":{"attendances":[...]}} و {"data":{"session_id":1,"saved_items":4}}
+// ═════════════════════════════════════════════
+data class AttendanceListResponse(
+    @SerializedName("attendances") val attendances: List<AttendanceDto>? = null
+)
+
+data class BulkAttendanceResultDto(
+    @SerializedName("session_id") val sessionId: Int? = null,
+    @SerializedName("saved_items") val savedItems: Int? = null
+)
+
+// ═════════════════════════════════════════════
+// Chat Wrappers
+// سرور پاسخ‌های چت را داخل کلیدهای نام‌دار برمی‌گرداند:
+// {"success":true,"data":{"rooms":[...]}} / {"room":{...}}
+// / {"messages":[...]} / {"message":{...}}
+// ═════════════════════════════════════════════
+data class ChatRoomsResponseDto(
+    @SerializedName("rooms") val rooms: List<ChatRoomDto>? = null
+)
+
+data class ChatRoomResponseDto(
+    @SerializedName("room") val room: ChatRoomDto? = null
+)
+
+data class ChatMessagesResponseDto(
+    @SerializedName("messages") val messages: List<ChatMessageDto>? = null
+)
+
 data class ChatMessageResponseDto(
-    @SerializedName("message") val message: ChatMessageDto
+    @SerializedName("message") val message: ChatMessageDto? = null
+)
+
+/**
+ * برگه حضور و غیاب: بازیکنان ثبت‌نام‌شده کلاس + وضعیت ذخیره‌شده، در یک ریکوئست
+ * سرور: {"data":{"session_id":1,"class_id":3,"players":[...]}}
+ */
+data class AttendanceSheetResponse(
+    @SerializedName("session_id") val sessionId: Int? = null,
+    @SerializedName("class_id") val classId: Int? = null,
+    @SerializedName("players") val players: List<AttendanceSheetPlayerDto>? = null
+)
+
+data class AttendanceSheetPlayerDto(
+    @SerializedName("player_id") val playerId: Int,
+    @SerializedName("first_name") val firstName: String? = null,
+    @SerializedName("last_name") val lastName: String? = null,
+    @SerializedName("full_name") val fullName: String? = null,
+    @SerializedName("avatar_path") val avatarPath: String? = null,
+    @SerializedName("avatar_url") val avatarUrl: String? = null,
+    @SerializedName("status") val status: String? = null,
+    @SerializedName("is_billable") val isBillable: Boolean? = null,
+    @SerializedName("note") val note: String? = null,
+    @SerializedName("recorded_at") val recordedAt: String? = null
+)
+
+// ═════════════════════════════════════════════
+// Me / Client Wrappers
+// سرور پاسخ‌های بخش «من» را داخل کلیدهای نام‌دار برمی‌گرداند:
+// {"data":{"children":[...]}} / {"sessions":[...]} / {"news":[...]}
+// / {"media":[...]} / {"finance":[...]}
+// ═════════════════════════════════════════════
+data class MyChildrenResponseDto(
+    @SerializedName("children") val children: List<MyChildrenDto>? = null
+)
+
+data class MyScheduleResponseDto(
+    @SerializedName("sessions") val sessions: List<MyScheduleDto>? = null
+)
+
+data class MyNewsResponseDto(
+    @SerializedName("news") val news: List<NewsDto>? = null
+)
+
+data class MyMediaResponseDto(
+    @SerializedName("media") val media: List<MediaDto>? = null
+)
+
+data class MyFinanceResponseDto(
+    @SerializedName("finance") val finance: List<MyFinanceDto>? = null
 )

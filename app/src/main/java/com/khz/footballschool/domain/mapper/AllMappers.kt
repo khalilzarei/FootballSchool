@@ -54,7 +54,8 @@ fun PlayerDto.toDomain(): Player = Player(
     id = id,
     firstName = firstName,
     lastName = lastName,
-    fullName = fullName?.takeIf { it.isNotBlank() } ?: "$firstName $lastName".trim(),
+    fullName = fullName?.takeIf { it.isNotBlank() }
+            ?: "$firstName $lastName".trim(),
     nationalCode = nationalCode,
     birthDate = birthDate,
     age = age,
@@ -63,11 +64,13 @@ fun PlayerDto.toDomain(): Player = Player(
     medicalNotes = medicalNotes,
     notes = notes,
     // ─── اولویت با avatar_url کامل، سپس avatar_path نسبی ───
-    avatarPath = avatarUrl ?: avatarPath,
+    avatarPath = avatarUrl
+            ?: avatarPath,
     createdBy = createdBy,
     createdAt = createdAt,
     updatedAt = updatedAt,
-    guardians = guardians?.map { it.toDomain() } ?: emptyList(),
+    guardians = guardians?.map { it.toDomain() }
+            ?: emptyList(),
     currentClass = currentClass?.toDomain(),
     balance = balance?.toDomain(),
 )
@@ -87,7 +90,8 @@ fun CoachDto.toDomain(): Coach = Coach(
     specialty = specialty,
     licenseLevel = licenseLevel,
     bio = bio,
-    classes = classes.map { it.toDomain() })
+    classes = classes.orEmpty()
+        .map { it.toDomain() })
 
 // ═══════════════════════════════════════════════════════════════
 // Academic
@@ -108,8 +112,6 @@ fun SeasonDto.toDomain(): Season = Season(
 
 fun AgeGroupDto.toDomain(): AgeGroup = AgeGroup(
     id = id,
-    seasonId = seasonId,
-    season = season?.toDomain(),
     title = title,
     birthDateFrom = birthDateFrom,
     birthDateTo = birthDateTo,
@@ -118,6 +120,7 @@ fun AgeGroupDto.toDomain(): AgeGroup = AgeGroup(
     sortOrder = sortOrder,
     status = status,
     isActive = isActive,
+    playersCount = playersCount,
     createdAt = createdAt,
     updatedAt = updatedAt
 )
@@ -125,6 +128,8 @@ fun AgeGroupDto.toDomain(): AgeGroup = AgeGroup(
 fun ClassDto.toDomain(): FootballClass = FootballClass(
     id = id,
     title = title,
+    seasonId = seasonId,
+    season = season?.toDomain(),
     ageGroupId = ageGroupId,
     ageGroup = ageGroup?.toDomain(),
     coachId = coachId,
@@ -142,14 +147,15 @@ fun ClassDto.toDomain(): FootballClass = FootballClass(
     startDate = startDate,
     endDate = endDate,
     enrolledCount = enrolledCount,
-    schedules = schedules.map { it.toDomain() })
+    schedules = schedules.orEmpty()
+        .map { it.toDomain() })
 
 fun ClassScheduleDto.toDomain(): ClassSchedule = ClassSchedule(
     id = id,
     classId = classId,
     weekday = weekday.toString(),
-    startTime = startTime,
-    endTime = endTime,
+    startTime = startTime.take(5), // حذف ثانیه‌ی TIME دیتابیس (17:00:00 → 17:00)
+    endTime = endTime.take(5),
     location = location,
     status = status,
     isActive = isActive,
@@ -160,9 +166,9 @@ fun ClassScheduleDto.toDomain(): ClassSchedule = ClassSchedule(
 fun EnrollmentDto.toDomain(): Enrollment = Enrollment(
     id = id,
     classId = classId,
-    classItem = classItem.toDomain(),
+    classItem = classItem?.toDomain(),
     playerId = playerId,
-    player = player.toDomain(),
+    player = player?.toDomain(),
     status = status,
     isActive = isActive,
     enrolledAt = enrolledAt,
@@ -180,8 +186,8 @@ fun SessionDto.toDomain(): Session = Session(
     classId = classId,
     classItem = classItem?.toDomain(),
     sessionDate = sessionDate,
-    startTime = startTime,
-    endTime = endTime,
+    startTime = startTime?.take(5), // حذف ثانیه‌ی TIME دیتابیس (17:00:00 → 17:00)
+    endTime = endTime?.take(5),
     location = location,
     topic = topic,
     status = status,
@@ -243,10 +249,14 @@ fun InvoiceDto.toDomain(): Invoice = Invoice(
     paidAmount = paidAmount,
     remainingAmount = remainingAmount,
     notes = notes,
-    items = items.map { it.toDomain() },
-    discounts = discounts.map { it.toDomain() },
-    installments = installments.map { it.toDomain() },
-    payments = payments.map { it.toDomain() },
+    items = items.orEmpty()
+        .map { it.toDomain() },
+    discounts = discounts.orEmpty()
+        .map { it.toDomain() },
+    installments = installments.orEmpty()
+        .map { it.toDomain() },
+    payments = payments.orEmpty()
+        .map { it.toDomain() },
     createdAt = createdAt,
     updatedAt = updatedAt
 )
@@ -362,7 +372,8 @@ fun MatchDto.toDomain(): Match = Match(
     homeScore = homeScore,
     awayScore = awayScore,
     notes = notes,
-    players = players.map { it.toDomain() },
+    players = players.orEmpty()
+        .map { it.toDomain() },
     createdAt = createdAt,
     updatedAt = updatedAt
 )
@@ -422,7 +433,7 @@ fun ChatRoomDto.toDomain(): ChatRoom = ChatRoom(
 
 fun ChatMessageDto.toDomain(): ChatMessage = ChatMessage(
     id = id,
-    roomId = roomId,
+    roomId = effectiveRoomId,
     senderId = senderId,
     sender = sender?.toDomain(),
     messageType = messageType,
@@ -431,8 +442,9 @@ fun ChatMessageDto.toDomain(): ChatMessage = ChatMessage(
     media = media?.toDomain(),
     isRead = isRead,
     readAt = readAt,
-    createdAt = createdAt,
-    senderName = sender?.fullName
+    createdAt = createdAt
+            ?: sentAt,
+    senderName = effectiveSenderName
 )
 
 fun SettingDto.toDomain(): Setting = Setting(
@@ -520,13 +532,23 @@ fun MyChildrenDto.toDomain(): MyChild = MyChild(
 )
 
 fun MyScheduleDto.toDomain(): MyScheduleItem = MyScheduleItem(
-    classId = classId,
-    classTitle = classTitle,
-    weekday = weekday,
-    startTime = startTime,
-    endTime = endTime,
+    id = id
+            ?: 0,
+    classId = classId
+            ?: 0,
+    classTitle = classTitle
+            ?: "-",
+    sessionDate = sessionDate
+            ?: "",
+    startTime = startTime?.take(5)
+            ?: "",
+    endTime = endTime?.take(5)
+            ?: "",
     location = location,
-    coachName = coachName
+    status = status
+            ?: "scheduled",
+    topic = topic,
+    notes = notes
 )
 
 fun MyFinanceDto.toDomain(): MyFinance = MyFinance(
@@ -536,4 +558,5 @@ fun MyFinanceDto.toDomain(): MyFinance = MyFinance(
     totalPaid = totalPaid,
     balance = balance,
     pendingPayments = pendingPayments,
-    invoices = invoices.map { it.toDomain() })
+    invoices = invoices.orEmpty()
+        .map { it.toDomain() })

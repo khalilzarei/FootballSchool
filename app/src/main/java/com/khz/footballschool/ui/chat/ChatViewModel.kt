@@ -21,8 +21,34 @@ class ChatViewModel(private val repo: ChatRepository) : ViewModel() {
     fun load(roomId: Int) {
         viewModelScope.launch {
             _loading.value = true
-            (repo.getMessages(roomId) as? NetworkResult.Success)?.let { _messages.value = it.data }
+            (repo.getMessages(roomId) as? NetworkResult.Success)?.let {
+                _messages.value = it.data
+                // ثبت خوانده‌شدن پیام‌ها تا آخرین پیام (شمارنده «جدید» صفر شود)
+                it.data.maxOfOrNull { m -> m.id }
+                    ?.let { lastId ->
+                        repo.markAsRead(
+                            roomId,
+                            lastId
+                        )
+                    }
+            }
             _loading.value = false
+        }
+    }
+
+    /**
+     * علامت‌گذاری پیام‌های اتاق به‌عنوان خوانده‌شده تا [lastReadMessageId]
+     */
+    fun markAsRead(
+        roomId: Int,
+        lastReadMessageId: Int
+    ) {
+        if (lastReadMessageId <= 0) return
+        viewModelScope.launch {
+            repo.markAsRead(
+                roomId,
+                lastReadMessageId
+            )
         }
     }
 
