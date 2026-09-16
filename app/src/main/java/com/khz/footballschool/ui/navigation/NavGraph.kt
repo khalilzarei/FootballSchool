@@ -28,7 +28,6 @@ import com.khz.footballschool.ui.classes.ScheduleManagerScreen
 import com.khz.footballschool.ui.coaches.CoachListScreen
 import com.khz.footballschool.ui.dashboard.DashboardScreen
 import com.khz.footballschool.ui.discounts.DiscountListScreen
-import com.khz.footballschool.ui.guardians.AttachPlayerToGuardianScreen
 import com.khz.footballschool.ui.guardians.GuardianDetailScreen
 import com.khz.footballschool.ui.guardians.GuardianListScreen
 import com.khz.footballschool.ui.invoices.InvoiceListScreen
@@ -299,10 +298,12 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
                     ?: 0
             AttachGuardianToPlayerScreen(
                 playerId = playerId,
-                onBack = { nav.popBackStack() },
-                onAttached = { nav.popBackStack() })
+                onBack = { nav.popBackStack() })
         }
 
+        // ═════════════════════════════════════════════
+        // Guardians (بخش رفع خطا)
+        // ═════════════════════════════════════════════
         // ═════════════════════════════════════════════
         // Guardians (بخش رفع خطا)
         // ═════════════════════════════════════════════
@@ -319,19 +320,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
             GuardianDetailScreen(
                 guardianId = guardianId,
                 onBack = { nav.popBackStack() },
-                onEdit = { /* TODO: Guardian Edit */ },
-                onAttachPlayer = { nav.navigate(Screen.AttachPlayerToGuardian.createRoute(guardianId)) })
-        }
-        composable(
-            route = Screen.AttachPlayerToGuardian.route,
-            arguments = listOf(navArgument("guardianId") { type = NavType.IntType })
-        ) { backStack ->
-            val guardianId = backStack.arguments?.getInt("guardianId")
-                    ?: 0
-            AttachPlayerToGuardianScreen(
-                guardianId = guardianId,
-                onBack = { nav.popBackStack() },
-                onAttached = { nav.popBackStack() })
+                onEdit = { /* TODO: Guardian Edit */ })
         }
 
         // ═════════════════════════════════════════════

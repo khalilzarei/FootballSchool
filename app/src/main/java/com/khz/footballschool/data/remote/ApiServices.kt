@@ -237,6 +237,21 @@ interface PlayerApi {
 
     @GET("players/{id}/balance")
     suspend fun getPlayerBalance(@Path("id") id: Int): ApiResponse<PlayerBalanceDto>
+
+    /** ویرایش سرپرستِ متصل به بازیکن (نام/موبایل/کد ملی/نسبت/دسترسی‌ها) */
+    @PUT("players/{id}/guardians/{guardianId}")
+    suspend fun updateGuardian(
+        @Path("id") id: Int,
+        @Path("guardianId") guardianId: Int,
+        @Body request: UpdateGuardianRequest
+    ): ApiResponse<JsonElement>
+
+    /** ساخت سرپرست جدید (با موبایل) + اتصال به بازیکن در یک ریکوئست */
+    @POST("players/{id}/guardians/new")
+    suspend fun attachNewGuardian(
+        @Path("id") id: Int,
+        @Body request: CreateGuardianForPlayerRequest
+    ): ApiResponse<AttachNewGuardianResponseDto>
 }
 
 // ═══════════════════════════════════════════════════════════════

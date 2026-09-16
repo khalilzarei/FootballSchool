@@ -6,10 +6,6 @@ sealed class Screen(val route: String) {
         fun createRoute(playerId: Int) = "players/$playerId/attach-guardian"
     }
 
-    object AttachPlayerToGuardian : Screen("guardians/{guardianId}/attach-player") {
-        fun createRoute(guardianId: Int) = "guardians/$guardianId/attach-player"
-    }
-
     object GuardianDetail : Screen("guardians/{guardianId}") {
         fun createRoute(guardianId: Int) = "guardians/$guardianId"
     }

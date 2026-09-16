@@ -2,6 +2,7 @@ package com.khz.footballschool.ui.players
 
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -44,7 +45,7 @@ import com.khz.footballschool.ui.theme.GoldPrimary
  *
  * دکمه چت و تماس با سرپرست اصلی بازیکن کار می‌کند
  *
- * @param onChat ارسال guardianId (سرپرست اصلی) برای چت
+ * @param onChat ارسال userId کاربرِ سرپرست اصلی برای چت (چت با target_user_id ساخته می‌شود)
  * @param onCall ارسال شماره موبایل سرپرست اصلی برای تماس
  */
 @Composable
@@ -59,11 +60,15 @@ fun PlayerRow(
 
     // ─── استخراج سرپرست اصلی از لیست GuardianPlayer ───
     val primaryGuardian: GuardianPlayer? = player.guardians.firstOrNull { it.isPrimary }
-        ?: player.guardians.firstOrNull()
+            ?: player.guardians.firstOrNull()
 
     // استخراج اطلاعات سرپرست اصلی
-    val guardianId = primaryGuardian?.guardianId
-    val guardianPhone = primaryGuardian?.guardian?.displayMobile
+    // chatUserId = شناسه کاربر سرپرست (برای ساخت اتاق چت)
+    val chatUserId = primaryGuardian?.guardian?.userId
+    // شماره تماس سرپرست اصلی: موبایل کاربر سرپرست، در نبود آن شماره اضطراری
+    // (نکته: displayMobile به‌جای نال «-» برمی‌گرداند و برای تماس نامعتبر است)
+    val guardianPhone: String? = primaryGuardian?.guardian?.user?.mobile
+            ?: primaryGuardian?.guardian?.emergencyPhone
     val guardianName = primaryGuardian?.guardianName
 
     // رنگ آواتار بر اساس جنسیت
@@ -151,34 +156,43 @@ fun PlayerRow(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // دکمه چت با سرپرست اصلی
+                // دکمه چت با سرپرست اصلی — همیشه کلیک را مصرف می‌کند
                 ActionIconButton(
                     icon = Icons.Default.Chat,
                     accentColor = Color(0xFF66BB6A),   // سبز
                     contentDescription = "پیام به سرپرست",
-                    enabled = guardianId != null,
+                    enabled = chatUserId != null,
                     onClick = {
-                        guardianId?.let { onChat(it) }
+                        if (chatUserId != null) {
+                            onChat(chatUserId)
+                        } else {
+                            Toast.makeText(context, "برای این بازیکن سرپرستی ثبت نشده است", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 )
 
-                // دکمه تماس با سرپرست اصلی
+                // دکمه تماس با سرپرست اصلی — دیالر پیش‌فرض گوشی؛ همیشه کلیک را مصرف می‌کند
                 ActionIconButton(
                     icon = Icons.Default.Phone,
                     accentColor = Color(0xFF42A5F5),   // آبی
                     contentDescription = "تماس با سرپرست",
                     enabled = !guardianPhone.isNullOrBlank(),
                     onClick = {
-                        if (!guardianPhone.isNullOrBlank()) {
+                        // فقط ارقام و + — هر کاراکتر اضافه‌ای حذف می‌شود
+                        val number = guardianPhone?.filter { it.isDigit() || it == '+' }
+                        if (!number.isNullOrBlank()) {
                             try {
+                                Toast.makeText(context, "تماس با $number", Toast.LENGTH_SHORT).show()
                                 val intent = Intent(Intent.ACTION_DIAL).apply {
-                                    data = Uri.parse("tel:$guardianPhone")
+                                    data = Uri.parse("tel:$number")
                                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                 }
                                 context.startActivity(intent)
                             } catch (e: Exception) {
-                                onCall(guardianPhone)
+                                Toast.makeText(context, "باز کردن تماس ممکن نشد: ${e.message}", Toast.LENGTH_SHORT).show()
                             }
+                        } else {
+                            Toast.makeText(context, "شماره تماس سرپرست این بازیکن ثبت نشده است", Toast.LENGTH_SHORT).show()
                         }
                     }
                 )
@@ -206,7 +220,11 @@ fun PlayerRow(
 }
 
 /**
- * دکمه دایره‌ای آیکونی با افکت شیشه‌ای سه‌بعدی
+ * دکمه دایره‌ای آیکونی با افکت شیشه‌ای سه‌بعدی.
+ *
+ * نکته‌ی مهم: دکمه «همیشه» کلیک را مصرف می‌کند (حتی در حالت غیرفعال)
+ * تا تاچ به کلیک کارت پدر سرریز نکند. enabled فقط ظاهر را کم‌رنگ می‌کند؛
+ * منطق فعال/غیرفعال داخل onClick خود دکمه هندل می‌شود.
  */
 @Composable
 private fun ActionIconButton(
@@ -215,7 +233,7 @@ private fun ActionIconButton(
     contentDescription: String,
     enabled: Boolean,
     onClick: () -> Unit,
-    size: Int = 40
+    size: Int = 44
 ) {
     Box(
         modifier = Modifier
@@ -229,10 +247,7 @@ private fun ActionIconButton(
                     )
                 )
             )
-            .then(
-                if (enabled) Modifier.clickable(onClick = onClick)
-                else Modifier
-            ),
+            .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
         Icon(

@@ -125,14 +125,16 @@ private fun PlayerDetailContent(
                 })
         },
         floatingActionButton = {
+            // اگر بازیکن سرپرست دارد → آیکون مدیریت؛ در غیر این صورت → افزودن
+            val hasGuardian = guardians.isNotEmpty()
             FloatingActionButton(
                 onClick = onAttachGuardian,
                 containerColor = GoldPrimary,
                 contentColor = Color(0xFF1A0533)
             ) {
                 Icon(
-                    Icons.Default.PersonAdd,
-                    "افزودن سرپرست"
+                    if (hasGuardian) Icons.Default.Edit else Icons.Default.PersonAdd,
+                    if (hasGuardian) "مدیریت سرپرست" else "افزودن سرپرست"
                 )
             }
         }) { padding ->

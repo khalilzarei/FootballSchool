@@ -2,12 +2,6 @@ package com.khz.footballschool.data.dto.request
 
 import com.google.gson.annotations.SerializedName
 
-data class UpdateGuardianRequest(
-    @SerializedName("address") val address: String?,
-    @SerializedName("emergency_phone") val emergencyPhone: String?,
-    @SerializedName("notes") val notes: String?
-)
-
 data class CreatePlayerRequest(
     @SerializedName("first_name") val firstName: String,
     @SerializedName("last_name") val lastName: String,

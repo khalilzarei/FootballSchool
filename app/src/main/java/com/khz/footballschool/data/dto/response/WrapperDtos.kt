@@ -251,3 +251,15 @@ data class MyMediaResponseDto(
 data class MyFinanceResponseDto(
     @SerializedName("finance") val finance: List<MyFinanceDto>? = null
 )
+
+// ═════════════════════════════════════════════
+// ساخت سرپرست جدید برای بازیکن
+// سرور: {"data":{"guardian_player":{...},"initial_password":"..."}}
+// ═════════════════════════════════════════════
+data class AttachNewGuardianResponseDto(
+    @SerializedName("initial_password") val initialPassword: String? = null,
+    /** true = سرپرستِ موجود با همین موبایل به بازیکن متصل شد (حساب جدید ساخته نشد) */
+    @SerializedName("attached_existing") val attachedExisting: Boolean = false,
+    /** رکورد رابطه سرپرست-بازیکن پس از اتصال */
+    @SerializedName("guardian_player") val guardianPlayer: GuardianPlayerDto? = null
+)

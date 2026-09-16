@@ -54,10 +54,16 @@ import com.khz.footballschool.ui.theme.PurpleDark
 @Composable
 fun GlassCard3D(
     modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(20.dp),
+    shape: Shape = RoundedCornerShape(
+        topStart = 50.dp,
+        bottomStart = 50.dp,
+        topEnd = 10.dp,
+        bottomEnd = 10.dp
+    ),
     glowColor: Color = Color.Transparent,
     content: @Composable BoxScope.() -> Unit
 ) {
+
     // ─── گرادیان اصلی سطح ───
     val surfaceBrush = remember {
         Brush.verticalGradient(
@@ -100,7 +106,7 @@ fun GlassCard3D(
     Box(
         modifier = modifier
             .padding(
-                7.dp,
+                5.dp,
             )
             // لایه ۱: سایه درونی (حس عمق)
             .background(
@@ -120,10 +126,12 @@ fun GlassCard3D(
             )
             // لایه ۴: گرد کردن گوشه‌ها
             .clip(shape),
+
         content = {
             Box(
-                modifier = modifier.padding(14.dp)
-            ) {
+                modifier = modifier.padding(10.dp),
+
+                ) {
                 content()
             }
         })

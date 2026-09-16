@@ -9,7 +9,10 @@ import com.khz.footballschool.core.network.NetworkResult
 import com.khz.footballschool.core.network.PaginatedResponse
 import com.khz.footballschool.core.util.MultipartHelper
 import com.khz.footballschool.data.dto.request.AttachGuardianToPlayerRequest
+import com.khz.footballschool.data.dto.request.CreateGuardianForPlayerRequest
+import com.khz.footballschool.data.dto.request.UpdateGuardianRequest
 import com.khz.footballschool.data.dto.request.UpdatePlayerRequest
+import com.khz.footballschool.data.dto.response.AttachNewGuardianResponseDto
 import com.khz.footballschool.data.dto.response.GuardianPlayerDto
 import com.khz.footballschool.data.dto.response.PlayerDto
 import com.khz.footballschool.data.remote.PlayerApi
@@ -367,6 +370,36 @@ class PlayerRepository(private val api: PlayerApi) {
             r.message
                     ?: "خطا در قطع ارتباط"
         )
+    } catch (e: Exception) {
+        NetworkResult.Error(ApiErrorHandler.extractMessage(e))
+    }
+
+    /**
+     * ساخت سرپرست جدید (با موبایل) + اتصال به بازیکن در یک ریکوئست.
+     * خروجی: رمز اولیه حساب سرپرست (برای اعلام به سرپرست)
+     */
+    /**
+     * ساخت سرپرست جدید (با موبایل) + اتصال به بازیکن در یک ریکوئست.
+     * اگر سرپرستی با این موبایل از قبل وجود داشته باشد، همان متصل می‌شود
+     * (attachedExisting=true و initialPassword=null).
+     */
+    suspend fun attachNewGuardian(id: Int, request: CreateGuardianForPlayerRequest): NetworkResult<AttachNewGuardianResponseDto> = try {
+        val r = api.attachNewGuardian(id, request)
+        if (r.success) NetworkResult.Success(r.data ?: AttachNewGuardianResponseDto())
+        else NetworkResult.Error(r.message ?: "خطا در ثبت سرپرست جدید")
+    } catch (e: Exception) {
+        NetworkResult.Error(ApiErrorHandler.extractMessage(e))
+    }
+
+    /** ویرایش سرپرستِ متصل به بازیکن (اطلاعات هویتی + نسبت + دسترسی‌ها) */
+    suspend fun updateGuardian(playerId: Int, guardianId: Int, request: UpdateGuardianRequest): NetworkResult<GuardianPlayer> = try {
+        val r = api.updateGuardian(playerId, guardianId, request)
+        val dto = r.data.unwrap<GuardianPlayerDto>("guardian_player", "player", "guardian")
+        if (r.success && dto != null) {
+            NetworkResult.Success(dto.toDomain())
+        } else {
+            NetworkResult.Error(r.message ?: "خطا در ویرایش سرپرست")
+        }
     } catch (e: Exception) {
         NetworkResult.Error(ApiErrorHandler.extractMessage(e))
     }

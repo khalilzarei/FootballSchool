@@ -4,22 +4,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -55,8 +50,7 @@ import kotlinx.coroutines.launch
 fun GuardianDetailScreen(
     guardianId: Int,
     onBack: () -> Unit,
-    onEdit: () -> Unit,
-    onAttachPlayer: () -> Unit
+    onEdit: () -> Unit
 ) {
     val context = LocalContext.current
     val container = (context.applicationContext as FootballSchoolApp).container
@@ -96,19 +90,8 @@ fun GuardianDetailScreen(
                         )
                     }
                 })
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAttachPlayer,
-                containerColor = GoldPrimary,
-                contentColor = Color(0xFF1A0533)
-            ) {
-                Icon(
-                    Icons.Default.PersonAdd,
-                    "افزودن بازیکن"
-                )
-            }
-        }) { padding ->
+        }
+    ) { padding ->
         if (loading) {
             Box(
                 Modifier
@@ -146,26 +129,7 @@ fun GuardianDetailScreen(
                     }
 
                     item {
-                        Row(
-                            Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            GlassSectionTitle("بازیکنان تحت سرپرستی (${players.size})")
-                            TextButton(onClick = onAttachPlayer) {
-                                Icon(
-                                    Icons.Default.PersonAdd,
-                                    null,
-                                    Modifier.size(16.dp),
-                                    tint = GoldPrimary
-                                )
-                                Spacer(Modifier.width(4.dp))
-                                Text(
-                                    "افزودن",
-                                    color = GoldPrimary
-                                )
-                            }
-                        }
+                        GlassSectionTitle("بازیکنان تحت سرپرستی (${players.size})")
                     }
 
                     if (players.isEmpty()) {
@@ -195,12 +159,17 @@ fun GuardianDetailScreen(
             confirmButton = {
                 TextButton(onClick = {
                     scope.launch {
-                        repo.detachPlayer(
-                            guardianId,
-                            target.playerId
-                        )
-                        detachTarget = null
-                        reload()
+                        when (val r = repo.detachPlayer(guardianId, target.playerId)) {
+                            is NetworkResult.Success -> {
+                                detachTarget = null
+                                reload()
+                            }
+                            is NetworkResult.Error -> {
+                                detachTarget = null
+                                error = r.message
+                            }
+                            else -> {}
+                        }
                     }
                 }) {
                     Text(
