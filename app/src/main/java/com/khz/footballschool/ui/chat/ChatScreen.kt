@@ -28,6 +28,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -114,14 +115,33 @@ fun ChatScreen(
         mutableStateOf<String?>(null)
     }
 
+    /*
+     * آواتار و نام کاربر جاری (برای پیام‌های خودی)
+     */
+    var myAvatarUrl by remember {
+        mutableStateOf<String?>(null)
+    }
+
+    var myName by remember {
+        mutableStateOf<String?>(null)
+    }
+
     val listState = rememberLazyListState()
 
     /*
-     * بارگذاری شناسه کاربر جاری
+     * بارگذاری شناسه کاربر جاری + آواتار
      */
     LaunchedEffect(Unit) {
         currentUserId = container.sessionManager.userId.first()
             ?.toIntOrNull()
+
+        container.authRepository.getCurrentUser()
+            .let { result ->
+                if (result is NetworkResult.Success) {
+                    myAvatarUrl = result.data.avatarUrl
+                    myName = result.data.fullName
+                }
+            }
     }
 
     /*
@@ -247,6 +267,19 @@ fun ChatScreen(
                 title = roomTitle,
                 onBack = onBack,
                 actions = {
+
+                    /*
+                     * نمایش وضعیت قفل گفتگو (فقط ادمین می‌تواند
+                     * قفل/باز را تغییر دهد — در لیست گفتگوها)
+                     */
+                    if (room?.isLocked == true) {
+                        Icon(
+                            imageVector = Icons.Filled.Lock,
+                            contentDescription = "قفل شده",
+                            tint = Color(0xFFFF8A80),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
 
                     /*
                      * تماس فعلاً غیرفعال است چون API جدید ChatRoom
@@ -446,7 +479,9 @@ fun ChatScreen(
 
                                 MessageBubble(
                                     message = message,
-                                    isMine = message.senderId == currentUserId
+                                    isMine = message.senderId == currentUserId,
+                                    myAvatarUrl = myAvatarUrl,
+                                    myName = myName
                                 )
                             }
                         }
@@ -535,7 +570,9 @@ private fun Boolean?.orFalse(): Boolean {
 @Composable
 private fun MessageBubble(
     message: ChatMessage,
-    isMine: Boolean
+    isMine: Boolean,
+    myAvatarUrl: String? = null,
+    myName: String? = null
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -546,10 +583,14 @@ private fun MessageBubble(
         }
     ) {
 
-        if (!isMine) {
+        if (!isMine) {/*
+             * آواتار فرستنده (از payload پیام).
+             * اگر نبود، AvatarView حرف اول نام را نشان می‌دهد.
+             */
             AvatarView(
                 name = message.senderName
                         ?: "?",
+                avatarUrl = message.senderAvatar,
                 size = 32.dp,
                 accentColor = Color(0xFF4FC3F7)
             )
@@ -639,27 +680,14 @@ private fun MessageBubble(
                 modifier = Modifier.width(6.dp)
             )
 
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .background(
-                        Brush.radialGradient(
-                            listOf(
-                                GoldPrimary,
-                                GoldPrimary.copy(alpha = 0.4f)
-                            )
-                        )
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "م",
-                    color = Color(0xFF1A0533),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+            /* آواتار کاربر جاری (حرف اول نام به‌عنوان fallback) */
+            AvatarView(
+                name = myName
+                        ?: "من",
+                avatarUrl = myAvatarUrl,
+                size = 32.dp,
+                accentColor = GoldPrimary
+            )
         }
     }
 }
@@ -712,12 +740,12 @@ private fun MessageInputBar(
                         )
                         .then(
                             if (text.isNotBlank() && !sending) {
-                                Modifier.clickable {
-                                    onSend()
-                                }
-                            } else {
-                                Modifier
-                            }),
+                            Modifier.clickable {
+                                onSend()
+                            }
+                        } else {
+                            Modifier
+                        }),
                     contentAlignment = Alignment.Center) {
 
                     if (sending) {
@@ -780,7 +808,6 @@ private fun MessageInputBar(
                         singleLine = false
                     )
                 }
-
 
             }
         }

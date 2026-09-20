@@ -24,7 +24,10 @@ fun UserDto.toDomain(): User = User(
     createdBy = createdBy,
     createdAt = createdAt,
     updatedAt = updatedAt,
-    avatarUrl = avatarUrl,
+    // ─── اولویت با URL کامل، سپس مسیر نسبی (AvatarView هر دو را پشتیبانی می‌کند) ───
+    avatarUrl = avatarUrl?.takeIf { it.isNotBlank() }
+            ?: avatarPath?.takeIf { it.isNotBlank() }
+            ?: avatar?.takeIf { it.isNotBlank() },
 )
 
 fun GuardianDto.toDomain(): Guardian = Guardian(
@@ -462,12 +465,21 @@ private fun parseBoolean(value: Any?): Boolean {
     }
 }
 
+fun ChatContactDto.toDomain(): ChatContact = ChatContact(
+    userId = userId,
+    fullName = fullName,
+    role = role,
+    avatarUrl = avatarUrl,
+    classTitle = classTitle
+)
+
 fun ChatMessageDto.toDomain(): ChatMessage {
     return ChatMessage(
         id = id,
         roomId = effectiveRoomId,
         senderId = senderId,
         sender = sender?.toDomain(),
+        senderAvatar = effectiveSenderAvatar,
         messageType = messageType,
         body = body,
         mediaId = mediaId,

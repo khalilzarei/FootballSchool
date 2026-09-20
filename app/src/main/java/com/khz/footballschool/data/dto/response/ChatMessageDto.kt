@@ -49,4 +49,9 @@ data class ChatMessageDto(
     val effectiveCreatedAt: String?
         get() = createdAt
                 ?: sentAt
+
+    val effectiveSenderAvatar: String?
+        get() = sender?.avatarUrl?.takeIf { it.isNotBlank() }
+                ?: sender?.avatar?.takeIf { it.isNotBlank() }
+                ?: sender?.avatarPath?.takeIf { it.isNotBlank() }
 }

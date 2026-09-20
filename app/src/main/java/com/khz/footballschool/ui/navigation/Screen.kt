@@ -250,6 +250,7 @@ sealed class Screen(val route: String) {
     // چت
     // ═════════════════════════════════════════════
     object ChatRoomList : Screen("chat_rooms")
+    object ChatContacts : Screen("chat_contacts")
     object CreateChatRoom : Screen("chat_rooms/create")
 
     // ═════════════════════════════════════════════

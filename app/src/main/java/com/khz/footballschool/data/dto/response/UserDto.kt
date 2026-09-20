@@ -19,4 +19,6 @@ data class UserDto(
     @SerializedName("deleted_at") val deletedAt: String? = null,
     @SerializedName("deleted_seq") val deletedSeq: Int? = 0,
     @SerializedName("avatar_url") val avatarUrl: String? = null,
+    @SerializedName("avatar_path") val avatarPath: String? = null,
+    @SerializedName("avatar") val avatar: String? = null,
 )

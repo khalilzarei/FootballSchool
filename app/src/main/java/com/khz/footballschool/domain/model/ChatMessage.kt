@@ -6,6 +6,7 @@ data class ChatMessage(
     val senderId: Int,
     val senderName: String?,
     val sender: User?,
+    val senderAvatar: String? = null,
     val messageType: String,
     val body: String?,
     val mediaId: Int?,

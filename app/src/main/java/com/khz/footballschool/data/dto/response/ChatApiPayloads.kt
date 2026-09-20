@@ -1,5 +1,7 @@
 package com.khz.footballschool.data.dto.response
 
+import com.google.gson.annotations.SerializedName
+
 data class ChatRoomsPayload(
     val rooms: List<ChatRoomDto> = emptyList()
 )
@@ -19,4 +21,8 @@ data class ChatMessagePayload(
 data class ChatReadPayload(
     val roomId: Int,
     val lastReadMessageId: Int
+)
+
+data class ChatContactsPayload(
+    val contacts: List<ChatContactDto> = emptyList()
 )

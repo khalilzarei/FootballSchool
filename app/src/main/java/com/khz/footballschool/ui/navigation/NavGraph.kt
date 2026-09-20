@@ -20,8 +20,10 @@ import com.khz.footballschool.ui.age_groups.AgeGroupListScreen
 import com.khz.footballschool.ui.attendance.AttendanceScreen
 import com.khz.footballschool.ui.auth.ChangePasswordScreen
 import com.khz.footballschool.ui.auth.LoginScreen
+import com.khz.footballschool.ui.chat.ChatContactsScreen
 import com.khz.footballschool.ui.chat.ChatRoomListScreen
 import com.khz.footballschool.ui.chat.ChatScreen
+import com.khz.footballschool.ui.chat.CreateGroupRoomDialog
 import com.khz.footballschool.ui.classes.ClassFormScreen
 import com.khz.footballschool.ui.classes.ClassListScreen
 import com.khz.footballschool.ui.classes.EnrollPlayerScreen
@@ -79,12 +81,11 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
             container.sessionManager.clearSession()
             startDestination = Screen.Login.route
         } else {
-            startDestination =
-                if (!token.isNullOrBlank()) {
-                    Screen.Dashboard.route
-                } else {
-                    Screen.Login.route
-                }
+            startDestination = if (!token.isNullOrBlank()) {
+                Screen.Dashboard.route
+            } else {
+                Screen.Login.route
+            }
         }
     }
 
@@ -94,8 +95,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
         SplashScreen(
             isLoggedIn = false,
             onNavigateToLogin = {},
-            onNavigateToDashboard = {}
-        )
+            onNavigateToDashboard = {})
         return
     }
 
@@ -123,8 +123,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
                             inclusive = true
                         }
                     }
-                }
-            )
+                })
         }
 
         composable(Screen.ChangePassword.route) {
@@ -135,8 +134,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
                             inclusive = true
                         }
                     }
-                }
-            )
+                })
         }
 
         // ═════════════════════════════════════════════
@@ -229,8 +227,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
                     nav.navigate(
                         Screen.Chat.createRoute(roomId)
                     )
-                }
-            )
+                })
         }
 
         // ═════════════════════════════════════════════
@@ -241,8 +238,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
             NewsListScreen(
                 onBack = {
                     nav.popBackStack()
-                }
-            )
+                })
         }
 
         // ═════════════════════════════════════════════
@@ -250,6 +246,11 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
         // ═════════════════════════════════════════════
 
         composable(Screen.ChatRoomList.route) {
+
+            var showCreateGroup by remember {
+                mutableStateOf(false)
+            }
+
             ChatRoomListScreen(
                 onBack = {
                     nav.popBackStack()
@@ -259,8 +260,60 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
                     nav.navigate(
                         Screen.Chat.createRoute(roomId)
                     )
-                }
-            )
+                },
+
+                onOpenContacts = {
+                    nav.navigate(Screen.ChatContacts.route)
+                },
+
+                onOpenCreateGroup = {
+                    showCreateGroup = true
+                })
+
+            if (showCreateGroup) {
+                CreateGroupRoomDialog(
+                    onDismiss = { showCreateGroup = false },
+                    onCreated = { roomId ->
+                        showCreateGroup = false
+                        nav.navigate(Screen.Chat.createRoute(roomId))
+                    })
+            }
+        }
+
+        // ═════════════════════════════════════════════
+        // Chat Contacts (شروع گفتگوی جدید — ادمین)
+        // ═════════════════════════════════════════════
+
+        composable(Screen.ChatContacts.route) {
+            ChatContactsScreen(
+                onBack = {
+                    nav.popBackStack()
+                },
+
+                onPick = { userId ->
+
+                    scope.launch {
+
+                        when (val result = container.chatRepository.createPrivateRoom(
+                            targetUserId = userId
+                        )) {
+
+                            is NetworkResult.Success -> {
+                                nav.navigate(
+                                    Screen.Chat.createRoute(
+                                        result.data.id
+                                    )
+                                )
+                            }
+
+                            is NetworkResult.Error   -> {
+                                // خطا در صفحه تماس/پروفایل مدیریت می‌شود
+                            }
+
+                            is NetworkResult.Loading -> Unit
+                        }
+                    }
+                })
         }
 
         // ═════════════════════════════════════════════
@@ -272,20 +325,16 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
             arguments = listOf(
                 navArgument("roomId") {
                     type = NavType.IntType
-                }
-            )
-        ) { backStackEntry ->
+                })) { backStackEntry ->
 
-            val roomId = backStackEntry.arguments
-                ?.getInt("roomId")
+            val roomId = backStackEntry.arguments?.getInt("roomId")
                     ?: return@composable
 
             ChatScreen(
                 roomId = roomId,
                 onBack = {
                     nav.popBackStack()
-                }
-            )
+                })
         }
 
         // ═════════════════════════════════════════════
@@ -296,8 +345,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
             AgeGroupListScreen(
                 onBack = {
                     nav.popBackStack()
-                }
-            )
+                })
         }
 
         // ═════════════════════════════════════════════
@@ -308,8 +356,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
             SeasonListScreen(
                 onBack = {
                     nav.popBackStack()
-                }
-            )
+                })
         }
 
         // ═════════════════════════════════════════════
@@ -320,8 +367,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
             CoachListScreen(
                 onBack = {
                     nav.popBackStack()
-                }
-            )
+                })
         }
 
         // ═════════════════════════════════════════════
@@ -332,8 +378,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
             DiscountListScreen(
                 onBack = {
                     nav.popBackStack()
-                }
-            )
+                })
         }
 
         // ═════════════════════════════════════════════
@@ -344,8 +389,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
             MatchListScreen(
                 onBack = {
                     nav.popBackStack()
-                }
-            )
+                })
         }
 
         // ═════════════════════════════════════════════
@@ -356,8 +400,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
             MediaListScreen(
                 onBack = {
                     nav.popBackStack()
-                }
-            )
+                })
         }
 
         // ═════════════════════════════════════════════
@@ -368,8 +411,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
             NotificationListScreen(
                 onBack = {
                     nav.popBackStack()
-                }
-            )
+                })
         }
 
         // ═════════════════════════════════════════════
@@ -388,8 +430,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
                             inclusive = true
                         }
                     }
-                }
-            )
+                })
         }
 
         // ═════════════════════════════════════════════
@@ -412,12 +453,9 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
 
                     scope.launch {
 
-                        when (
-                            val result =
-                                container.chatRepository.createPrivateRoom(
-                                    targetUserId = userId
-                                )
-                        ) {
+                        when (val result = container.chatRepository.createPrivateRoom(
+                            targetUserId = userId
+                        )) {
 
                             is NetworkResult.Success -> {
                                 nav.navigate(
@@ -427,15 +465,14 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
                                 )
                             }
 
-                            is NetworkResult.Error -> {
+                            is NetworkResult.Error   -> {
                                 // خطا توسط UI فعلی مدیریت شود
                             }
 
                             is NetworkResult.Loading -> Unit
                         }
                     }
-                }
-            )
+                })
         }
 
         // ═════════════════════════════════════════════
@@ -450,8 +487,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
                 },
                 onBack = {
                     nav.popBackStack()
-                }
-            )
+                })
         }
 
         // ═════════════════════════════════════════════
@@ -463,12 +499,9 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
             arguments = listOf(
                 navArgument("userId") {
                     type = NavType.IntType
-                }
-            )
-        ) { backStack ->
+                })) { backStack ->
 
-            val userId = backStack.arguments
-                ?.getInt("userId")
+            val userId = backStack.arguments?.getInt("userId")
                     ?: 0
 
             UserDetailScreen(
@@ -482,8 +515,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
                     nav.navigate(
                         Screen.UserEdit.createRoute(userId)
                     )
-                }
-            )
+                })
         }
 
         // ═════════════════════════════════════════════
@@ -495,12 +527,9 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
             arguments = listOf(
                 navArgument("userId") {
                     type = NavType.IntType
-                }
-            )
-        ) { backStack ->
+                })) { backStack ->
 
-            val userId = backStack.arguments
-                ?.getInt("userId")
+            val userId = backStack.arguments?.getInt("userId")
                     ?: 0
 
             UserFormScreen(
@@ -512,8 +541,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
 
                 onBack = {
                     nav.popBackStack()
-                }
-            )
+                })
         }
 
         // ═════════════════════════════════════════════
@@ -539,12 +567,9 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
 
                     scope.launch {
 
-                        when (
-                            val result =
-                                container.chatRepository.createPrivateRoom(
-                                    targetUserId = userId
-                                )
-                        ) {
+                        when (val result = container.chatRepository.createPrivateRoom(
+                            targetUserId = userId
+                        )) {
 
                             is NetworkResult.Success -> {
                                 nav.navigate(
@@ -554,15 +579,14 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
                                 )
                             }
 
-                            is NetworkResult.Error -> {
+                            is NetworkResult.Error   -> {
                                 // خطا توسط UI فعلی مدیریت شود
                             }
 
                             is NetworkResult.Loading -> Unit
                         }
                     }
-                }
-            )
+                })
         }
 
         // ═════════════════════════════════════════════
@@ -579,8 +603,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
 
                 onBack = {
                     nav.popBackStack()
-                }
-            )
+                })
         }
 
         // ═════════════════════════════════════════════
@@ -592,12 +615,9 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
             arguments = listOf(
                 navArgument("playerId") {
                     type = NavType.IntType
-                }
-            )
-        ) { backStack ->
+                })) { backStack ->
 
-            val playerId = backStack.arguments
-                ?.getInt("playerId")
+            val playerId = backStack.arguments?.getInt("playerId")
                     ?: 0
 
             PlayerDetailScreen(
@@ -625,12 +645,9 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
 
                     scope.launch {
 
-                        when (
-                            val result =
-                                container.chatRepository.createPrivateRoom(
-                                    targetUserId = userId
-                                )
-                        ) {
+                        when (val result = container.chatRepository.createPrivateRoom(
+                            targetUserId = userId
+                        )) {
 
                             is NetworkResult.Success -> {
                                 nav.navigate(
@@ -640,15 +657,14 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
                                 )
                             }
 
-                            is NetworkResult.Error -> {
+                            is NetworkResult.Error   -> {
                                 // خطا توسط UI فعلی مدیریت شود
                             }
 
                             is NetworkResult.Loading -> Unit
                         }
                     }
-                }
-            )
+                })
         }
 
         // ═════════════════════════════════════════════
@@ -660,12 +676,9 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
             arguments = listOf(
                 navArgument("playerId") {
                     type = NavType.IntType
-                }
-            )
-        ) { backStack ->
+                })) { backStack ->
 
-            val playerId = backStack.arguments
-                ?.getInt("playerId")
+            val playerId = backStack.arguments?.getInt("playerId")
                     ?: 0
 
             PlayerFormScreen(
@@ -677,8 +690,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
 
                 onBack = {
                     nav.popBackStack()
-                }
-            )
+                })
         }
 
         // ═════════════════════════════════════════════
@@ -690,12 +702,9 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
             arguments = listOf(
                 navArgument("playerId") {
                     type = NavType.IntType
-                }
-            )
-        ) { backStack ->
+                })) { backStack ->
 
-            val playerId = backStack.arguments
-                ?.getInt("playerId")
+            val playerId = backStack.arguments?.getInt("playerId")
                     ?: 0
 
             AttachGuardianToPlayerScreen(
@@ -703,8 +712,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
 
                 onBack = {
                     nav.popBackStack()
-                }
-            )
+                })
         }
 
         // ═════════════════════════════════════════════
@@ -717,8 +725,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
                     nav.navigate(
                         Screen.GuardianDetail.createRoute(id)
                     )
-                }
-            )
+                })
         }
 
         composable(
@@ -726,12 +733,9 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
             arguments = listOf(
                 navArgument("guardianId") {
                     type = NavType.IntType
-                }
-            )
-        ) { backStack ->
+                })) { backStack ->
 
-            val guardianId = backStack.arguments
-                ?.getInt("guardianId")
+            val guardianId = backStack.arguments?.getInt("guardianId")
                     ?: 0
 
             GuardianDetailScreen(
@@ -743,8 +747,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
 
                 onEdit = {
                     // TODO: Guardian Edit
-                }
-            )
+                })
         }
 
         // ═════════════════════════════════════════════
@@ -756,12 +759,9 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
             arguments = listOf(
                 navArgument("classId") {
                     type = NavType.IntType
-                }
-            )
-        ) { backStack ->
+                })) { backStack ->
 
-            val classId = backStack.arguments
-                ?.getInt("classId")
+            val classId = backStack.arguments?.getInt("classId")
                     ?: 0
 
             ScheduleManagerScreen(
@@ -769,8 +769,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
 
                 onBack = {
                     nav.popBackStack()
-                }
-            )
+                })
         }
 
         composable(
@@ -778,12 +777,9 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
             arguments = listOf(
                 navArgument("classId") {
                     type = NavType.IntType
-                }
-            )
-        ) { backStack ->
+                })) { backStack ->
 
-            val classId = backStack.arguments
-                ?.getInt("classId")
+            val classId = backStack.arguments?.getInt("classId")
                     ?: 0
 
             EnrollmentManagerScreen(
@@ -799,8 +795,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
                             classId
                         )
                     )
-                }
-            )
+                })
         }
 
         composable(
@@ -808,12 +803,9 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
             arguments = listOf(
                 navArgument("classId") {
                     type = NavType.IntType
-                }
-            )
-        ) { backStack ->
+                })) { backStack ->
 
-            val classId = backStack.arguments
-                ?.getInt("classId")
+            val classId = backStack.arguments?.getInt("classId")
                     ?: 0
 
             EnrollPlayerScreen(
@@ -825,8 +817,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
 
                 onEnrolled = {
                     nav.popBackStack()
-                }
-            )
+                })
         }
 
         // ═════════════════════════════════════════════
@@ -842,16 +833,14 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
                             classId
                         )
                     )
-                }
-            )
+                })
         }
 
         composable(Screen.MySessions.route) {
             MySessionsScreen(
                 onBack = {
                     nav.popBackStack()
-                }
-            )
+                })
         }
 
         composable(
@@ -862,16 +851,12 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
                 },
                 navArgument("classId") {
                     type = NavType.IntType
-                }
-            )
-        ) { backStack ->
+                })) { backStack ->
 
-            val sessionId = backStack.arguments
-                ?.getInt("sessionId")
+            val sessionId = backStack.arguments?.getInt("sessionId")
                     ?: 0
 
-            val classId = backStack.arguments
-                ?.getInt("classId")
+            val classId = backStack.arguments?.getInt("classId")
                     ?: 0
 
             AttendanceScreen(
@@ -880,16 +865,14 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
 
                 onBack = {
                     nav.popBackStack()
-                }
-            )
+                })
         }
 
         composable(Screen.GenerateSessions.route) {
             GenerateSessionsScreen(
                 onBack = {
                     nav.popBackStack()
-                }
-            )
+                })
         }
 
         composable(
@@ -897,12 +880,9 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
             arguments = listOf(
                 navArgument("sessionId") {
                     type = NavType.IntType
-                }
-            )
-        ) { backStack ->
+                })) { backStack ->
 
-            val sessionId = backStack.arguments
-                ?.getInt("sessionId")
+            val sessionId = backStack.arguments?.getInt("sessionId")
                     ?: 0
 
             SessionEvaluationsScreen(
@@ -910,8 +890,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
 
                 onBack = {
                     nav.popBackStack()
-                }
-            )
+                })
         }
 
         // ═════════════════════════════════════════════
@@ -934,8 +913,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
             MatchListScreen(
                 onBack = {
                     nav.popBackStack()
-                }
-            )
+                })
         }
 
         composable(
@@ -943,12 +921,9 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
             arguments = listOf(
                 navArgument("matchId") {
                     type = NavType.IntType
-                }
-            )
-        ) { backStack ->
+                })) { backStack ->
 
-            val matchId = backStack.arguments
-                ?.getInt("matchId")
+            val matchId = backStack.arguments?.getInt("matchId")
                     ?: 0
 
             MatchPlayersScreen(
@@ -956,8 +931,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
 
                 onBack = {
                     nav.popBackStack()
-                }
-            )
+                })
         }
 
         composable(
@@ -965,12 +939,9 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
             arguments = listOf(
                 navArgument("matchId") {
                     type = NavType.IntType
-                }
-            )
-        ) { backStack ->
+                })) { backStack ->
 
-            val matchId = backStack.arguments
-                ?.getInt("matchId")
+            val matchId = backStack.arguments?.getInt("matchId")
                     ?: 0
 
             SetMatchResultScreen(
@@ -982,8 +953,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
 
                 onSaved = {
                     nav.popBackStack()
-                }
-            )
+                })
         }
 
         // ═════════════════════════════════════════════
@@ -1010,8 +980,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
                     nav.navigate(
                         Screen.ClassForm.route
                     )
-                }
-            )
+                })
         }
 
         // ═════════════════════════════════════════════
@@ -1028,8 +997,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
 
                 onBack = {
                     nav.popBackStack()
-                }
-            )
+                })
         }
 
         // ═════════════════════════════════════════════
@@ -1041,12 +1009,9 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
             arguments = listOf(
                 navArgument("classId") {
                     type = NavType.IntType
-                }
-            )
-        ) { backStack ->
+                })) { backStack ->
 
-            val classId = backStack.arguments
-                ?.getInt("classId")
+            val classId = backStack.arguments?.getInt("classId")
                     ?: 0
 
             ClassFormScreen(
@@ -1070,8 +1035,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
                     nav.navigate(
                         Screen.EnrollmentManager.createRoute(id)
                     )
-                }
-            )
+                })
         }
     }
 }

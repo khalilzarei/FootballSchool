@@ -842,6 +842,12 @@ interface ChatApi {
         @Body request: CreateChatRoomRequest
     ): ApiResponse<ChatRoomResponseDto>
 
+    /** ساخت روم گروهی (فقط ادمین) */
+    @POST("chat/rooms")
+    suspend fun createGroupRoom(
+        @Body request: CreateGroupChatRoomRequest
+    ): ApiResponse<ChatRoomResponseDto>
+
     @GET("chat/rooms/{roomId}/messages")
     suspend fun getMessages(
         @Path("roomId") roomId: Int,
@@ -866,6 +872,53 @@ interface ChatApi {
         @Path("id") roomId: Int,
         @Path("messageId") messageId: Int
     ): ApiResponse<Unit>
+
+    /* ───────────────────────────────────────────────
+     * مدیریت چت — فقط ادمین
+     * ─────────────────────────────────────────────── */
+
+    /** مخاطبین قابل گفتگو (بازیکنان + مربیان فعال) */
+    @GET("chat/contacts")
+    suspend fun getContacts(): ApiResponse<ChatContactsPayload>
+
+    /** تغییر پروفایل روم (عنوان/تصویر/موضوع) */
+    @PUT("chat/rooms/{id}")
+    suspend fun updateRoom(
+        @Path("id") roomId: Int,
+        @Body request: UpdateChatRoomRequest
+    ): ApiResponse<ChatRoomResponseDto>
+
+    /** افزودن عضو */
+    @POST("chat/rooms/{id}/members")
+    suspend fun addMembers(
+        @Path("id") roomId: Int,
+        @Body request: AddRoomMembersRequest
+    ): ApiResponse<ChatRoomResponseDto>
+
+    /** حذف عضو */
+    @DELETE("chat/rooms/{id}/members/{userId}")
+    suspend fun removeMember(
+        @Path("id") roomId: Int,
+        @Path("userId") userId: Int
+    ): ApiResponse<ChatRoomResponseDto>
+
+    /** حذف (غیرفعال‌سازی) روم */
+    @DELETE("chat/rooms/{id}")
+    suspend fun deleteRoom(
+        @Path("id") roomId: Int
+    ): ApiResponse<JsonElement>
+
+    /** قفل گفتگو */
+    @POST("chat/rooms/{id}/lock")
+    suspend fun lockRoom(
+        @Path("id") roomId: Int
+    ): ApiResponse<ChatRoomResponseDto>
+
+    /** باز کردن قفل گفتگو */
+    @POST("chat/rooms/{id}/unlock")
+    suspend fun unlockRoom(
+        @Path("id") roomId: Int
+    ): ApiResponse<ChatRoomResponseDto>
 }
 
 // ═══════════════════════════════════════════════════════════════
