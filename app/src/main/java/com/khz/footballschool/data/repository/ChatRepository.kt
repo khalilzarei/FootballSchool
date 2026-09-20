@@ -11,61 +11,33 @@ import com.khz.footballschool.domain.mapper.toDomain
 import com.khz.footballschool.domain.model.ChatMessage
 import com.khz.footballschool.domain.model.ChatRoom
 
-class ChatRepository(private val api: ChatApi) {
+class ChatRepository(
+    private val api: ChatApi
+) {
 
     companion object {
         private const val TAG = "ChatRepository"
-
-        // انواع اتاق چت مطابق سرور (ChatController::createRoom)
-        const val ROOM_TYPE_GUARDIAN_ADMIN = "guardian_admin"
-        const val ROOM_TYPE_COACH_ADMIN = "coach_admin"
-        const val ROOM_TYPE_GUARDIAN_COACH = "guardian_coach"
-
-        /**
-         * نوع اتاق مجاز را بر اساس نقش دو کاربر تعیین می‌کند؛
-         * سرور فقط ترکیب‌های admin↔guardian، admin↔coach و guardian↔coach را می‌پذیرد
-         */
-        fun roomTypeForRoles(
-            currentRole: String?,
-            targetRole: String?
-        ): String? {
-            if (currentRole == null || targetRole == null) return null
-            return when (setOf(
-                currentRole,
-                targetRole
-            )) {
-                setOf(
-                    "admin",
-                    "guardian"
-                ) -> ROOM_TYPE_GUARDIAN_ADMIN
-
-                setOf(
-                    "admin",
-                    "coach"
-                ) -> ROOM_TYPE_COACH_ADMIN
-
-                setOf(
-                    "guardian",
-                    "coach"
-                ) -> ROOM_TYPE_GUARDIAN_COACH
-
-                else -> null
-            }
-        }
     }
 
     // ═════════════════════════════════════════════
     // Rooms
     // ═════════════════════════════════════════════
+
     suspend fun getRooms(): NetworkResult<List<ChatRoom>> = try {
-        val r = api.getRooms()
-        if (r.success && r.data != null) {
+        Log.d(
+            TAG,
+            "getRooms"
+        )
+
+        val response = api.getRooms()
+
+        if (response.success && response.data != null) {
             NetworkResult.Success(
-                r.data.rooms.orEmpty()
+                response.data.rooms.orEmpty()
                     .map { it.toDomain() })
         } else {
             NetworkResult.Error(
-                r.message
+                response.message
                         ?: "خطا در دریافت اتاق‌ها"
             )
         }
@@ -75,61 +47,105 @@ class ChatRepository(private val api: ChatApi) {
             "getRooms error: ${e.message}",
             e
         )
-        NetworkResult.Error(ApiErrorHandler.extractMessage(e))
+
+        NetworkResult.Error(
+            ApiErrorHandler.extractMessage(e)
+        )
     }
 
-    suspend fun getRoom(roomId: Int): NetworkResult<ChatRoom> = try {
-        val r = api.getRoom(roomId)
-        if (r.success && r.data?.room != null) {
-            NetworkResult.Success(r.data.room.toDomain())
+    suspend fun getRoom(
+        roomId: Int
+    ): NetworkResult<ChatRoom> = try {
+        Log.d(
+            TAG,
+            "getRoom: roomId=$roomId"
+        )
+
+        val response = api.getRoom(roomId)
+
+        if (response.success && response.data?.room != null) {
+            NetworkResult.Success(
+                response.data.room.toDomain()
+            )
         } else {
             NetworkResult.Error(
-                r.message
+                response.message
                         ?: "خطا در دریافت اتاق"
             )
         }
     } catch (e: Exception) {
-        NetworkResult.Error(ApiErrorHandler.extractMessage(e))
+        Log.e(
+            TAG,
+            "getRoom error: ${e.message}",
+            e
+        )
+
+        NetworkResult.Error(
+            ApiErrorHandler.extractMessage(e)
+        )
     }
 
-    // ═════════════════════════════════════════════
-    // Create Room — مطابق قرارداد سرور
-    // (سرور endpoint جستجوی اتاق با userId ندارد؛ اما خود createRoom
-    //  با unique_key اتاق موجود را برمی‌گرداند، پس create همیشه
-    //  «get or create» است و idempotent می‌باشد)
-    // ═════════════════════════════════════════════
-
     /**
-     * ایجاد (یا دریافت) اتاق چت بین کاربر جاری و کاربر مقابل.
-     * نوع اتاق باید یکی از سه نوع مجاز سرور باشد (roomTypeForRoles).
+     * ایجاد یا دریافت اتاق خصوصی.
+     *
+     * کاربر جاری توسط Token در سرور شناسایی می‌شود.
      */
-    suspend fun createRoom(
-        roomType: String,
-        targetUserId: Int,
-        playerId: Int? = null,
-        classId: Int? = null,
-        subject: String? = null
+    suspend fun createPrivateRoom(
+        targetUserId: Int
     ): NetworkResult<ChatRoom> = try {
         Log.d(
             TAG,
-            "createRoom: type=$roomType, targetUserId=$targetUserId, playerId=$playerId, classId=$classId"
+            "createPrivateRoom: targetUserId=$targetUserId"
         )
 
         val request = CreateChatRoomRequest(
-            roomType = roomType,
-            targetUserId = targetUserId,
-            playerId = playerId,
-            classId = classId,
-            subject = subject,
-            participantIds = arrayListOf(),
+            targetUserId = targetUserId
         )
-        val r = api.createRoom(request)
 
-        if (r.success && r.data?.room != null) {
-            NetworkResult.Success(r.data.room.toDomain())
+        val response = api.createRoom(request)
+
+        if (response.success && response.data?.room != null) {
+            NetworkResult.Success(
+                response.data.room.toDomain()
+            )
         } else {
             NetworkResult.Error(
-                r.message
+                response.message
+                        ?: "خطا در ایجاد اتاق خصوصی"
+            )
+        }
+    } catch (e: Exception) {
+        Log.e(
+            TAG,
+            "createPrivateRoom error: ${e.message}",
+            e
+        )
+
+        NetworkResult.Error(
+            ApiErrorHandler.extractMessage(e)
+        )
+    }
+
+    /**
+     * ایجاد اتاق با تمام پارامترهای موردنیاز سرور.
+     */
+    suspend fun createRoom(
+        request: CreateChatRoomRequest
+    ): NetworkResult<ChatRoom> = try {
+        Log.d(
+            TAG,
+            "createRoom: targetUserId=${request.targetUserId}"
+        )
+
+        val response = api.createRoom(request)
+
+        if (response.success && response.data?.room != null) {
+            NetworkResult.Success(
+                response.data.room.toDomain()
+            )
+        } else {
+            NetworkResult.Error(
+                response.message
                         ?: "خطا در ایجاد اتاق"
             )
         }
@@ -139,52 +155,16 @@ class ChatRepository(private val api: ChatApi) {
             "createRoom error: ${e.message}",
             e
         )
-        NetworkResult.Error(ApiErrorHandler.extractMessage(e))
+
+        NetworkResult.Error(
+            ApiErrorHandler.extractMessage(e)
+        )
     }
-
-    /**
-     * ایجاد اتاق خصوصی با کاربر مشخص‌شده؛
-     * نوع اتاق را بر اساس نقش دو طرف تعیین کنید (roomTypeForRoles)
-     */
-    suspend fun createPrivateRoom(
-        targetUserId: Int,
-        roomType: String,
-        subject: String? = null
-    ): NetworkResult<ChatRoom> = createRoom(
-        roomType = roomType,
-        targetUserId = targetUserId,
-        subject = subject
-    )
-
-    /**
-     * اتاق گفتگو درباره یک بازیکن خاص (بین سرپرست و مربی)
-     */
-    suspend fun createPlayerRoom(
-        targetUserId: Int,
-        playerId: Int,
-        subject: String? = null
-    ): NetworkResult<ChatRoom> = createRoom(
-        roomType = ROOM_TYPE_GUARDIAN_COACH,
-        targetUserId = targetUserId,
-        playerId = playerId,
-        subject = subject
-    )
-
-    /**
-     * دریافت یا ایجاد اتاق خصوصی با کاربر مشخص‌شده.
-     * (سرور اتاق موجود را با unique_key برمی‌گرداند؛ فراخوانی create کافی است)
-     */
-    suspend fun getOrCreatePrivateRoomWithUser(
-        userId: Int,
-        roomType: String
-    ): NetworkResult<ChatRoom> = createPrivateRoom(
-        targetUserId = userId,
-        roomType = roomType
-    )
 
     // ═════════════════════════════════════════════
     // Messages
     // ═════════════════════════════════════════════
+
     suspend fun getMessages(
         roomId: Int,
         limit: Int = 50,
@@ -192,21 +172,22 @@ class ChatRepository(private val api: ChatApi) {
     ): NetworkResult<List<ChatMessage>> = try {
         Log.d(
             TAG,
-            "getMessages: roomId=$roomId, limit=$limit"
+            "getMessages: roomId=$roomId, limit=$limit, before=$before"
         )
 
-        val r = api.getMessages(
-            roomId,
-            limit,
-            before
+        val response = api.getMessages(
+            roomId = roomId,
+            limit = limit,
+            before = before
         )
-        if (r.success && r.data != null) {
+
+        if (response.success && response.data != null) {
             NetworkResult.Success(
-                r.data.messages.orEmpty()
+                response.data.messages.orEmpty()
                     .map { it.toDomain() })
         } else {
             NetworkResult.Error(
-                r.message
+                response.message
                         ?: "خطا در دریافت پیام‌ها"
             )
         }
@@ -216,33 +197,47 @@ class ChatRepository(private val api: ChatApi) {
             "getMessages error: ${e.message}",
             e
         )
-        NetworkResult.Error(ApiErrorHandler.extractMessage(e))
+
+        NetworkResult.Error(
+            ApiErrorHandler.extractMessage(e)
+        )
     }
 
     suspend fun sendMessage(
         roomId: Int,
         body: String
     ): NetworkResult<ChatMessage> = try {
+        val message = body.trim()
+
+        if (message.isEmpty()) {
+            return NetworkResult.Error(
+                "متن پیام نمی‌تواند خالی باشد"
+            )
+        }
+
         Log.d(
             TAG,
-            "sendMessage: roomId=$roomId, body=$body"
+            "sendMessage: roomId=$roomId"
         )
 
         val request = SendChatMessageRequest(
-            body = body,
+            body = message,
             messageType = "text",
             mediaId = null
         )
-        val r = api.sendMessage(
-            roomId,
-            request
+
+        val response = api.sendMessage(
+            roomId = roomId,
+            request = request
         )
 
-        if (r.success && r.data?.message != null) {
-            NetworkResult.Success(r.data.message.toDomain())
+        if (response.success && response.data?.message != null) {
+            NetworkResult.Success(
+                response.data.message.toDomain()
+            )
         } else {
             NetworkResult.Error(
-                r.message
+                response.message
                         ?: "خطا در ارسال پیام"
             )
         }
@@ -252,7 +247,10 @@ class ChatRepository(private val api: ChatApi) {
             "sendMessage error: ${e.message}",
             e
         )
-        NetworkResult.Error(ApiErrorHandler.extractMessage(e))
+
+        NetworkResult.Error(
+            ApiErrorHandler.extractMessage(e)
+        )
     }
 
     suspend fun deleteMessage(
@@ -264,15 +262,16 @@ class ChatRepository(private val api: ChatApi) {
             "deleteMessage: roomId=$roomId, messageId=$messageId"
         )
 
-        val r = api.deleteMessage(
-            roomId,
-            messageId
+        val response = api.deleteMessage(
+            roomId = roomId,
+            messageId = messageId
         )
-        if (r.success) {
+
+        if (response.success) {
             NetworkResult.Success(Unit)
         } else {
             NetworkResult.Error(
-                r.message
+                response.message
                         ?: "خطا در حذف پیام"
             )
         }
@@ -282,13 +281,12 @@ class ChatRepository(private val api: ChatApi) {
             "deleteMessage error: ${e.message}",
             e
         )
-        NetworkResult.Error(ApiErrorHandler.extractMessage(e))
+
+        NetworkResult.Error(
+            ApiErrorHandler.extractMessage(e)
+        )
     }
 
-    /**
-     * علامت‌گذاری پیام‌های اتاق به‌عنوان خوانده‌شده (تا آخرین پیام مشخص‌شده)
-     * شمارنده پیام‌های خوانده‌نشده کاربر در این اتاق صفر می‌شود
-     */
     suspend fun markAsRead(
         roomId: Int,
         lastReadMessageId: Int
@@ -298,15 +296,20 @@ class ChatRepository(private val api: ChatApi) {
             "markAsRead: roomId=$roomId, lastReadMessageId=$lastReadMessageId"
         )
 
-        val r = api.markAsRead(
-            roomId,
-            MarkChatReadRequest(lastReadMessageId)
+        val request = MarkChatReadRequest(
+            lastReadMessageId = lastReadMessageId
         )
-        if (r.success) {
+
+        val response = api.markAsRead(
+            roomId = roomId,
+            request = request
+        )
+
+        if (response.success) {
             NetworkResult.Success(Unit)
         } else {
             NetworkResult.Error(
-                r.message
+                response.message
                         ?: "خطا در ثبت خوانده‌شدن پیام‌ها"
             )
         }
@@ -316,6 +319,9 @@ class ChatRepository(private val api: ChatApi) {
             "markAsRead error: ${e.message}",
             e
         )
-        NetworkResult.Error(ApiErrorHandler.extractMessage(e))
+
+        NetworkResult.Error(
+            ApiErrorHandler.extractMessage(e)
+        )
     }
 }
