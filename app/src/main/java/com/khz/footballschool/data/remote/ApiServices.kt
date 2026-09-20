@@ -829,30 +829,22 @@ interface SettingApi {
 
 interface ChatApi {
 
-    // ═════════════════════════════════════════════
-    // Chat Rooms
-    // پاسخ سرور: data = {"rooms": [...]} یا {"room": {...}}
-    // ═════════════════════════════════════════════
     @GET("chat/rooms")
     suspend fun getRooms(): ApiResponse<ChatRoomsResponseDto>
 
     @GET("chat/rooms/{id}")
-    suspend fun getRoom(@Path("id") roomId: Int): ApiResponse<ChatRoomResponseDto>
+    suspend fun getRoom(
+        @Path("id") roomId: Int
+    ): ApiResponse<ChatRoomResponseDto>
 
-    /**
-     * ایجاد (یا دریافت) اتاق چت بین کاربر فعلی و کاربر دیگر.
-     * سرور با unique_key اتاق موجود را برمی‌گرداند (idempotent).
-     */
     @POST("chat/rooms")
-    suspend fun createRoom(@Body request: CreateChatRoomRequest): ApiResponse<ChatRoomResponseDto>
+    suspend fun createRoom(
+        @Body request: CreateChatRoomRequest
+    ): ApiResponse<ChatRoomResponseDto>
 
-    // ═════════════════════════════════════════════
-    // Messages
-    // پاسخ سرور: data = {"messages": [...]} یا {"message": {...}}
-    // ═════════════════════════════════════════════
-    @GET("chat/rooms/{id}/messages")
+    @GET("chat/rooms/{roomId}/messages")
     suspend fun getMessages(
-        @Path("id") roomId: Int,
+        @Path("roomId") roomId: Int,
         @Query("limit") limit: Int = 50,
         @Query("before") before: Int? = null
     ): ApiResponse<ChatMessagesResponseDto>
@@ -863,11 +855,6 @@ interface ChatApi {
         @Body request: SendChatMessageRequest
     ): ApiResponse<ChatMessageResponseDto>
 
-    /**
-     * علامت‌گذاری پیام‌های اتاق به‌عنوان خوانده‌شده
-     * بدنه: { "last_read_message_id": <شناسه آخرین پیام> }
-     * پاسخ سرور: data = {"room_id":1,"last_read_message_id":42}
-     */
     @POST("chat/rooms/{id}/read")
     suspend fun markAsRead(
         @Path("id") roomId: Int,

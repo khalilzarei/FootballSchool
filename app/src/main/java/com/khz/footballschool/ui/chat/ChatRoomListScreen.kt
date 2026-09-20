@@ -1,143 +1,191 @@
 package com.khz.footballschool.ui.chat
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.khz.footballschool.core.util.appViewModel
-import com.khz.footballschool.ui.components.GlassTopBar
-import com.khz.footballschool.ui.components.InfoCard
+import com.khz.footballschool.FootballSchoolApp
+import com.khz.footballschool.core.network.NetworkResult
+import com.khz.footballschool.domain.model.ChatRoom
+import com.khz.footballschool.ui.components.AvatarView
+import com.khz.footballschool.ui.components.GenericListScreen
+import com.khz.footballschool.ui.components.GlassCard3D
+import com.khz.footballschool.ui.components.ListState
 import com.khz.footballschool.ui.theme.GoldPrimary
+import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatRoomListScreen(
     onBack: () -> Unit,
-    onRoomClick: (Int) -> Unit
+    onOpenChat: (Int) -> Unit
 ) {
-    val viewModel: ChatRoomListViewModel = appViewModel()
-    val state by viewModel.state.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val container = (context.applicationContext as FootballSchoolApp).container
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            GlassTopBar(
-                title = "گفتگوها",
-                onBack = onBack
-            )
-        }
-    ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            when {
-                state.loading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(
-                            Alignment.Center
-                        ),
-                        color = GoldPrimary
-                    )
+    val chatRepo = container.chatRepository
+    val scope = rememberCoroutineScope()
+
+    var state by remember {
+        mutableStateOf<ListState<ChatRoom>>(ListState.Loading)
+    }
+
+    fun reload() {
+        state = ListState.Loading
+
+        scope.launch {
+            state = when (val result = chatRepo.getRooms()) {
+                is NetworkResult.Success -> {
+                    ListState.Success(result.data)
                 }
 
-                state.error != null &&
-                        state.rooms.isEmpty() -> {
-                    Column(
-                        modifier = Modifier.align(
-                            Alignment.Center
-                        ),
-                        horizontalAlignment =
-                            Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = state.error
-                                    ?: "خطا در دریافت گفتگوها",
-                            color = Color.White
-                        )
-
-                        TextButton(
-                            onClick = viewModel::refresh
-                        ) {
-                            Text("تلاش مجدد")
-                        }
-                    }
+                is NetworkResult.Error   -> {
+                    ListState.Error(result.message)
                 }
 
-                state.rooms.isEmpty() -> {
-                    Text(
-                        text = "هنوز گفتگویی وجود ندارد",
-                        modifier = Modifier.align(
-                            Alignment.Center
-                        ),
-                        color = Color.White.copy(
-                            alpha = 0.7f
-                        )
-                    )
-                }
-
-                else -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement =
-                            Arrangement.spacedBy(10.dp)
-                    ) {
-                        items(
-                            items = state.rooms,
-                            key = { room -> room.id }
-                        ) { room ->
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        onRoomClick(room.id)
-                                    }
-                            ) {
-                                InfoCard(
-                                    title = room.subject
-                                            ?: room.roomType.toChatTitle(),
-                                    subtitle = room.lastMessage
-                                        ?.body
-                                            ?: "هنوز پیامی ارسال نشده",
-                                    trailing = room.unreadCount
-                                        .takeIf { it > 0 }
-                                        ?.let { "$it جدید" }
-                                        .orEmpty()
-                                )
-                            }
-                        }
-                    }
+                is NetworkResult.Loading -> {
+                    ListState.Loading
                 }
             }
         }
     }
+
+    LaunchedEffect(Unit) {
+        reload()
+    }
+
+    GenericListScreen(
+        title = "گفتگوها",
+        state = state,
+        onRefresh = { reload() },
+        onBack = onBack
+    ) { room ->
+
+        ChatRoomItem(
+            room = room,
+            onClick = {
+                // در مدل جدید، ChatScreen مستقیماً با roomId
+                // اتاق موجود را باز می‌کند.
+                onOpenChat(room.id)
+            })
+    }
 }
 
-private fun String.toChatTitle(): String {
-    return when (this) {
-        "guardian_admin" -> "گفتگو با مدیریت"
-        "coach_admin" -> "گفتگو با مدیریت"
-        "guardian_coach" -> "گفتگو با مربی"
-        else -> "گفتگو"
+@Composable
+private fun ChatRoomItem(
+    room: ChatRoom,
+    onClick: () -> Unit
+) {
+    val title = room.title.takeIf { it.isNotBlank() }
+            ?: "گفتگو"
+
+    val avatarUrl = room.image?.takeIf { it.isNotBlank() }
+
+    GlassCard3D(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            AvatarView(
+                name = title,
+                avatarUrl = avatarUrl,
+                size = 48.dp,
+                accentColor = GoldPrimary
+            )
+
+            Spacer(
+                modifier = Modifier.width(12.dp)
+            )
+
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = androidx.compose.ui.graphics.Color.White,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    if (room.isGroup) {
+                        Spacer(
+                            modifier = Modifier.width(6.dp)
+                        )
+
+                        Text(
+                            text = "گروه",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = GoldPrimary
+                        )
+                    }
+                }
+
+                Text(text = room.lastMessage?.body?.takeIf { it.isNotBlank() }
+                        ?: "بدون پیام",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.65f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 2.dp))
+            }
+
+            if (room.unreadCount > 0) {
+                Spacer(
+                    modifier = Modifier.width(8.dp)
+                )
+
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .background(
+                            color = androidx.compose.ui.graphics.Color(0xFFE53935),
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = if (room.unreadCount > 99) {
+                            "99+"
+                        } else {
+                            room.unreadCount.toString()
+                        },
+                        style = MaterialTheme.typography.labelSmall,
+                        color = androidx.compose.ui.graphics.Color.White
+                    )
+                }
+            }
+        }
     }
 }

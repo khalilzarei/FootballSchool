@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Badge
@@ -72,7 +73,8 @@ fun PlayerDetailScreen(
     playerId: Int,
     onBack: () -> Unit,
     onEdit: () -> Unit,
-    onAttachGuardian: () -> Unit
+    onAttachGuardian: () -> Unit,
+    onChat: (Int) -> Unit
 ) {
     val vm: PlayerDetailViewModel = appViewModel()
 
@@ -82,7 +84,8 @@ fun PlayerDetailScreen(
         vm = vm,
         onBack = onBack,
         onEdit = onEdit,
-        onAttachGuardian = onAttachGuardian
+        onAttachGuardian = onAttachGuardian,
+        onChat = onChat
     )
 }
 
@@ -92,7 +95,8 @@ private fun PlayerDetailContent(
     vm: PlayerDetailViewModel,
     onBack: () -> Unit,
     onEdit: () -> Unit,
-    onAttachGuardian: () -> Unit
+    onAttachGuardian: () -> Unit,
+    onChat: (Int) -> Unit
 ) {
     val player by vm.player.collectAsState()
     val guardians by vm.guardians.collectAsState()
@@ -426,6 +430,7 @@ private fun PlayerDetailContent(
                     items(guardians) { g ->
                         GuardianRow(
                             guardianPlayer = g,
+                            onChat = onChat,
                             onCall = { phone ->
                                 try {
                                     val intent = Intent(Intent.ACTION_DIAL).apply {
@@ -712,6 +717,7 @@ private fun NoteItem(
 @Composable
 private fun GuardianRow(
     guardianPlayer: GuardianPlayer,
+    onChat: (Int) -> Unit,
     onCall: (String) -> Unit
 ) {
     val phone = guardianPlayer.guardian?.displayMobile
@@ -790,11 +796,15 @@ private fun GuardianRow(
                 verticalArrangement = Arrangement.spacedBy(6.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // چت درون‌برنامه‌ای با کاربرِ سرپرست
                 GuardianActionButton(
                     icon = Icons.Default.Chat,
                     accentColor = Color(0xFF66BB6A),
-                    enabled = guardianPlayer.guardianId != 0,
-                    onClick = { /* TODO: chat */ })
+                    enabled = (guardianPlayer.guardian?.userId ?: 0) != 0,
+                    onClick = {
+                        val uid = guardianPlayer.guardian?.userId
+                        if (uid != null && uid != 0) onChat(uid)
+                    })
 
                 GuardianActionButton(
                     icon = Icons.Default.Phone,

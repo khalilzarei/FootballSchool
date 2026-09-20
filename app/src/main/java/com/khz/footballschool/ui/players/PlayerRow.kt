@@ -2,6 +2,7 @@ package com.khz.footballschool.ui.players
 
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -45,7 +46,7 @@ import com.khz.footballschool.ui.theme.GoldPrimary
  *
  * دکمه چت و تماس با سرپرست اصلی بازیکن کار می‌کند
  *
- * @param onChat ارسال userId کاربرِ سرپرست اصلی برای چت (چت با target_user_id ساخته می‌شود)
+ * @param onChat ارسال (userId کاربرِ سرپرست اصلی، شناسه بازیکن) برای چت — player_id در اتاق ثبت می‌شود
  * @param onCall ارسال شماره موبایل سرپرست اصلی برای تماس
  */
 @Composable
@@ -64,7 +65,7 @@ fun PlayerRow(
 
     // استخراج اطلاعات سرپرست اصلی
     // chatUserId = شناسه کاربر سرپرست (برای ساخت اتاق چت)
-    val chatUserId = primaryGuardian?.guardian?.userId
+    val chatUserId = player.userId.takeIf { it!! > 0 }
     // شماره تماس سرپرست اصلی: موبایل کاربر سرپرست، در نبود آن شماره اضطراری
     // (نکته: displayMobile به‌جای نال «-» برمی‌گرداند و برای تماس نامعتبر است)
     val guardianPhone: String? = primaryGuardian?.guardian?.user?.mobile
@@ -92,7 +93,10 @@ fun PlayerRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp, horizontal = 4.dp),
+                .padding(
+                    vertical = 8.dp,
+                    horizontal = 4.dp
+                ),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // ─── آواتار بازیکن ───
@@ -159,17 +163,25 @@ fun PlayerRow(
                 // دکمه چت با سرپرست اصلی — همیشه کلیک را مصرف می‌کند
                 ActionIconButton(
                     icon = Icons.Default.Chat,
-                    accentColor = Color(0xFF66BB6A),   // سبز
-                    contentDescription = "پیام به سرپرست",
+                    accentColor = Color(0xFF66BB6A),
+                    contentDescription = "پیام",
                     enabled = chatUserId != null,
                     onClick = {
+                        Log.d(
+                            "TAG",
+                            "PlayerRow: $chatUserId"
+                        )
                         if (chatUserId != null) {
                             onChat(chatUserId)
                         } else {
-                            Toast.makeText(context, "برای این بازیکن سرپرستی ثبت نشده است", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                context,
+                                "برای این کاربر شناسه کاربری معتبر ثبت نشده است",
+                                Toast.LENGTH_SHORT
+                            )
+                                .show()
                         }
-                    }
-                )
+                    })
 
                 // دکمه تماس با سرپرست اصلی — دیالر پیش‌فرض گوشی؛ همیشه کلیک را مصرف می‌کند
                 ActionIconButton(
@@ -182,20 +194,34 @@ fun PlayerRow(
                         val number = guardianPhone?.filter { it.isDigit() || it == '+' }
                         if (!number.isNullOrBlank()) {
                             try {
-                                Toast.makeText(context, "تماس با $number", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    context,
+                                    "تماس با $number",
+                                    Toast.LENGTH_SHORT
+                                )
+                                    .show()
                                 val intent = Intent(Intent.ACTION_DIAL).apply {
                                     data = Uri.parse("tel:$number")
                                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                 }
                                 context.startActivity(intent)
                             } catch (e: Exception) {
-                                Toast.makeText(context, "باز کردن تماس ممکن نشد: ${e.message}", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    context,
+                                    "باز کردن تماس ممکن نشد: ${e.message}",
+                                    Toast.LENGTH_SHORT
+                                )
+                                    .show()
                             }
                         } else {
-                            Toast.makeText(context, "شماره تماس سرپرست این بازیکن ثبت نشده است", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                context,
+                                "شماره تماس سرپرست این بازیکن ثبت نشده است",
+                                Toast.LENGTH_SHORT
+                            )
+                                .show()
                         }
-                    }
-                )
+                    })
             }
 
             Spacer(Modifier.width(8.dp))

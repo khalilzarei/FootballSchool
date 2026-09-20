@@ -4,6 +4,7 @@ import com.google.gson.annotations.SerializedName
 
 data class PlayerDto(
     @SerializedName("id") val id: Int = 0,
+    @SerializedName("user_id") val userId: Int? = null,
     @SerializedName("first_name") val firstName: String = "",
     @SerializedName("last_name") val lastName: String = "",
     @SerializedName("full_name") val fullName: String? = null,       // nullable

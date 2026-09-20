@@ -17,13 +17,13 @@ class ChatRepository(private val api: ChatApi) {
         private const val TAG = "ChatRepository"
 
         // انواع اتاق چت مطابق سرور (ChatController::createRoom)
-        const val ROOM_TYPE_PLAYER_ADMIN = "player_admin"
+        const val ROOM_TYPE_GUARDIAN_ADMIN = "guardian_admin"
         const val ROOM_TYPE_COACH_ADMIN = "coach_admin"
-        const val ROOM_TYPE_PLAYER_COACH = "player_coach"
+        const val ROOM_TYPE_GUARDIAN_COACH = "guardian_coach"
 
         /**
          * نوع اتاق مجاز را بر اساس نقش دو کاربر تعیین می‌کند؛
-         * سرور فقط ترکیب‌های admin↔player، admin↔coach و player↔coach را می‌پذیرد
+         * سرور فقط ترکیب‌های admin↔guardian، admin↔coach و guardian↔coach را می‌پذیرد
          */
         fun roomTypeForRoles(
             currentRole: String?,
@@ -36,8 +36,8 @@ class ChatRepository(private val api: ChatApi) {
             )) {
                 setOf(
                     "admin",
-                    "player"
-                ) -> ROOM_TYPE_PLAYER_ADMIN
+                    "guardian"
+                ) -> ROOM_TYPE_GUARDIAN_ADMIN
 
                 setOf(
                     "admin",
@@ -45,9 +45,9 @@ class ChatRepository(private val api: ChatApi) {
                 ) -> ROOM_TYPE_COACH_ADMIN
 
                 setOf(
-                    "player",
+                    "guardian",
                     "coach"
-                ) -> ROOM_TYPE_PLAYER_COACH
+                ) -> ROOM_TYPE_GUARDIAN_COACH
 
                 else -> null
             }
@@ -164,7 +164,7 @@ class ChatRepository(private val api: ChatApi) {
         playerId: Int,
         subject: String? = null
     ): NetworkResult<ChatRoom> = createRoom(
-        roomType = ROOM_TYPE_PLAYER_COACH,
+        roomType = ROOM_TYPE_GUARDIAN_COACH,
         targetUserId = targetUserId,
         playerId = playerId,
         subject = subject

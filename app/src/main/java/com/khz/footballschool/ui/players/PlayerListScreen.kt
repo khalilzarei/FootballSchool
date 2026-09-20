@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -42,13 +41,16 @@ import com.khz.footballschool.ui.theme.GoldPrimary
 fun PlayerListScreen(
     onPlayerClick: (Int) -> Unit,
     onAddPlayer: () -> Unit,
+
+    // فقط userId سرپرست برای ساخت/پیدا کردن اتاق خصوصی
     onChat: (Int) -> Unit = {}
 ) {
     val viewModel: PlayerListViewModel = appViewModel()
     val state by viewModel.state.collectAsState()
 
-    // ─── فقط جستجو ───
-    var query by remember { mutableStateOf("") }
+    var query by remember {
+        mutableStateOf("")
+    }
 
     LaunchedEffect(Unit) {
         viewModel.load()
@@ -56,19 +58,26 @@ fun PlayerListScreen(
 
     Scaffold(
         containerColor = Color.Transparent,
+
         topBar = {
             GlassTopBar(
                 title = "بازیکنان",
+
                 actions = {
-                    IconButton(onClick = onAddPlayer) {
-                        Icon(Icons.Default.PersonAdd, "افزودن بازیکن", tint = GoldPrimary)
+                    IconButton(
+                        onClick = onAddPlayer
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PersonAdd,
+                            contentDescription = "افزودن بازیکن",
+                            tint = GoldPrimary
+                        )
                     }
-                }
-            )
-        }
-    ) { padding ->
+                })
+        }) { padding ->
+
         Column(
-            Modifier
+            modifier = Modifier
                 .padding(padding)
                 .padding(16.dp)
                 .fillMaxSize()
@@ -77,100 +86,177 @@ fun PlayerListScreen(
             // ═════════════════════════════════════════
             // جستجو
             // ═════════════════════════════════════════
+
             GlassSearchField(
                 value = query,
-                onValueChange = { query = it },
+                onValueChange = {
+                    query = it
+                },
                 label = "جستجوی بازیکن"
             )
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(
+                modifier = Modifier.height(16.dp)
+            )
 
             // ═════════════════════════════════════════
             // محتوای اصلی
             // ═════════════════════════════════════════
+
             when (val s = state) {
 
-                // ─── لودینگ ───
-                is PlayerListState.Loading -> Box(
-                    Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = GoldPrimary)
-                }
+                // ─────────────────────────────────────
+                // Loading
+                // ─────────────────────────────────────
 
-                // ─── خطا ───
-                is PlayerListState.Error -> Column(
-                    Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    GlassCard3D(glowColor = Color(0x66A50044)) {
-                        Text(
-                            s.message,
-                            color = Color.White.copy(0.85f),
-                            modifier = Modifier.padding(16.dp)
+                is PlayerListState.Loading -> {
+
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = GoldPrimary
                         )
                     }
-                    Spacer(Modifier.height(12.dp))
-                    GlassButton(
-                        text = "تلاش مجدد",
-                        onClick = { viewModel.load() }
-                    )
                 }
 
-                // ─── موفقیت ───
+                // ─────────────────────────────────────
+                // Error
+                // ─────────────────────────────────────
+
+                is PlayerListState.Error   -> {
+
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+
+                        GlassCard3D(
+                            glowColor = Color(0x66A50044)
+                        ) {
+                            Text(
+                                text = s.message,
+                                color = Color.White.copy(alpha = 0.85f),
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
+
+                        Spacer(
+                            modifier = Modifier.height(12.dp)
+                        )
+
+                        GlassButton(
+                            text = "تلاش مجدد",
+                            onClick = {
+                                viewModel.load()
+                            })
+                    }
+                }
+
+                // ─────────────────────────────────────
+                // Success
+                // ─────────────────────────────────────
+
                 is PlayerListState.Success -> {
-                    // فیلتر محلی فقط بر اساس جستجو
+
                     val filteredPlayers = if (query.isBlank()) {
+
                         s.players
+
                     } else {
+
                         s.players.filter { player ->
-                            player.fullName.contains(query, ignoreCase = true) ||
-                            player.nationalCode?.contains(query) == true
+
+                            player.fullName.contains(
+                                query,
+                                ignoreCase = true
+                            ) || player.nationalCode?.contains(
+                                query
+                            ) == true
                         }
                     }
 
+                    // ─────────────────────────────────
+                    // Empty
+                    // ─────────────────────────────────
+
                     if (filteredPlayers.isEmpty()) {
+
                         Box(
-                            Modifier.fillMaxSize(),
+                            modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+
                                 Text(
-                                    "بازیکنی یافت نشد",
-                                    color = Color.White.copy(0.6f),
+                                    text = "بازیکنی یافت نشد",
+                                    color = Color.White.copy(alpha = 0.6f),
                                     style = MaterialTheme.typography.bodyLarge
                                 )
-                                Spacer(Modifier.height(4.dp))
+
+                                Spacer(
+                                    modifier = Modifier.height(4.dp)
+                                )
+
                                 Text(
-                                    "بازیکن جدید اضافه کنید یا عبارت جستجو را تغییر دهید",
-                                    color = Color.White.copy(0.4f),
+                                    text = "بازیکن جدید اضافه کنید یا عبارت جستجو را تغییر دهید",
+                                    color = Color.White.copy(alpha = 0.4f),
                                     style = MaterialTheme.typography.bodySmall
                                 )
                             }
                         }
+
                     } else {
-                        // ─── شمارنده نتایج ───
+
+                        // ─────────────────────────────
+                        // Result count
+                        // ─────────────────────────────
+
                         Text(
-                            "${filteredPlayers.size} بازیکن",
+                            text = "${filteredPlayers.size} بازیکن",
                             style = MaterialTheme.typography.labelMedium,
-                            color = Color.White.copy(0.5f),
-                            modifier = Modifier.padding(bottom = 8.dp)
+                            color = Color.White.copy(alpha = 0.5f),
+                            modifier = Modifier.padding(
+                                bottom = 8.dp
+                            )
                         )
+
+                        // ─────────────────────────────
+                        // Players
+                        // ─────────────────────────────
 
                         LazyColumn(
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
+
                             items(
                                 items = filteredPlayers,
-                                key = { it.id }
-                            ) { player ->
+                                key = { it.id }) { player ->
+
                                 PlayerRow(
                                     player = player,
-                                    onClick = { onPlayerClick(player.id) },
-                                    onToggle = { viewModel.toggleStatus(player) },
-                                    onChat = { guardianId -> onChat(guardianId) }
-                                )
+
+                                    onClick = {
+                                        onPlayerClick(
+                                            player.id
+                                        )
+                                    },
+
+                                    onToggle = {
+                                        viewModel.toggleStatus(
+                                            player
+                                        )
+                                    },
+
+                                    // فقط userId سرپرست
+                                    onChat = { userId ->
+                                        onChat(userId)
+                                    })
                             }
                         }
                     }

@@ -2,6 +2,7 @@ package com.khz.footballschool.domain.model
 
 data class Player(
     val id: Int,
+    val userId: Int?,
     val firstName: String,
     val lastName: String,
     val fullName: String,            // در Mapper ساخته می‌شود

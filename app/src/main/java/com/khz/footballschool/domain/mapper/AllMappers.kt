@@ -2,6 +2,7 @@ package com.khz.footballschool.domain.mapper
 
 import com.khz.footballschool.data.dto.response.*
 import com.khz.footballschool.domain.model.*
+import java.lang.Boolean.parseBoolean
 
 // ═══════════════════════════════════════════════════════════════
 // Users & Guardians & Players
@@ -53,6 +54,7 @@ fun GuardianPlayerDto.toDomain(): GuardianPlayer = GuardianPlayer(
 fun PlayerDto.toDomain(): Player = Player(
     id = id,
     firstName = firstName,
+    userId = userId,
     lastName = lastName,
     fullName = fullName?.takeIf { it.isNotBlank() }
             ?: "$firstName $lastName".trim(),
@@ -418,34 +420,64 @@ fun UnreadCountDto.toDomain(): UnreadCount = UnreadCount(
     unreadCount = unreadCount
 )
 
-fun ChatRoomDto.toDomain(): ChatRoom = ChatRoom(
-    id = id,
-    roomType = roomType,
-    targetUserId = targetUserId,
-    playerId = playerId,
-    classId = classId,
-    subject = subject,
-    lastMessage = lastMessage?.toDomain(),
-    unreadCount = unreadCount,
-    createdAt = createdAt,
-    updatedAt = updatedAt
-)
+fun ChatRoomDto.toDomain(): ChatRoom {
+    return ChatRoom(
+        id = id,
+        isGroup = isGroup,
+        title = title.orEmpty(),
+        image = image,
+        users = users.map {
+            ChatRoomUser(
+                id = it.id,
+                fullName = it.fullName.orEmpty(),
+                avatar = it.avatar,
+                role = it.role,
+                memberRole = it.memberRole
+            )
+        },
+        lastMessage = lastMessage?.toDomain(),
+        unreadCount = unreadCount,
+        status = status,
+        isLocked = parseBoolean(isLocked),
+        playerId = playerId,
+        classId = classId,
+        subject = subject,
+        createdAt = createdAt,
+        updatedAt = updatedAt
+    )
+}
 
-fun ChatMessageDto.toDomain(): ChatMessage = ChatMessage(
-    id = id,
-    roomId = effectiveRoomId,
-    senderId = senderId,
-    sender = sender?.toDomain(),
-    messageType = messageType,
-    body = body,
-    mediaId = mediaId,
-    media = media?.toDomain(),
-    isRead = isRead,
-    readAt = readAt,
-    createdAt = createdAt
-            ?: sentAt,
-    senderName = effectiveSenderName
-)
+private fun parseBoolean(value: Any?): Boolean {
+    return when (value) {
+        is Boolean -> value
+        is Number  -> value.toInt() != 0
+        is String  -> {
+            value == "1" || value.equals(
+                "true",
+                ignoreCase = true
+            )
+        }
+
+        else       -> false
+    }
+}
+
+fun ChatMessageDto.toDomain(): ChatMessage {
+    return ChatMessage(
+        id = id,
+        roomId = effectiveRoomId,
+        senderId = senderId,
+        sender = sender?.toDomain(),
+        messageType = messageType,
+        body = body,
+        mediaId = mediaId,
+        media = media?.toDomain(),
+        isRead = isRead,
+        readAt = readAt,
+        createdAt = effectiveCreatedAt,
+        senderName = effectiveSenderName
+    )
+}
 
 fun SettingDto.toDomain(): Setting = Setting(
     id = id,

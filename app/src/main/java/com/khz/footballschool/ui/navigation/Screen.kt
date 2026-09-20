@@ -140,8 +140,8 @@ sealed class Screen(val route: String) {
         fun createRoute(evaluationId: Int) = "evaluations/$evaluationId/edit"
     }
 
-    object Chat : Screen("chat/{userId}") {
-        fun createRoute(userId: Int) = "chat/$userId"
+    object Chat : Screen("chat/{roomId}") {
+        fun createRoute(roomId: Int): String = "chat/$roomId"
     }
 
     object SessionEvaluations : Screen("sessions/{sessionId}/evaluations") {
