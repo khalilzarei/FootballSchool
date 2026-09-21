@@ -28,9 +28,12 @@ class UserListViewModel(private val repository: UserRepository) : ViewModel() {
         load()
     }
 
-    fun load() {
+    /**
+     * silent=true: بدون نمایش اسپینر (برای رفرش هنگام بازگشت به صفحه)
+     */
+    fun load(silent: Boolean = false) {
         viewModelScope.launch {
-            _state.value = UserListState.Loading
+            if (!silent) _state.value = UserListState.Loading
             when (val r = repository.getUsers(
                 perPage = 100,
                 role = _roleFilter.value,
@@ -41,7 +44,7 @@ class UserListViewModel(private val repository: UserRepository) : ViewModel() {
                     _state.value = UserListState.Success(allUsers)
                 }
                 is NetworkResult.Error -> {
-                    _state.value = UserListState.Error(r.message)
+                    if (!silent) _state.value = UserListState.Error(r.message)
                 }
                 else -> {}
             }

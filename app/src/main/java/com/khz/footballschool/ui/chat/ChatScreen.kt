@@ -116,7 +116,7 @@ fun ChatScreen(
     }
 
     /*
-     * آواتار و نام کاربر جاری (برای پیام‌های خودی)
+     * Avatar and name of the current user (for one's own messages)
      */
     var myAvatarUrl by remember {
         mutableStateOf<String?>(null)
@@ -129,7 +129,7 @@ fun ChatScreen(
     val listState = rememberLazyListState()
 
     /*
-     * بارگذاری شناسه کاربر جاری + آواتار
+     * Load the ID of the current user + avatar
      */
     LaunchedEffect(Unit) {
         currentUserId = container.sessionManager.userId.first()
@@ -145,7 +145,7 @@ fun ChatScreen(
     }
 
     /*
-     * دریافت اطلاعات اتاق
+     * Fetch room information
      */
     suspend fun loadRoom() {
         error = null
@@ -164,7 +164,7 @@ fun ChatScreen(
     }
 
     /*
-     * دریافت پیام‌ها
+     * Fetch messages
      */
     suspend fun loadMessages() {
         when (val result = chatRepo.getMessages(
@@ -194,7 +194,7 @@ fun ChatScreen(
     }
 
     /*
-     * بارگذاری اولیه اتاق و پیام‌ها
+     * Initial loading of the room and messages
      */
     LaunchedEffect(roomId) {
         loading = true
@@ -206,7 +206,7 @@ fun ChatScreen(
     }
 
     /*
-     * Polling پیام‌ها
+     * Polling messages
      */
     LaunchedEffect(roomId) {
         while (isActive) {
@@ -240,7 +240,7 @@ fun ChatScreen(
     }
 
     /*
-     * اطلاعات نمایش هدر
+     * Header display information
      */
     val roomTitle = room?.title?.takeIf { it.isNotBlank() }
             ?: "گفتگو"
@@ -248,15 +248,26 @@ fun ChatScreen(
     val roomImage = room?.image?.takeIf { it.isNotBlank() }
 
     /*
-     * برای تماس فقط در گفتگوی خصوصی:
-     * کاربر مقابل همان کاربری است که در users لیست شده
+     * For calls, only in private conversations:
+     * The counterpart user is the one listed in users
      */
     val otherUser = room?.users?.firstOrNull { it.id != currentUserId }
 
     /*
-     * شماره موبایل در ChatRoom جدید وجود ندارد.
-     * بنابراین فعلاً تماس فقط در صورتی فعال می‌شود که بعداً
-     * شماره تلفن به مدل کاربر اتاق اضافه شود.
+     * Subtitle below the name in the top bar
+     * (Group: number of members, Private: counterpart user's role).
+     */
+    val roomSubtitle = if (room?.isGroup == true) {
+        "${room?.users?.size ?: 0} عضو"
+    } else {
+        otherUser?.role?.takeIf { it.isNotBlank() }
+                ?: "گفتگوی خصوصی"
+    }
+
+    /*
+     * Mobile phone number does not exist in the new ChatRoom.
+     * Therefore, for now, the call is only enabled if a phone
+     * number is added to the room user model later.
      */
     userMobile = null
 
@@ -266,11 +277,13 @@ fun ChatScreen(
             GlassTopBar(
                 title = roomTitle,
                 onBack = onBack,
+                avatarUrl = roomImage,
+                subtitle = roomSubtitle,
                 actions = {
 
                     /*
-                     * نمایش وضعیت قفل گفتگو (فقط ادمین می‌تواند
-                     * قفل/باز را تغییر دهد — در لیست گفتگوها)
+                     * Display the lock state of the conversation (only admin can
+                     * change lock/unlock — in the conversation list)
                      */
                     if (room?.isLocked == true) {
                         Icon(
@@ -282,11 +295,11 @@ fun ChatScreen(
                     }
 
                     /*
-                     * تماس فعلاً غیرفعال است چون API جدید ChatRoom
-                     * شماره موبایل کاربر را برنمی‌گرداند.
+                     * The call is currently disabled because the new ChatRoom API
+                     * does not return the user's mobile phone number.
                      *
-                     * وقتی phone/mobile به users اضافه شد،
-                     * این قسمت قابل فعال‌سازی است.
+                     * When phone/mobile is added to users,
+                     * this part can be enabled.
                      */
                     if (!room?.isGroup.orFalse() && !userMobile.isNullOrBlank()) {
                         IconButton(
@@ -325,59 +338,7 @@ fun ChatScreen(
         ) {
 
             /*
-             * هدر اتاق
-             */
-            GlassCard3D(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-
-                    AvatarView(
-                        name = roomTitle,
-                        avatarUrl = roomImage,
-                        size = 56.dp,
-                        accentColor = GoldPrimary
-                    )
-
-                    Spacer(
-                        modifier = Modifier.width(12.dp)
-                    )
-
-                    Column(
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = roomTitle,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-
-                        if (room?.isGroup == true) {
-                            Text(
-                                text = "${room?.users?.size ?: 0} عضو",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color.White.copy(alpha = 0.6f)
-                            )
-                        } else {
-                            Text(text = otherUser?.role?.takeIf { it.isNotBlank() }
-                                    ?: "گفتگوی خصوصی",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color.White.copy(alpha = 0.6f))
-                        }
-                    }
-                }
-            }
-
-            /*
-             * پیام‌ها
+             * Messages
              */
             Box(
                 modifier = Modifier.weight(1f)
@@ -490,7 +451,7 @@ fun ChatScreen(
             }
 
             /*
-             * نوار ارسال
+             * Send bar
              */
             MessageInputBar(
                 text = messageText,
@@ -547,7 +508,7 @@ fun ChatScreen(
     }
 
     /*
-     * اسکرول خودکار
+     * Auto scroll
      */
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
@@ -584,8 +545,8 @@ private fun MessageBubble(
     ) {
 
         if (!isMine) {/*
-             * آواتار فرستنده (از payload پیام).
-             * اگر نبود، AvatarView حرف اول نام را نشان می‌دهد.
+             * Sender's avatar (from the message payload).
+             * If it doesn't exist, AvatarView displays the first letter of the name.
              */
             AvatarView(
                 name = message.senderName
@@ -680,7 +641,7 @@ private fun MessageBubble(
                 modifier = Modifier.width(6.dp)
             )
 
-            /* آواتار کاربر جاری (حرف اول نام به‌عنوان fallback) */
+            /* Current user's avatar (first letter of the name as a fallback) */
             AvatarView(
                 name = myName
                         ?: "من",

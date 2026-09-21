@@ -32,7 +32,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.khz.footballschool.FootballSchoolApp
 import com.khz.footballschool.core.network.NetworkResult
@@ -72,7 +71,6 @@ fun UserFormScreen(
     var fullName by remember { mutableStateOf("") }
     var mobile by remember { mutableStateOf("") }
     var nationalCode by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
     var selectedRole by remember { mutableStateOf("coach") }
     var status by remember { mutableStateOf("active") }
 
@@ -217,7 +215,10 @@ fun UserFormScreen(
                                 nationalCode = v.filter { it.isDigit() }
                                     .take(10)
                             },
-                            label = "کد ملی",
+                            label = if (!isEditMode) "کد ملی (الزامی)" else "کد ملی",
+                            supportingText = if (!isEditMode) {
+                                "شناسه و رمز اولیه‌ی ورود، همان کد ملی می‌شود (در اولین ورود تغییر می‌کند)"
+                            } else null,
                             keyboardType = KeyboardType.Number,
                             leadingIcon = {
                                 Icon(
@@ -225,24 +226,6 @@ fun UserFormScreen(
                                     null
                                 )
                             })
-
-                        // ─── رمز عبور (فقط در حالت ایجاد) ───
-                        if (!isEditMode) {
-                            GlassTextField3D(
-                                value = password,
-                                onValueChange = { password = it },
-                                label = "رمز عبور",
-                                keyboardType = KeyboardType.Password,
-                                visualTransformation = PasswordVisualTransformation(),
-                                leadingIcon = {
-                                    Icon(
-                                        Icons.Default.Key,
-                                        null
-                                    )
-                                },
-                                supportingText = "حداقل ۶ کاراکتر"
-                            )
-                        }
 
                         // ─── وضعیت (فقط در حالت ویرایش) ───
                         if (isEditMode) {
@@ -280,8 +263,8 @@ fun UserFormScreen(
                             error = "کد ملی باید ۱۰ رقم باشد"
                             return@GlassButton
                         }
-                        if (!isEditMode && password.length < 6) {
-                            error = "رمز عبور باید حداقل ۶ کاراکتر باشد"
+                        if (!isEditMode && nationalCode.isBlank()) {
+                            error = "کد ملی الزامی است (شناسه و رمز اولیه‌ی ورود، همان کد ملی می‌شود)"
                             return@GlassButton
                         }
 
@@ -310,10 +293,6 @@ fun UserFormScreen(
                         )
                         android.util.Log.d(
                             "UserForm",
-                            "password: '${"*".repeat(password.length)}'"
-                        )
-                        android.util.Log.d(
-                            "UserForm",
                             "selectedImageUri: $selectedImageUri"
                         )
 
@@ -331,12 +310,15 @@ fun UserFormScreen(
                                 )
                             } else {
                                 // ─── ایجاد کاربر ───
+                                // رمز عبور دیگر از فرم نمی‌آید؛
+                                // سرور آن را از کد ملی می‌سازد
+                                // (must_change_password = 1)
                                 repo.createUser(
                                     fullName = fullName,
                                     mobile = mobile,
                                     nationalCode = nationalCode.takeIf { it.isNotBlank() },
                                     role = selectedRole,
-                                    password = password,
+                                    password = "",
                                     status = "active",
                                     avatarUri = selectedImageUri,
                                     context = context
@@ -346,7 +328,19 @@ fun UserFormScreen(
                             loading = false
 
                             when (result) {
-                                is NetworkResult.Success -> onSaved()
+                                is NetworkResult.Success -> {
+                                    // پیام راهنما: رمز اولیه همان کد ملی شد
+                                    if (!isEditMode) {
+                                        android.widget.Toast.makeText(
+                                            context,
+                                            "کاربر ساخته شد — رمز اولیه همان کد ملی است و در اولین ورود باید تغییر کند",
+                                            android.widget.Toast.LENGTH_LONG
+                                        )
+                                            .show()
+                                    }
+                                    onSaved()
+                                }
+
                                 is NetworkResult.Error   -> error = result.message
                                 else                     -> {}
                             }

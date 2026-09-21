@@ -29,11 +29,12 @@ class PlayerListViewModel(
     }
 
     /**
-     * بارگذاری لیست بازیکنان از سرور
+     * بارگذاری لیست بازیکنان از سرور.
+     * silent=true: بدون نمایش اسپینر (برای رفرش هنگام بازگشت به صفحه)
      */
-    fun load() {
+    fun load(silent: Boolean = false) {
         viewModelScope.launch {
-            _state.value = PlayerListState.Loading
+            if (!silent) _state.value = PlayerListState.Loading
             when (val r = repo.getPlayers(perPage = 100)) {
                 is NetworkResult.Success -> {
                     allPlayers = r.data.items
@@ -41,7 +42,7 @@ class PlayerListViewModel(
                 }
 
                 is NetworkResult.Error   -> {
-                    _state.value = PlayerListState.Error(r.message)
+                    if (!silent) _state.value = PlayerListState.Error(r.message)
                 }
 
                 else                     -> {}

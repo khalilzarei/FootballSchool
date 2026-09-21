@@ -14,8 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Chat
-import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -30,7 +28,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
@@ -39,6 +36,7 @@ import com.khz.footballschool.FootballSchoolApp
 import com.khz.footballschool.core.network.NetworkResult
 import com.khz.footballschool.domain.model.ChatRoom
 import com.khz.footballschool.ui.components.GlassCard3D
+import com.khz.footballschool.ui.components.AvatarView
 import com.khz.footballschool.ui.theme.GoldPrimary
 
 @Composable
@@ -63,8 +61,13 @@ fun RecentMessagesSection(
         loading = true
 
         when (val result = chatRepository.getRooms()) {
-            is NetworkResult.Success -> {
-                chatRooms = result.data
+            is NetworkResult.Success -> {/*
+                 * گفتگویی که آخرین پیام را داشته
+                 * بالا بیاید.
+                 */
+                chatRooms = result.data.sortedByDescending { room ->
+                    room.lastMessage?.createdAt.orEmpty()
+                }
             }
 
             is NetworkResult.Error   -> {
@@ -86,11 +89,48 @@ fun RecentMessagesSection(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "پیام‌های دریافتی",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = GoldPrimary
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "پیام‌های دریافتی",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = GoldPrimary
+                    )
+
+                    /*
+                     * تعداد کل پیام‌های دریافتی‌نشده
+                     * (فقط وقتی بیشتر از صفر است نمایش داده
+                     * می‌شود).
+                     */
+                    val totalUnread = chatRooms.sumOf { it.unreadCount }
+
+                    if (totalUnread > 0) {
+                        Spacer(
+                            modifier = Modifier.width(8.dp)
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .size(22.dp)
+                                .background(
+                                    color = Color(0xFFE53935),
+                                    shape = CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = if (totalUnread > 99) {
+                                    "99+"
+                                } else {
+                                    totalUnread.toString()
+                                },
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
 
                 TextButton(
                     onClick = onViewAll
@@ -140,10 +180,10 @@ fun RecentMessagesSection(
                 else -> {
 
                     /*
-                     * نمایش حداکثر ۵ اتاق دارای پیام
+                     * نمایش حداکثر ۲ گفتگوی فعال (جدیدترین‌ها)
                      */
                     chatRooms.filter { it.lastMessage != null }
-                        .take(5)
+                        .take(2)
                         .forEach { room ->
 
                             ChatPreviewItem(
@@ -186,32 +226,16 @@ private fun ChatPreviewItem(
         ) {
 
             /*
-             * آیکون گفتگو
-             *
-             * چون ChatPreviewItem قبلاً از AvatarView استفاده نمی‌کرد،
-             * ساختار ظاهری آن حفظ شده است.
+             * آواتار گفتگو:
+             * در گفتگوی خصوصی = آواتار کاربر مقابل،
+             * در گروه = عکس گروه (حرف اول نام به‌عنوان fallback).
              */
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(
-                        brush = Brush.radialGradient(
-                            listOf(
-                                GoldPrimary.copy(alpha = 0.8f),
-                                GoldPrimary.copy(alpha = 0.2f)
-                            )
-                        ),
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Chat,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+            AvatarView(
+                name = title,
+                avatarUrl = room.image,
+                size = 40.dp,
+                accentColor = GoldPrimary
+            )
 
             Spacer(
                 modifier = Modifier.width(12.dp)

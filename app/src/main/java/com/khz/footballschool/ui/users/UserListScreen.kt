@@ -26,12 +26,16 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.khz.footballschool.core.util.appViewModel
 import com.khz.footballschool.ui.components.GlassButton
 import com.khz.footballschool.ui.components.GlassCard3D
@@ -51,6 +55,19 @@ fun UserListScreen(
     val state by viewModel.state.collectAsState()
     val query by viewModel.query.collectAsState()
     val roleFilter by viewModel.roleFilter.collectAsState()
+
+    // هر بار که صفحه دوباره بالا بیاید (مثلاً بعد از افزودن/ویرایش کاربر)
+    // لیست به‌صورت خاموش (بدون اسپینر) تازه‌بارگذاری شود
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.load(silent = true)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     Scaffold(
         containerColor = Color.Transparent,

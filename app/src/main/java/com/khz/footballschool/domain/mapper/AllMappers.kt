@@ -345,7 +345,10 @@ fun MediaDto.toDomain(): Media = Media(
     status = status,
     uploadedBy = uploadedBy,
     createdAt = createdAt,
-    updatedAt = updatedAt
+    updatedAt = updatedAt,
+    durationSeconds = 5,
+    streamUrl = "",
+    uploaderName = ""
 )
 
 fun NewsDto.toDomain(): News = News(

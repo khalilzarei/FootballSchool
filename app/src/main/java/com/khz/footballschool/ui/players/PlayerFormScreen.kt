@@ -200,8 +200,13 @@ fun PlayerFormScreen(
                                 nationalCode = v.filter { it.isDigit() }
                                     .take(10)
                             },
-                            label = "کد ملی",
+                            label = if (isEditMode) "کد ملی" else "کد ملی (الزامی)",
                             keyboardType = KeyboardType.Number,
+                            supportingText = if (isEditMode) {
+                                null
+                            } else {
+                                "شناسه و رمز اولیه‌ی ورود بازیکن همان کد ملی است (در اولین ورود تغییر می‌کند)"
+                            },
                             leadingIcon = {
                                 Icon(
                                     Icons.Default.Key,
@@ -269,6 +274,12 @@ fun PlayerFormScreen(
                         if (birthDateGregorian > java.time.LocalDate.now().toString()) {
                             error = "تاریخ تولد نمی‌تواند در آینده باشد"; return@GlassButton
                         }
+                        if (nationalCode.isNotBlank() && nationalCode.length != 10) {
+                            error = "کد ملی باید ۱۰ رقم باشد"; return@GlassButton
+                        }
+                        if (!isEditMode && nationalCode.isBlank()) {
+                            error = "کد ملی الزامی است (شناسه و رمز اولیه‌ی ورود، همان کد ملی می‌شود)"; return@GlassButton
+                        }
 
                         loading = true
                         error = null
@@ -303,7 +314,17 @@ fun PlayerFormScreen(
 
                             loading = false
                             when (result) {
-                                is NetworkResult.Success -> onSaved()
+                                is NetworkResult.Success -> {
+                                    // پیام راهنما: رمز اولیه همان کد ملی شد
+                                    if (!isEditMode) {
+                                        android.widget.Toast.makeText(
+                                            context,
+                                            "بازیکن ساخته شد — رمز اولیه همان کد ملی است و در اولین ورود باید تغییر کند",
+                                            android.widget.Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                                    onSaved()
+                                }
                                 is NetworkResult.Error   -> error = result.message
                                 else                     -> {}
                             }

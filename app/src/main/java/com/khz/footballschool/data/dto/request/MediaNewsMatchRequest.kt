@@ -8,7 +8,8 @@ data class SetMediaAudiencesRequest(
 
 data class AudienceItemRequest(
     @SerializedName("audience_type") val audienceType: String,
-    @SerializedName("target_id") val targetId: Int?
+    @SerializedName("target_id") val targetId: Int?,
+    @SerializedName("role") val role: String?
 )
 
 data class CreateNewsRequest(

@@ -79,7 +79,6 @@ sealed class Screen(val route: String) {
     // ═════════════════════════════════════════════
     // مربیان
     // ═════════════════════════════════════════════
-    object CoachList : Screen("coaches")
     object CoachDetail : Screen("coaches/{coachId}") {
         fun createRoute(coachId: Int) = "coaches/$coachId"
     }

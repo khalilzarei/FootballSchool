@@ -42,7 +42,6 @@ import androidx.compose.material.icons.filled.Article
 import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Category
-import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Discount
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
@@ -68,7 +67,6 @@ fun DashboardScreen(
     onNavigateToChat: () -> Unit,
     onNavigateToAgeGroups: () -> Unit,
     onNavigateToSeasons: () -> Unit,
-    onNavigateToCoaches: () -> Unit,
     onNavigateToDiscounts: () -> Unit,
     onNavigateToMatches: () -> Unit,
     onNavigateToMedia: () -> Unit,
@@ -133,7 +131,6 @@ fun DashboardScreen(
                     onNavigateToChat = onNavigateToChat,
                     onNavigateToAgeGroups = onNavigateToAgeGroups,
                     onNavigateToSeasons = onNavigateToSeasons,
-                    onNavigateToCoaches = onNavigateToCoaches,
                     onNavigateToDiscounts = onNavigateToDiscounts,
                     onNavigateToMatches = onNavigateToMatches,
                     onNavigateToMedia = onNavigateToMedia,
@@ -160,7 +157,6 @@ private fun DashboardContent(
     onNavigateToChat: () -> Unit,
     onNavigateToAgeGroups: () -> Unit,
     onNavigateToSeasons: () -> Unit,
-    onNavigateToCoaches: () -> Unit,
     onNavigateToDiscounts: () -> Unit,
     onNavigateToMatches: () -> Unit,
     onNavigateToMedia: () -> Unit,
@@ -187,13 +183,6 @@ private fun DashboardContent(
             blueColor,
             data.activePlayers.toString(),
             onNavigateToPlayers
-        ),
-        DashboardMenuItem(
-            "مربیان",
-            Icons.Default.Groups,
-            cyanColor,
-            data.usersStats.totalCoaches.toString(),
-            onNavigateToCoaches
         ),
         DashboardMenuItem(
             "کلاس‌ها",
@@ -223,41 +212,41 @@ private fun DashboardContent(
             null,
             onNavigateToAgeGroups
         ),
-        DashboardMenuItem(
-            "فصل‌ها",
-            Icons.Default.CalendarMonth,
-            GoldPrimary,
-            null,
-            onNavigateToSeasons
-        ),
-        DashboardMenuItem(
-            "فاکتورها",
-            Icons.Default.ReceiptLong,
-            purpleColor,
-            null,
-            onNavigateToInvoices
-        ),
-        DashboardMenuItem(
-            "پرداخت‌ها",
-            Icons.Default.AccountBalanceWallet,
-            cyanColor,
-            data.pendingPayments.toString(),
-            onNavigateToPayments
-        ),
-        DashboardMenuItem(
-            "تخفیف‌ها",
-            Icons.Default.Discount,
-            greenColor,
-            null,
-            onNavigateToDiscounts
-        ),
-        DashboardMenuItem(
-            "مسابقات",
-            Icons.Default.Star,
-            GoldPrimary,
-            null,
-            onNavigateToMatches
-        ),
+//        DashboardMenuItem(
+//            "فصل‌ها",
+//            Icons.Default.CalendarMonth,
+//            GoldPrimary,
+//            null,
+//            onNavigateToSeasons
+//        ),
+//        DashboardMenuItem(
+//            "فاکتورها",
+//            Icons.Default.ReceiptLong,
+//            purpleColor,
+//            null,
+//            onNavigateToInvoices
+//        ),
+//        DashboardMenuItem(
+//            "پرداخت‌ها",
+//            Icons.Default.AccountBalanceWallet,
+//            cyanColor,
+//            data.pendingPayments.toString(),
+//            onNavigateToPayments
+//        ),
+//        DashboardMenuItem(
+//            "تخفیف‌ها",
+//            Icons.Default.Discount,
+//            greenColor,
+//            null,
+//            onNavigateToDiscounts
+//        ),
+//        DashboardMenuItem(
+//            "مسابقات",
+//            Icons.Default.Star,
+//            GoldPrimary,
+//            null,
+//            onNavigateToMatches
+//        ),
         DashboardMenuItem(
             "اخبار",
             Icons.Default.Article,
@@ -265,34 +254,27 @@ private fun DashboardContent(
             null,
             onNavigateToNews
         ),
-        DashboardMenuItem(
-            "رسانه‌ها",
-            Icons.Default.Image,
-            purpleColor,
-            null,
-            onNavigateToMedia
-        ),
-        DashboardMenuItem(
-            "چت",
-            Icons.Default.Chat,
-            greenColor,
-            null,
-            onNavigateToChat
-        ),
-        DashboardMenuItem(
-            "اعلان‌ها",
-            Icons.Default.Notifications,
-            peopleColor,
-            null,
-            onNavigateToNotifications
-        ),
-        DashboardMenuItem(
-            "گزارش‌ها",
-            Icons.Default.Assessment,
-            GoldPrimary,
-            null,
-            onNavigateToReports
-        )
+//        DashboardMenuItem(
+//            "رسانه‌ها",
+//            Icons.Default.Image,
+//            purpleColor,
+//            null,
+//            onNavigateToMedia
+//        ),
+//        DashboardMenuItem(
+//            "اعلان‌ها",
+//            Icons.Default.Notifications,
+//            peopleColor,
+//            null,
+//            onNavigateToNotifications
+//        ),
+//        DashboardMenuItem(
+//            "گزارش‌ها",
+//            Icons.Default.Assessment,
+//            GoldPrimary,
+//            null,
+//            onNavigateToReports
+//        )
     )
 
     LazyColumn(

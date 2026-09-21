@@ -29,7 +29,6 @@ import com.khz.footballschool.ui.classes.ClassListScreen
 import com.khz.footballschool.ui.classes.EnrollPlayerScreen
 import com.khz.footballschool.ui.classes.EnrollmentManagerScreen
 import com.khz.footballschool.ui.classes.ScheduleManagerScreen
-import com.khz.footballschool.ui.coaches.CoachListScreen
 import com.khz.footballschool.ui.dashboard.DashboardScreen
 import com.khz.footballschool.ui.discounts.DiscountListScreen
 import com.khz.footballschool.ui.guardians.GuardianDetailScreen
@@ -199,9 +198,6 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
                     nav.navigate(Screen.SeasonList.route)
                 },
 
-                onNavigateToCoaches = {
-                    nav.navigate(Screen.CoachList.route)
-                },
 
                 onNavigateToDiscounts = {
                     nav.navigate(Screen.DiscountList.route)
@@ -359,20 +355,6 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
                 })
         }
 
-        // ═════════════════════════════════════════════
-        // Coaches
-        // ═════════════════════════════════════════════
-
-        composable(Screen.CoachList.route) {
-            CoachListScreen(
-                onBack = {
-                    nav.popBackStack()
-                })
-        }
-
-        // ═════════════════════════════════════════════
-        // Discounts
-        // ═════════════════════════════════════════════
 
         composable(Screen.DiscountList.route) {
             DiscountListScreen(

@@ -1,5 +1,6 @@
 package com.khz.footballschool.ui.media
 
+import android.R.attr.subtitle
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -22,8 +23,12 @@ fun MediaListScreen(onBack: () -> Unit) {
 
     Scaffold(
         containerColor = Color.Transparent,
-        topBar = { GlassTopBar(title = "رسانه‌ها", onBack = onBack) }
-    ) { padding ->
+        topBar = {
+            GlassTopBar(
+                title = "رسانه‌ها",
+                onBack = onBack
+            )
+        }) { padding ->
         Box(Modifier.padding(padding)) {
             GenericListScreen(
                 title = "رسانه‌ها",
@@ -31,7 +36,7 @@ fun MediaListScreen(onBack: () -> Unit) {
                 onRefresh = vm::refresh
             ) { m ->
                 InfoCard(
-                    title = m.originalName,
+                    title = m.originalName!!,
                     subtitle = "${m.fileType} - ${m.fileSize / 1024} KB",
                     trailing = m.visibility
                 )

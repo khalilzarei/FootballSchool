@@ -93,8 +93,14 @@ fun ChatRoomListScreen(
 
         scope.launch {
             state = when (val result = chatRepo.getRooms()) {
-                is NetworkResult.Success -> {
-                    ListState.Success(result.data)
+                is NetworkResult.Success -> {/*
+                     * گفتگویی که آخرین پیام را داشته
+                     * بالای لیست بیاید.
+                     */
+                    ListState.Success(
+                        result.data.sortedByDescending { room ->
+                            room.lastMessage?.createdAt.orEmpty()
+                        })
                 }
 
                 is NetworkResult.Error   -> {

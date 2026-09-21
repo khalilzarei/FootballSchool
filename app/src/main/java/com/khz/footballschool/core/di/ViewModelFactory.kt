@@ -9,7 +9,6 @@ import com.khz.footballschool.ui.chat.ChatRoomListViewModel
 import com.khz.footballschool.ui.chat.ChatViewModel
 import com.khz.footballschool.ui.classes.ClassFormViewModel
 import com.khz.footballschool.ui.classes.ClassListViewModel
-import com.khz.footballschool.ui.coaches.CoachListViewModel
 import com.khz.footballschool.ui.dashboard.DashboardViewModel
 import com.khz.footballschool.ui.discounts.DiscountListViewModel
 import com.khz.footballschool.ui.guardians.GuardianListViewModel
@@ -50,9 +49,12 @@ class ViewModelFactory(private val container: AppContainer) : ViewModelProvider.
         modelClass.isAssignableFrom(GuardianListViewModel::class.java)     -> GuardianListViewModel(container.guardianRepository) as T
         modelClass.isAssignableFrom(SeasonListViewModel::class.java)       -> SeasonListViewModel(container.seasonRepository) as T
         modelClass.isAssignableFrom(AgeGroupListViewModel::class.java)     -> AgeGroupListViewModel(container.ageGroupRepository) as T
-        modelClass.isAssignableFrom(CoachListViewModel::class.java)        -> CoachListViewModel(container.coachRepository) as T
         modelClass.isAssignableFrom(ClassListViewModel::class.java)        -> ClassListViewModel(container.classRepository) as T
-        modelClass.isAssignableFrom(SessionListViewModel::class.java)      -> SessionListViewModel(container.sessionRepository, container.classRepository) as T
+        modelClass.isAssignableFrom(SessionListViewModel::class.java)      -> SessionListViewModel(
+            container.sessionRepository,
+            container.classRepository
+        ) as T
+
         modelClass.isAssignableFrom(AttendanceViewModel::class.java)       -> AttendanceViewModel(
             container.sessionRepository,
             container.classRepository
