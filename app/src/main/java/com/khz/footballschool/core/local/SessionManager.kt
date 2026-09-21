@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
@@ -19,17 +20,16 @@ class SessionManager(private val context: Context) {
     private val USER_ROLE_KEY = stringPreferencesKey("user_role")
     private val REMEMBER_ME_KEY = booleanPreferencesKey("remember_me")
 
-    val authToken: Flow<String?> = context.dataStore.data
-        .map { preferences -> preferences[TOKEN_KEY] }
+    val authToken: Flow<String?> = context.dataStore.data.map { preferences -> preferences[TOKEN_KEY] }
 
-    val userId: Flow<String?> = context.dataStore.data
-        .map { preferences -> preferences[USER_ID_KEY] }
+    val userId: Flow<String?> = context.dataStore.data.map { preferences -> preferences[USER_ID_KEY] }
 
-    val userRole: Flow<String?> = context.dataStore.data
-        .map { preferences -> preferences[USER_ROLE_KEY] }
+    val userRole: Flow<String?> = context.dataStore.data.map { preferences -> preferences[USER_ROLE_KEY] }
 
-    val rememberMe: Flow<Boolean> = context.dataStore.data
-        .map { preferences -> preferences[REMEMBER_ME_KEY] ?: false }
+    val rememberMe: Flow<Boolean> = context.dataStore.data.map { preferences ->
+            preferences[REMEMBER_ME_KEY]
+                    ?: false
+        }
 
     suspend fun saveToken(token: String) {
         context.dataStore.edit { preferences ->
@@ -37,7 +37,10 @@ class SessionManager(private val context: Context) {
         }
     }
 
-    suspend fun saveUserInfo(userId: String, role: String) {
+    suspend fun saveUserInfo(
+        userId: String,
+        role: String
+    ) {
         context.dataStore.edit { preferences ->
             preferences[USER_ID_KEY] = userId
             preferences[USER_ROLE_KEY] = role
@@ -57,7 +60,8 @@ class SessionManager(private val context: Context) {
             preferences.remove(USER_ID_KEY)
             preferences.remove(USER_ROLE_KEY)
             // اگر کاربر نخواسته لاگین بماند، rememberMe را هم پاک کن
-            val remember = preferences[REMEMBER_ME_KEY] ?: false
+            val remember = preferences[REMEMBER_ME_KEY]
+                    ?: false
             if (!remember) {
                 preferences.remove(REMEMBER_ME_KEY)
             }
@@ -72,4 +76,6 @@ class SessionManager(private val context: Context) {
             preferences.clear()
         }
     }
+
+    suspend fun getTokenSync(): String? = authToken.first()
 }

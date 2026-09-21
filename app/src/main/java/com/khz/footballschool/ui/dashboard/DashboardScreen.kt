@@ -212,6 +212,13 @@ private fun DashboardContent(
             null,
             onNavigateToAgeGroups
         ),
+        DashboardMenuItem(
+            "اخبار",
+            Icons.Default.Article,
+            blueColor,
+            null,
+            onNavigateToNews
+        ),
 //        DashboardMenuItem(
 //            "فصل‌ها",
 //            Icons.Default.CalendarMonth,
@@ -219,40 +226,33 @@ private fun DashboardContent(
 //            null,
 //            onNavigateToSeasons
 //        ),
-//        DashboardMenuItem(
-//            "فاکتورها",
-//            Icons.Default.ReceiptLong,
-//            purpleColor,
-//            null,
-//            onNavigateToInvoices
-//        ),
-//        DashboardMenuItem(
-//            "پرداخت‌ها",
-//            Icons.Default.AccountBalanceWallet,
-//            cyanColor,
-//            data.pendingPayments.toString(),
-//            onNavigateToPayments
-//        ),
-//        DashboardMenuItem(
-//            "تخفیف‌ها",
-//            Icons.Default.Discount,
-//            greenColor,
-//            null,
-//            onNavigateToDiscounts
-//        ),
-//        DashboardMenuItem(
-//            "مسابقات",
-//            Icons.Default.Star,
-//            GoldPrimary,
-//            null,
-//            onNavigateToMatches
-//        ),
         DashboardMenuItem(
-            "اخبار",
-            Icons.Default.Article,
-            blueColor,
+            "فاکتورها",
+            Icons.Default.ReceiptLong,
+            purpleColor,
             null,
-            onNavigateToNews
+            onNavigateToInvoices
+        ),
+        DashboardMenuItem(
+            "پرداخت‌ها",
+            Icons.Default.AccountBalanceWallet,
+            cyanColor,
+            data.pendingPayments.toString(),
+            onNavigateToPayments
+        ),
+        DashboardMenuItem(
+            "تخفیف‌ها",
+            Icons.Default.Discount,
+            greenColor,
+            null,
+            onNavigateToDiscounts
+        ),
+        DashboardMenuItem(
+            "مسابقات",
+            Icons.Default.Star,
+            GoldPrimary,
+            null,
+            onNavigateToMatches
         ),
 //        DashboardMenuItem(
 //            "رسانه‌ها",

@@ -1,11 +1,16 @@
 package com.khz.footballschool.ui.news
 
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,16 +21,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -35,12 +43,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.khz.footballschool.core.util.MediaPickerHelper
 import com.khz.footballschool.core.util.appViewModel
+import com.khz.footballschool.domain.model.Media
+import com.khz.footballschool.ui.components.AuthenticatedAsyncImage
 import com.khz.footballschool.ui.components.GlassBackground
 import com.khz.footballschool.ui.components.GlassButton
 import com.khz.footballschool.ui.components.GlassCard3D
@@ -48,6 +61,8 @@ import com.khz.footballschool.ui.components.GlassSectionTitle
 import com.khz.footballschool.ui.components.GlassTextField
 import com.khz.footballschool.ui.components.GlassTopBar
 import com.khz.footballschool.ui.components.LoadingContent
+import com.khz.footballschool.ui.components.rememberAuthToken
+import com.khz.footballschool.ui.theme.BlueAccent
 import com.khz.footballschool.ui.theme.GoldPrimary
 import com.khz.footballschool.ui.theme.RedError
 import kotlinx.coroutines.Dispatchers
@@ -55,9 +70,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * فرم ساخت و ویرایش خبر — با امکان آپلود عکس و فیلم.
+ * فرم ساخت و ویرایش خبر — با امکان آپلود عکس و فیلم و نمایش پیش‌نمایش.
+ * + مخاطبان جدید: گروه سنی و کلاس
  * @param newsId مقدار null یعنی «خبر جدید»
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun NewsFormScreen(
     newsId: Int? = null,
@@ -66,6 +83,7 @@ fun NewsFormScreen(
 ) {
     val viewModel: NewsFormViewModel = appViewModel()
     val state by viewModel.state.collectAsState()
+    val token = rememberAuthToken()
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -86,16 +104,11 @@ fun NewsFormScreen(
         }
     }
 
-    /**
-     * پردازش Uri انتخاب‌شده. کپی فایل روی Dispatchers.IO انجام می‌شود تا
-     * برای ویدیوهای چند ده مگابایتی رابط کاربری قفل نشود.
-     */
     fun handlePickedUri(
         uri: android.net.Uri?,
         isVideo: Boolean
     ) {
         if (uri == null) return
-
         scope.launch {
             val prepared = withContext(Dispatchers.IO) {
                 val (name, size) = MediaPickerHelper.queryFileInfo(
@@ -112,9 +125,7 @@ fun NewsFormScreen(
                     part
                 )
             }
-
             val (name, size, part) = prepared
-
             when {
                 !MediaPickerHelper.isAllowed(name) -> viewModel.onPickError("نوع فایل مجاز نیست (فقط عکس یا فیلم): $name")
                 part == null                       -> viewModel.onPickError("خواندن فایل «$name» ممکن نشد")
@@ -129,20 +140,13 @@ fun NewsFormScreen(
         }
     }
 
-    // عکس: Photo Picker
-    val imagePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia()
-    ) { uri ->
+    val imagePicker = rememberLauncherForActivityResult(contract = ActivityResultContracts.PickVisualMedia()) { uri ->
         handlePickedUri(
             uri,
             isVideo = false
         )
     }
-
-    // فیلم: Photo Picker روی همه‌ی نسخه‌ها ویدیو برنمی‌گرداند، پس OpenDocument
-    val videoPicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument()
-    ) { uri ->
+    val videoPicker = rememberLauncherForActivityResult(contract = ActivityResultContracts.OpenDocument()) { uri ->
         handlePickedUri(
             uri,
             isVideo = true
@@ -158,7 +162,6 @@ fun NewsFormScreen(
 
             when {
                 state.loadingNews -> LoadingContent()
-
                 else              -> LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -209,30 +212,190 @@ fun NewsFormScreen(
                     item { GlassSectionTitle("مخاطبان") }
 
                     item {
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            FilterChip(
-                                selected = state.globalAudience,
-                                onClick = { viewModel.onGlobalAudienceChange(!state.globalAudience) },
-                                enabled = !state.saving,
-                                label = { Text("همه") })
+                        GlassCard3D(shape = RoundedCornerShape(16.dp)) {
+                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                // همه
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        "ارسال برای همه",
+                                        color = Color.White,
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
+                                    )
+                                    FilterChip(
+                                        selected = state.globalAudience,
+                                        onClick = { viewModel.onGlobalAudienceChange(!state.globalAudience) },
+                                        enabled = !state.saving,
+                                        label = { Text(if (state.globalAudience) "فعال" else "غیرفعال") })
+                                }
 
-                            NewsFormViewModel.ROLES.forEach { (role, label) ->
-                                FilterChip(
-                                    selected = !state.globalAudience && role in state.selectedRoles,
-                                    onClick = { viewModel.onRoleToggle(role) },
-                                    enabled = !state.saving && !state.globalAudience,
-                                    label = { Text(label) })
+                                if (!state.globalAudience) {
+                                    Text(
+                                        text = "اگر «همه» خاموش باشد، فقط مخاطبان انتخاب‌شده خبر را می‌بینند. می‌توانید نقش، گروه سنی و کلاس را ترکیب کنید.",
+                                        color = Color.White.copy(alpha = 0.6f),
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+
+                                // نقش‌ها
+                                Text(
+                                    "نقش‌ها",
+                                    color = GoldPrimary,
+                                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
+                                )
+                                FlowRow(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    NewsFormViewModel.ROLES.forEach { (role, label) ->
+                                        FilterChip(
+                                            selected = !state.globalAudience && role in state.selectedRoles,
+                                            onClick = { viewModel.onRoleToggle(role) },
+                                            enabled = !state.saving && !state.globalAudience,
+                                            label = { Text(label) },
+                                            colors = FilterChipDefaults.filterChipColors(
+                                                selectedContainerColor = GoldPrimary.copy(alpha = 0.2f),
+                                                selectedLabelColor = GoldPrimary
+                                            )
+                                        )
+                                    }
+                                }
+
+                                // گروه‌های سنی
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        "گروه‌های سنی${if (state.selectedAgeGroupIds.isNotEmpty()) " (${state.selectedAgeGroupIds.size})" else ""}",
+                                        color = GoldPrimary,
+                                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
+                                    )
+                                    if (state.loadingAudienceOptions) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(16.dp),
+                                            strokeWidth = 2.dp,
+                                            color = GoldPrimary
+                                        )
+                                    } else {
+                                        TextButton(onClick = { viewModel.loadAudienceOptions() }) {
+                                            Text(
+                                                "بارگذاری مجدد",
+                                                color = GoldPrimary,
+                                                style = MaterialTheme.typography.labelSmall
+                                            )
+                                        }
+                                    }
+                                }
+
+                                if (state.audienceOptionsError != null) {
+                                    Text(
+                                        state.audienceOptionsError!!,
+                                        color = RedError,
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+
+                                if (state.availableAgeGroups.isEmpty() && !state.loadingAudienceOptions) {
+                                    Text(
+                                        "گروه سنی فعالی یافت نشد",
+                                        color = Color.White.copy(0.5f),
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                } else {
+                                    FlowRow(
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        state.availableAgeGroups.forEach { ag ->
+                                            val selected = ag.id in state.selectedAgeGroupIds
+                                            FilterChip(
+                                                selected = !state.globalAudience && selected,
+                                                onClick = { viewModel.onAgeGroupToggle(ag.id) },
+                                                enabled = !state.saving && !state.globalAudience,
+                                                label = { Text(ag.title) },
+                                                colors = FilterChipDefaults.filterChipColors(
+                                                    selectedContainerColor = BlueAccent.copy(alpha = 0.2f),
+                                                    selectedLabelColor = BlueAccent
+                                                )
+                                            )
+                                        }
+                                    }
+                                }
+
+                                // کلاس‌ها
+                                Text(
+                                    "کلاس‌ها${if (state.selectedClassIds.isNotEmpty()) " (${state.selectedClassIds.size})" else ""}",
+                                    color = GoldPrimary,
+                                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
+                                )
+
+                                if (state.availableClasses.isEmpty() && !state.loadingAudienceOptions) {
+                                    Text(
+                                        "کلاس فعالی یافت نشد",
+                                        color = Color.White.copy(0.5f),
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                } else {
+                                    FlowRow(
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        state.availableClasses.forEach { cls ->
+                                            val selected = cls.id in state.selectedClassIds
+                                            FilterChip(
+                                                selected = !state.globalAudience && selected,
+                                                onClick = { viewModel.onClassToggle(cls.id) },
+                                                enabled = !state.saving && !state.globalAudience,
+                                                label = {
+                                                    Column {
+                                                        Text(
+                                                            cls.title,
+                                                            style = MaterialTheme.typography.labelMedium
+                                                        )
+                                                        cls.ageGroupTitle?.let {
+                                                            Text(
+                                                                it,
+                                                                style = MaterialTheme.typography.labelSmall,
+                                                                color = Color.White.copy(0.6f)
+                                                            )
+                                                        }
+                                                    }
+                                                },
+                                                colors = FilterChipDefaults.filterChipColors(
+                                                    selectedContainerColor = Color(0xFF4CAF50).copy(alpha = 0.2f),
+                                                    selectedLabelColor = Color(0xFF4CAF50)
+                                                )
+                                            )
+                                        }
+                                    }
+                                }
+
+                                if (state.hasSpecificAudience && !state.globalAudience) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            "مجموع: ${state.selectedRoles.size} نقش · ${state.selectedAgeGroupIds.size} گروه سنی · ${state.selectedClassIds.size} کلاس",
+                                            color = Color.White.copy(0.7f),
+                                            style = MaterialTheme.typography.labelSmall
+                                        )
+                                        TextButton(onClick = { viewModel.clearAllSpecificAudiences() }) {
+                                            Text(
+                                                "پاک کردن",
+                                                color = RedError,
+                                                style = MaterialTheme.typography.labelSmall
+                                            )
+                                        }
+                                    }
+                                }
                             }
-                        }
-                    }
-
-                    if (!state.globalAudience) {
-                        item {
-                            Text(
-                                text = "اگر «همه» خاموش باشد، فقط نقش‌های انتخاب‌شده خبر را می‌بینند.",
-                                color = Color.White.copy(alpha = 0.6f),
-                                style = MaterialTheme.typography.bodySmall
-                            )
                         }
                     }
 
@@ -240,7 +403,7 @@ fun NewsFormScreen(
 
                     item {
                         Text(
-                            text = "${state.effectiveMediaCount} از " + "${NewsFormViewModel.MAX_MEDIA_PER_NEWS} فایل · " + "فرمت‌های مجاز: jpg, png, gif, webp, mp4, webm, mov",
+                            text = "${state.effectiveMediaCount} از ${NewsFormViewModel.MAX_MEDIA_PER_NEWS} فایل · فرمت‌های مجاز: jpg, png, gif, webp, mp4, webm, mov",
                             color = Color.White.copy(alpha = 0.6f),
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -251,16 +414,11 @@ fun NewsFormScreen(
                             GlassButton(
                                 text = "افزودن عکس",
                                 onClick = {
-                                    imagePicker.launch(
-                                        PickVisualMediaRequest(
-                                            ActivityResultContracts.PickVisualMedia.ImageOnly
-                                        )
-                                    )
+                                    imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                                 },
                                 enabled = !state.saving && state.effectiveMediaCount < NewsFormViewModel.MAX_MEDIA_PER_NEWS,
                                 modifier = Modifier.weight(1f)
                             )
-
                             GlassButton(
                                 text = "افزودن فیلم",
                                 onClick = { videoPicker.launch(arrayOf("video/*")) },
@@ -270,23 +428,15 @@ fun NewsFormScreen(
                         }
                     }
 
-                    // فایل‌های ذخیره‌شده روی سرور
+                    // فایل‌های ذخیره‌شده روی سرور - با پیش‌نمایش عکس
                     items(
                         count = state.existingMedia.size,
                         key = { index -> "existing-${state.existingMedia[index].id}" }) { index ->
                         val media = state.existingMedia[index]
                         val removed = media.id in state.removedMediaIds
-
-                        MediaRow(
-                            title = media.displayName,
-                            subtitle = buildString {
-                                append(if (media.isVideo) "فیلم" else "عکس")
-                                append(" · ")
-                                append(media.humanSize)
-                                media.humanDuration?.let { append(" · $it") }
-                                if (removed) append(" · حذف خواهد شد")
-                            },
-                            isVideo = media.isVideo,
+                        ExistingMediaRow(
+                            media = media,
+                            token = token,
                             dimmed = removed,
                             enabled = !state.saving,
                             undoMode = removed,
@@ -296,24 +446,15 @@ fun NewsFormScreen(
                             })
                     }
 
-                    // فایل‌های در انتظار آپلود
+                    // فایل‌های در انتظار آپلود - با پیش‌نمایش محلی
                     items(
                         count = state.pendingFiles.size,
                         key = { index -> "pending-$index" }) { index ->
                         val file = state.pendingFiles[index]
-
-                        MediaRow(
-                            title = file.name,
-                            subtitle = buildString {
-                                append(if (file.isVideo) "فیلم" else "عکس")
-                                if (file.sizeBytes > 0) {
-                                    append(" · "); append(formatBytes(file.sizeBytes))
-                                }
-                                append(" · در انتظار آپلود")
-                            },
-                            isVideo = file.isVideo,
+                        PendingMediaRow(
+                            file = file,
                             enabled = !state.saving,
-                            onAction = { viewModel.removePendingFile(index) })
+                            onRemove = { viewModel.removePendingFile(index) })
                     }
 
                     if (state.isUploading) {
@@ -350,7 +491,6 @@ fun NewsFormScreen(
 
                     item {
                         Spacer(Modifier.height(4.dp))
-
                         GlassButton(
                             text = if (state.isEditing) "ذخیره تغییرات" else "ساخت خبر",
                             onClick = { viewModel.save() },
@@ -365,16 +505,10 @@ fun NewsFormScreen(
     }
 }
 
-/**
- * یک ردیف رسانه با دکمه‌ی حذف.
- * @param dimmed اگر true باشد کم‌رنگ نمایش داده می‌شود (یعنی حذف خواهد شد)
- * @param undoMode دکمه به‌جای حذف، «بازگردانی» انجام می‌دهد
- */
 @Composable
-private fun MediaRow(
-    title: String,
-    subtitle: String,
-    isVideo: Boolean,
+private fun ExistingMediaRow(
+    media: Media,
+    token: String?,
     dimmed: Boolean = false,
     enabled: Boolean = true,
     undoMode: Boolean = false,
@@ -385,25 +519,76 @@ private fun MediaRow(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (isVideo) {
-                Icon(
-                    imageVector = Icons.Default.PlayArrow,
-                    contentDescription = "فیلم",
-                    tint = GoldPrimary,
-                    modifier = Modifier.size(22.dp)
-                )
-                Spacer(Modifier.width(10.dp))
+            // پیش‌نمایش تصویر
+            Box(
+                modifier = Modifier
+                    .size(72.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color.White.copy(alpha = if (dimmed) 0.03f else 0.08f))
+            ) {
+                val url = media.thumbnailUrl
+                        ?: media.streamUrl
+                        ?: media.url
+                if (!url.isNullOrBlank()) {
+                    AuthenticatedAsyncImage(
+                        url = url,
+                        token = token,
+                        contentDescription = media.displayName,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else if (media.isVideo) {
+                    Box(
+                        Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.PlayArrow,
+                            null,
+                            tint = GoldPrimary,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
+                if (media.isVideo) {
+                    Box(
+                        Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            Modifier
+                                .size(28.dp)
+                                .clip(androidx.compose.foundation.shape.CircleShape)
+                                .background(Color.Black.copy(alpha = 0.5f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Default.PlayArrow,
+                                null,
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                }
             }
+
+            Spacer(Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = title,
+                    text = media.displayName,
                     color = if (dimmed) Color.White.copy(alpha = 0.45f) else Color.White,
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                    maxLines = 1
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
-                    text = subtitle,
+                    text = buildString {
+                        append(if (media.isVideo) "فیلم" else "عکس")
+                        append(" · ${media.humanSize}")
+                        media.humanDuration?.let { append(" · $it") }
+                        if (dimmed) append(" · حذف خواهد شد")
+                    },
                     color = Color.White.copy(alpha = if (dimmed) 0.35f else 0.65f),
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -419,6 +604,93 @@ private fun MediaRow(
                     imageVector = if (undoMode) Icons.Default.Refresh else Icons.Default.Close,
                     contentDescription = if (undoMode) "بازگردانی" else "حذف",
                     tint = if (enabled) Color.White.copy(alpha = 0.75f) else Color.White.copy(alpha = 0.3f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PendingMediaRow(
+    file: NewsFormViewModel.PendingFile,
+    enabled: Boolean = true,
+    onRemove: () -> Unit
+) {
+    GlassCard3D {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // پیش‌نمایش محلی
+            Box(
+                modifier = Modifier
+                    .size(72.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color.White.copy(alpha = 0.08f))
+            ) {
+                AsyncImage(
+                    model = file.uri,
+                    contentDescription = file.name,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+                if (file.isVideo) {
+                    Box(
+                        Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            Modifier
+                                .size(28.dp)
+                                .clip(androidx.compose.foundation.shape.CircleShape)
+                                .background(Color.Black.copy(alpha = 0.5f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Default.PlayArrow,
+                                null,
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.width(12.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = file.name,
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                    maxLines = 1
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = buildString {
+                        append(if (file.isVideo) "فیلم" else "عکس")
+                        if (file.sizeBytes > 0) {
+                            append(" · ${formatBytes(file.sizeBytes)}")
+                        }
+                        append(" · در انتظار آپلود")
+                    },
+                    color = Color.White.copy(alpha = 0.65f),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            Spacer(Modifier.width(8.dp))
+
+            IconButton(
+                onClick = onRemove,
+                enabled = enabled
+            ) {
+                Icon(
+                    Icons.Default.Close,
+                    contentDescription = "حذف",
+                    tint = Color.White.copy(alpha = 0.75f),
                     modifier = Modifier.size(20.dp)
                 )
             }

@@ -8,23 +8,27 @@ data class SetMediaAudiencesRequest(
 
 data class AudienceItemRequest(
     @SerializedName("audience_type") val audienceType: String,
-    @SerializedName("target_id") val targetId: Int?,
-    @SerializedName("role") val role: String?
+    @SerializedName("target_id") val targetId: Int? = null,
+    @SerializedName("role") val role: String? = null
 )
 
 data class CreateNewsRequest(
     @SerializedName("title") val title: String,
     @SerializedName("body") val body: String,
     @SerializedName("status") val status: String,
-    @SerializedName("publish_at") val publishAt: String?,
-    @SerializedName("audiences") val audiences: List<AudienceItemRequest>
+    @SerializedName("publish_at") val publishAt: String? = null,
+    @SerializedName("audiences") val audiences: List<AudienceItemRequest> = emptyList(),
+    @SerializedName("media_ids") val mediaIds: List<Int>? = null
 )
 
 data class UpdateNewsRequest(
-    @SerializedName("title") val title: String?,
-    @SerializedName("body") val body: String?,
-    @SerializedName("status") val status: String?,
-    @SerializedName("publish_at") val publishAt: String?
+    @SerializedName("title") val title: String? = null,
+    @SerializedName("body") val body: String? = null,
+    @SerializedName("status") val status: String? = null,
+    @SerializedName("publish_at") val publishAt: String? = null,
+    @SerializedName("audiences") val audiences: List<AudienceItemRequest>? = null,
+    @SerializedName("media_ids") val mediaIds: List<Int>? = null,
+    @SerializedName("media") val media: List<Int>? = null
 )
 
 data class SetNewsAudiencesRequest(

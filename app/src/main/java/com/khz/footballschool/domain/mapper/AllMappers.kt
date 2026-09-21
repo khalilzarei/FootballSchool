@@ -333,22 +333,37 @@ fun MediaDto.toDomain(): Media = Media(
     id = id,
     fileName = fileName,
     originalName = originalName,
-    fileType = fileType,
-    fileSize = fileSize,
-    mimeType = mimeType,
+    fileType = fileType
+            ?: "other",
+    fileSize = fileSize
+            ?: 0L,
+    mimeType = mimeType
+            ?: "application/octet-stream",
     url = url,
     thumbnailUrl = thumbnailUrl,
-    visibility = visibility,
+    visibility = visibility
+            ?: "private",
     relatedType = relatedType,
     relatedId = relatedId,
     description = description,
-    status = status,
+    status = status
+            ?: "active",
     uploadedBy = uploadedBy,
     createdAt = createdAt,
     updatedAt = updatedAt,
-    durationSeconds = 5,
-    streamUrl = "",
-    uploaderName = ""
+    durationSeconds = durationSeconds,
+    streamUrl = streamUrl
+            ?: url,
+    uploaderName = uploaderName
+)
+
+fun NewsAudienceDto.toDomain(): NewsAudience = NewsAudience(
+    id = id,
+    newsId = newsId,
+    audienceType = audienceType,
+    role = role,
+    targetId = targetId,
+    targetTitle = targetTitle
 )
 
 fun NewsDto.toDomain(): News = News(
@@ -360,9 +375,13 @@ fun NewsDto.toDomain(): News = News(
     publishedAt = publishedAt,
     archivedAt = archivedAt,
     createdBy = createdBy,
+    createdByName = createdByName,
+    media = media?.map { it.toDomain() }
+            ?: emptyList(),
+    audiences = audiences?.map { it.toDomain() }
+            ?: emptyList(),
     createdAt = createdAt,
-    updatedAt = updatedAt
-)
+    updatedAt = updatedAt)
 
 fun MatchDto.toDomain(): Match = Match(
     id = id,

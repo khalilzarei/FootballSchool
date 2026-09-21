@@ -113,4 +113,7 @@ dependencies {
 
     implementation(libs.coil.compose)
 
+
+    // Pager برای اسلایدر گالری اخبار
+    implementation(libs.androidx.compose.foundation)
 }

@@ -19,16 +19,30 @@ fun GlassSearchField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String = "جستجو",
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    placeholder: String? = null,
+    leadingIcon: @Composable (() -> Unit)? = null
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(label) },
-        leadingIcon = { Icon(Icons.Default.Search, null) },
-        modifier = modifier
-            .fillMaxWidth()
-            ,
+        placeholder = placeholder?.let {
+            {
+                Text(
+                    it,
+                    color = Color.White.copy(alpha = 0.4f)
+                )
+            }
+        },
+        leadingIcon = leadingIcon
+                ?: {
+                    Icon(
+                        Icons.Default.Search,
+                        null
+                    )
+                },
+        modifier = modifier.fillMaxWidth(),
         singleLine = true,
         shape = RoundedCornerShape(18.dp),
         colors = OutlinedTextFieldDefaults.colors(
@@ -42,7 +56,9 @@ fun GlassSearchField(
             unfocusedTextColor = Color.White.copy(alpha = 0.90f),
             cursorColor = GoldPrimary,
             focusedLeadingIconColor = GoldPrimary,
-            unfocusedLeadingIconColor = Color.White.copy(alpha = 0.70f)
+            unfocusedLeadingIconColor = Color.White.copy(alpha = 0.70f),
+            focusedPlaceholderColor = Color.White.copy(alpha = 0.4f),
+            unfocusedPlaceholderColor = Color.White.copy(alpha = 0.35f)
         )
     )
 }

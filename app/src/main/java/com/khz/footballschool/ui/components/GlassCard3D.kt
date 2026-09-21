@@ -54,12 +54,7 @@ import com.khz.footballschool.ui.theme.PurpleDark
 @Composable
 fun GlassCard3D(
     modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(
-        topStart = 50.dp,
-        bottomStart = 50.dp,
-        topEnd = 10.dp,
-        bottomEnd = 10.dp
-    ),
+    shape: Shape = RoundedCornerShape(10.dp),
     glowColor: Color = Color.Transparent,
     content: @Composable BoxScope.() -> Unit
 ) {

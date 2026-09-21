@@ -38,7 +38,10 @@ import com.khz.footballschool.ui.matches.MatchListScreen
 import com.khz.footballschool.ui.matches.MatchPlayersScreen
 import com.khz.footballschool.ui.matches.SetMatchResultScreen
 import com.khz.footballschool.ui.media.MediaListScreen
+import com.khz.footballschool.ui.news.NewsDetailScreen
+import com.khz.footballschool.ui.news.NewsFormScreen
 import com.khz.footballschool.ui.news.NewsListScreen
+import com.khz.footballschool.ui.news.NewsRefreshBus
 import com.khz.footballschool.ui.notifications.NotificationListScreen
 import com.khz.footballschool.ui.payments.PaymentListScreen
 import com.khz.footballschool.ui.players.AttachGuardianToPlayerScreen
@@ -227,14 +230,58 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
         }
 
         // ═════════════════════════════════════════════
-        // News
+        // News - لیست، جزئیات، فرم ساخت و ویرایش
         // ═════════════════════════════════════════════
 
         composable(Screen.NewsList.route) {
             NewsListScreen(
-                onBack = {
+                onBack = { nav.popBackStack() },
+                onAdd = { nav.navigate(Screen.NewsForm.route) },
+                onEdit = { id -> nav.navigate(Screen.NewsEdit.createRoute(id)) },
+                onDetail = { id -> nav.navigate(Screen.NewsDetail.createRoute(id)) }
+            )
+        }
+
+        composable(Screen.NewsForm.route) {
+            NewsFormScreen(
+                newsId = null,
+                onBack = { nav.popBackStack() },
+                onSaved = {
+                    NewsRefreshBus.refresh()
                     nav.popBackStack()
-                })
+                }
+            )
+        }
+
+        composable(
+            route = Screen.NewsDetail.route,
+            arguments = listOf(navArgument("newsId") { type = NavType.IntType })
+        ) { backStack ->
+            val newsId = backStack.arguments?.getInt("newsId") ?: 0
+            NewsDetailScreen(
+                newsId = newsId,
+                onBack = { nav.popBackStack() },
+                onEdit = { id -> nav.navigate(Screen.NewsEdit.createRoute(id)) },
+                onDeleted = {
+                    NewsRefreshBus.refresh()
+                    nav.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            route = Screen.NewsEdit.route,
+            arguments = listOf(navArgument("newsId") { type = NavType.IntType })
+        ) { backStack ->
+            val newsId = backStack.arguments?.getInt("newsId") ?: 0
+            NewsFormScreen(
+                newsId = newsId,
+                onBack = { nav.popBackStack() },
+                onSaved = {
+                    NewsRefreshBus.refresh()
+                    nav.popBackStack()
+                }
+            )
         }
 
         // ═════════════════════════════════════════════

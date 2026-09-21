@@ -15,6 +15,8 @@ import com.khz.footballschool.ui.guardians.GuardianListViewModel
 import com.khz.footballschool.ui.invoices.InvoiceListViewModel
 import com.khz.footballschool.ui.matches.MatchListViewModel
 import com.khz.footballschool.ui.media.MediaListViewModel
+import com.khz.footballschool.ui.news.NewsDetailViewModel
+import com.khz.footballschool.ui.news.NewsFormViewModel
 import com.khz.footballschool.ui.news.NewsListViewModel
 import com.khz.footballschool.ui.notifications.NotificationListViewModel
 import com.khz.footballschool.ui.payments.PaymentListViewModel
@@ -65,6 +67,14 @@ class ViewModelFactory(private val container: AppContainer) : ViewModelProvider.
         modelClass.isAssignableFrom(PaymentListViewModel::class.java)      -> PaymentListViewModel(container.paymentRepository) as T
         modelClass.isAssignableFrom(MediaListViewModel::class.java)        -> MediaListViewModel(container.mediaRepository) as T
         modelClass.isAssignableFrom(NewsListViewModel::class.java)         -> NewsListViewModel(container.newsRepository) as T
+        modelClass.isAssignableFrom(NewsDetailViewModel::class.java)       -> NewsDetailViewModel(container.newsRepository) as T
+        modelClass.isAssignableFrom(NewsFormViewModel::class.java)         -> NewsFormViewModel(
+            container.newsRepository,
+            container.mediaRepository,
+            container.ageGroupRepository,
+            container.classRepository
+        ) as T
+
         modelClass.isAssignableFrom(MatchListViewModel::class.java)        -> MatchListViewModel(container.matchRepository) as T
         modelClass.isAssignableFrom(NotificationListViewModel::class.java) -> NotificationListViewModel(container.notificationRepository) as T
         modelClass.isAssignableFrom(SettingsViewModel::class.java)         -> SettingsViewModel(container.settingRepository) as T
