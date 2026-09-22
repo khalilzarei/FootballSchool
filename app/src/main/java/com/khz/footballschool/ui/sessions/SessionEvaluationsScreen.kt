@@ -30,12 +30,14 @@ import com.khz.footballschool.core.network.NetworkResult
 import com.khz.footballschool.domain.model.Evaluation
 import com.khz.footballschool.ui.components.GlassCard3D
 import com.khz.footballschool.ui.components.GlassTopBar
-import com.khz.footballschool.ui.theme.ErrorGlow
 import com.khz.footballschool.ui.theme.GoldPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SessionEvaluationsScreen(sessionId: Int, onBack: () -> Unit) {
+fun SessionEvaluationsScreen(
+    sessionId: Int,
+    onBack: () -> Unit
+) {
     val context = LocalContext.current
     val container = (context.applicationContext as FootballSchoolApp).container
     val repo = container.evaluationRepository
@@ -47,24 +49,38 @@ fun SessionEvaluationsScreen(sessionId: Int, onBack: () -> Unit) {
     LaunchedEffect(sessionId) {
         when (val r = repo.getSessionEvaluations(sessionId)) {
             is NetworkResult.Success -> evaluations = r.data
-            is NetworkResult.Error -> error = r.message
-            else -> {}
+            is NetworkResult.Error   -> error = r.message
+            else                     -> {}
         }
         loading = false
     }
 
     Scaffold(
         containerColor = Color.Transparent,
-        topBar = { GlassTopBar(title = "ارزیابی‌های جلسه", onBack = onBack) }
-    ) { padding ->
+        topBar = {
+            GlassTopBar(
+                title = "ارزیابی‌های جلسه",
+                onBack = onBack
+            )
+        }) { padding ->
         if (loading) {
-            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
                 CircularProgressIndicator(color = GoldPrimary)
             }
         } else {
-            Column(Modifier.padding(padding).padding(16.dp).fillMaxSize()) {
+            Column(
+                Modifier
+                    .padding(padding)
+                    .padding(16.dp)
+                    .fillMaxSize()
+            ) {
                 error?.let {
-                    GlassCard3D{
+                    GlassCard3D() {
                         Text(
                             it,
                             color = Color(0xFFFF8A80)
@@ -72,7 +88,7 @@ fun SessionEvaluationsScreen(sessionId: Int, onBack: () -> Unit) {
                     }
                 }
                 if (evaluations.isEmpty()) {
-                    GlassCard3D {
+                    GlassCard3D() {
                         Text(
                             "ارزیابی‌ای ثبت نشده است",
                             color = Color.White.copy(0.6f)
@@ -92,7 +108,7 @@ fun SessionEvaluationsScreen(sessionId: Int, onBack: () -> Unit) {
 
 @Composable
 private fun EvaluationCard(e: Evaluation) {
-    GlassCard3D(modifier = Modifier.fillMaxWidth(),) {
+    GlassCard3D(modifier = Modifier.fillMaxWidth()) {
         Column {
             Row(
                 Modifier.fillMaxWidth(),
@@ -137,8 +153,11 @@ private fun EvaluationCard(e: Evaluation) {
 }
 
 @Composable
-private fun ScoreChip(label: String, score: Int?) {
-    GlassCard3D(modifier = Modifier.padding(end = 0.dp),) {
+private fun ScoreChip(
+    label: String,
+    score: Int?
+) {
+    GlassCard3D(modifier = Modifier.padding(end = 0.dp)) {
         Text(
             "$label: ${score ?: "-"}",
             style = MaterialTheme.typography.labelSmall,

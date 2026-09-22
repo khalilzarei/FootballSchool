@@ -10,6 +10,10 @@ data class InvoiceItemDto(
     @SerializedName("amount") val amount: Long,
     @SerializedName("quantity") val quantity: Int,
     @SerializedName("total") val total: Long,
+    @SerializedName("class_id") val classId: Int? = null,
+    @SerializedName("class_title") val classTitle: String? = null,
+    @SerializedName("age_group_title") val ageGroupTitle: String? = null,
+    @SerializedName("session_id") val sessionId: Int? = null,
     @SerializedName("description") val description: String?,
     @SerializedName("created_at") val createdAt: String?,
     @SerializedName("updated_at") val updatedAt: String?

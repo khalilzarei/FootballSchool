@@ -80,7 +80,7 @@ fun RecentMessagesSection(
         loading = false
     }
 
-    GlassCard3D {
+    GlassCard3D() {
         Column {
 
             // Header
@@ -99,10 +99,10 @@ fun RecentMessagesSection(
                     )
 
                     /*
-                     * تعداد کل پیام‌های دریافتی‌نشده
-                     * (فقط وقتی بیشتر از صفر است نمایش داده
-                     * می‌شود).
-                     */
+                         * تعداد کل پیام‌های دریافتی‌نشده
+                         * (فقط وقتی بیشتر از صفر است نمایش داده
+                         * می‌شود).
+                         */
                     val totalUnread = chatRooms.sumOf { it.unreadCount }
 
                     if (totalUnread > 0) {
@@ -111,8 +111,7 @@ fun RecentMessagesSection(
                         )
 
                         Box(
-                            modifier = Modifier
-                                .size(22.dp)
+                            modifier = Modifier.size(22.dp)
                                 .background(
                                     color = Color(0xFFE53935),
                                     shape = CircleShape
@@ -157,8 +156,7 @@ fun RecentMessagesSection(
 
                 loading -> {
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth()
                             .padding(16.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -180,8 +178,8 @@ fun RecentMessagesSection(
                 else -> {
 
                     /*
-                     * نمایش حداکثر ۲ گفتگوی فعال (جدیدترین‌ها)
-                     */
+                         * نمایش حداکثر ۲ گفتگوی فعال (جدیدترین‌ها)
+                         */
                     chatRooms.filter { it.lastMessage != null }
                         .take(2)
                         .forEach { room ->
@@ -218,7 +216,7 @@ private fun ChatPreviewItem(
     GlassCard3D(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(onClick = onClick),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -226,10 +224,10 @@ private fun ChatPreviewItem(
         ) {
 
             /*
-             * آواتار گفتگو:
-             * در گفتگوی خصوصی = آواتار کاربر مقابل،
-             * در گروه = عکس گروه (حرف اول نام به‌عنوان fallback).
-             */
+                 * آواتار گفتگو:
+                 * در گفتگوی خصوصی = آواتار کاربر مقابل،
+                 * در گروه = عکس گروه (حرف اول نام به‌عنوان fallback).
+                 */
             AvatarView(
                 name = title,
                 avatarUrl = room.image,
@@ -285,8 +283,7 @@ private fun ChatPreviewItem(
                 )
 
                 Box(
-                    modifier = Modifier
-                        .size(24.dp)
+                    modifier = Modifier.size(24.dp)
                         .background(
                             color = Color(0xFFE53935),
                             shape = CircleShape

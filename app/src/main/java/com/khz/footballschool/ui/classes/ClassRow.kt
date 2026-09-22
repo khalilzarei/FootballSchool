@@ -56,18 +56,16 @@ fun ClassRow(
             bottomStart = 24.dp,
             topEnd = 16.dp,
             bottomEnd = 16.dp
-        )
+        ),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // آیکون کلاس
             Box(
-                modifier = Modifier
-                    .size(56.dp)
+                modifier = Modifier.size(56.dp)
                     .clip(CircleShape)
                     .background(
                         Brush.radialGradient(
@@ -149,8 +147,7 @@ fun ClassRow(
                         Box(modifier = Modifier.weight(1f)) {
                             LinearProgressIndicator(
                                 progress = { cls.fillPercent },
-                                modifier = Modifier
-                                    .fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth()
                                     .height(4.dp)
                                     .clip(RoundedCornerShape(2.dp)),
                                 color = if (cls.isFull) Color(0xFFFF8A80) else accentColor,
@@ -176,12 +173,14 @@ fun ClassRow(
             // وضعیت و عملیات
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(
-                    modifier = Modifier
-                        .background(
+                    modifier = Modifier.background(
                             if (cls.isActive) Color(0x3381C784) else Color(0x33FF8A80),
                             RoundedCornerShape(10.dp)
                         )
-                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                        .padding(
+                            horizontal = 8.dp,
+                            vertical = 3.dp
+                        )
                 ) {
                     Text(
                         if (cls.isActive) "فعال" else "غیرفعال",
@@ -201,7 +200,10 @@ fun ClassRow(
                     )
                 }
 
-                IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
+                IconButton(
+                    onClick = onDelete,
+                    modifier = Modifier.size(28.dp)
+                ) {
                     Icon(
                         Icons.Default.Delete,
                         "حذف",

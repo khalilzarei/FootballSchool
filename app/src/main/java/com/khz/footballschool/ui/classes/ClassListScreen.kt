@@ -129,7 +129,7 @@ fun ClassListScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    GlassCard3D(glowColor = Color(0x66A50044)) {
+                    GlassCard3D(glowColor = Color(0x66A50044),) {
                         Text(
                             s.message,
                             color = Color.White.copy(0.85f),

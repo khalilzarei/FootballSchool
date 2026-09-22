@@ -144,7 +144,7 @@ fun ScheduleManagerScreen(
                     .fillMaxSize()
             ) {
                 error?.let {
-                    GlassCard3D(glowColor = Color(0xFFA50044)) {
+                    GlassCard3D(glowColor = Color(0xFFA50044),) {
                         Column(
                             Modifier.padding(12.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -165,7 +165,7 @@ fun ScheduleManagerScreen(
                 }
 
                 if (schedules.isEmpty()) {
-                    GlassCard3D(Modifier.fillMaxWidth()) {
+                    GlassCard3D(Modifier.fillMaxWidth(),) {
                         Column(
                             Modifier.padding(20.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
@@ -364,10 +364,9 @@ private fun ScheduleCard(
     onEdit: () -> Unit,
     onToggle: () -> Unit
 ) {
-    GlassCard3D(modifier = Modifier.fillMaxWidth()) {
+    GlassCard3D(modifier = Modifier.fillMaxWidth(),) {
         Row(
-            Modifier
-                .fillMaxWidth()
+            Modifier.fillMaxWidth()
                 .padding(12.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically

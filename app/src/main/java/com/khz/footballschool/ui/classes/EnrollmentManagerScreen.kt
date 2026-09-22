@@ -218,8 +218,11 @@ fun EnrollmentManagerScreen(classId: Int, onBack: () -> Unit, onEnrollPlayer: ()
                 val ageGroupTitle = cls?.ageGroupTitle
                 if (ageGroupTitle != null) {
                     Spacer(Modifier.height(12.dp))
-                    GlassCard3D(Modifier.fillMaxWidth()) {
-                        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    GlassCard3D(Modifier.fillMaxWidth(),) {
+                        Column(
+                            Modifier.padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
                             Column {
                                 Text(
                                     "ثبت‌نام گروهی — گروه سنی «$ageGroupTitle»",
@@ -255,8 +258,11 @@ fun EnrollmentManagerScreen(classId: Int, onBack: () -> Unit, onEnrollPlayer: ()
 
                 // ─── افزودن بازیکن — انتخاب از بازیکنان ثبت‌نام‌نشده ───
                 Spacer(Modifier.height(12.dp))
-                GlassCard3D(Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                GlassCard3D(Modifier.fillMaxWidth(),) {
+                    Column(
+                        Modifier.padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
                         Row(
                             Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
@@ -288,16 +294,22 @@ fun EnrollmentManagerScreen(classId: Int, onBack: () -> Unit, onEnrollPlayer: ()
                         )
 
                         val enrolledIds = enrollments.mapNotNull { e ->
-                            e.player?.id ?: e.playerId.takeIf { it != 0 }
-                        }.toSet()
+                            e.player?.id
+                                    ?: e.playerId.takeIf { it != 0 }
+                        }
+                            .toSet()
                         val addable = allPlayers.filter { p -> p.id !in enrolledIds }
 
                         when {
-                            playersLoading -> Box(
-                                Modifier.fillMaxWidth().height(72.dp),
+                            playersLoading    -> Box(
+                                Modifier.fillMaxWidth()
+                                    .height(72.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                CircularProgressIndicator(color = GoldPrimary, strokeWidth = 2.dp)
+                                CircularProgressIndicator(
+                                    color = GoldPrimary,
+                                    strokeWidth = 2.dp
+                                )
                             }
 
                             addable.isEmpty() -> Text(
@@ -308,32 +320,28 @@ fun EnrollmentManagerScreen(classId: Int, onBack: () -> Unit, onEnrollPlayer: ()
                                 modifier = Modifier.padding(vertical = 6.dp)
                             )
 
-                            else -> LazyColumn(
-                                modifier = Modifier
-                                    .fillMaxWidth()
+                            else              -> LazyColumn(
+                                modifier = Modifier.fillMaxWidth()
                                     .heightIn(max = 180.dp),
                                 verticalArrangement = Arrangement.spacedBy(2.dp)
                             ) {
-                                items(addable, key = { it.id }) { p ->
+                                items(
+                                    addable,
+                                    key = { it.id }) { p ->
                                     Row(
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .clickable {
-                                                selectedAddIds =
-                                                    if (selectedAddIds.contains(p.id)) selectedAddIds - p.id
-                                                    else selectedAddIds + p.id
-                                            }
-                                            .padding(vertical = 2.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
+                                        Modifier.fillMaxWidth()
+                                        .clickable {
+                                            selectedAddIds = if (selectedAddIds.contains(p.id)) selectedAddIds - p.id
+                                            else selectedAddIds + p.id
+                                        }
+                                        .padding(vertical = 2.dp),
+                                        verticalAlignment = Alignment.CenterVertically) {
                                         Checkbox(
                                             checked = selectedAddIds.contains(p.id),
                                             onCheckedChange = { chk ->
-                                                selectedAddIds =
-                                                    if (chk) selectedAddIds + p.id
-                                                    else selectedAddIds - p.id
-                                            }
-                                        )
+                                                selectedAddIds = if (chk) selectedAddIds + p.id
+                                                else selectedAddIds - p.id
+                                            })
                                         Column(Modifier.weight(1f)) {
                                             Text(
                                                 p.fullName,
@@ -361,7 +369,11 @@ fun EnrollmentManagerScreen(classId: Int, onBack: () -> Unit, onEnrollPlayer: ()
                             )
                         }
                         addError?.let {
-                            Text(it, color = Color(0xFFFF8A80), style = MaterialTheme.typography.bodySmall)
+                            Text(
+                                it,
+                                color = Color(0xFFFF8A80),
+                                style = MaterialTheme.typography.bodySmall
+                            )
                         }
                     }
                 }
@@ -379,12 +391,18 @@ fun EnrollmentManagerScreen(classId: Int, onBack: () -> Unit, onEnrollPlayer: ()
                     Modifier.fillMaxSize().padding(16.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    GlassCard3D(glowColor = Color(0xFFA50044)) {
+                    GlassCard3D(glowColor = Color(0xFFA50044),) {
                         Column(Modifier.padding(16.dp)) {
-                            Text(error!!, color = Color(0xFFFF8A80))
+                            Text(
+                                error!!,
+                                color = Color(0xFFFF8A80)
+                            )
                             Spacer(Modifier.height(8.dp))
                             TextButton(onClick = { reload() }) {
-                                Text("تلاش مجدد", color = GoldPrimary)
+                                Text(
+                                    "تلاش مجدد",
+                                    color = GoldPrimary
+                                )
                             }
                         }
                     }
@@ -394,12 +412,16 @@ fun EnrollmentManagerScreen(classId: Int, onBack: () -> Unit, onEnrollPlayer: ()
                     Modifier.fillMaxSize().padding(16.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    GlassCard3D(Modifier.fillMaxWidth()) {
+                    GlassCard3D(Modifier.fillMaxWidth(),) {
                         Column(
-                            Modifier.padding(20.dp).fillMaxWidth(),
+                            Modifier.padding(20.dp)
+                                .fillMaxWidth(),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text("بازیکنی ثبت‌نام نکرده است", color = Color.White.copy(0.6f))
+                            Text(
+                                "بازیکنی ثبت‌نام نکرده است",
+                                color = Color.White.copy(0.6f)
+                            )
                             Text(
                                 "از بخش «افزودن بازیکن» بالای صفحه یا دکمه + در نوار بالا، بازیکن به این کلاس اضافه کنید",
                                 color = Color.White.copy(0.4f),
@@ -545,10 +567,9 @@ private fun EnrollmentCard(
     onToggle: () -> Unit,
     onEnd: () -> Unit
 ) {
-    GlassCard3D(Modifier.fillMaxWidth()) {
+    GlassCard3D(Modifier.fillMaxWidth(),) {
         Row(
-            Modifier
-                .fillMaxWidth()
+            Modifier.fillMaxWidth()
                 .padding(12.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -597,15 +618,18 @@ private fun EnrollmentCard(
                 Text(
                     enrollment.statusLabel,
                     color = when (enrollment.status) {
-                        "active" -> Color(0xFF81C784)
+                        "active"    -> Color(0xFF81C784)
                         "completed" -> Color(0xFFFF8A80)
-                        else -> Color.White.copy(0.7f)
+                        else        -> Color.White.copy(0.7f)
                     },
                     style = MaterialTheme.typography.labelMedium
                 )
                 Spacer(Modifier.height(4.dp))
                 Row {
-                    TextButton(onClick = onToggle, enabled = !busy) {
+                    TextButton(
+                        onClick = onToggle,
+                        enabled = !busy
+                    ) {
                         Text(
                             if (enrollment.isActive) "غیرفعال" else "فعال",
                             color = GoldPrimary,
@@ -613,7 +637,10 @@ private fun EnrollmentCard(
                         )
                     }
                     if (enrollment.status != "completed") {
-                        TextButton(onClick = onEnd, enabled = !busy) {
+                        TextButton(
+                            onClick = onEnd,
+                            enabled = !busy
+                        ) {
                             Text(
                                 "پایان",
                                 color = Color(0xFFFF8A80),

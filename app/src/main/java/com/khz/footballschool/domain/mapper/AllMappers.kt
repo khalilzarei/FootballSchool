@@ -82,10 +82,58 @@ fun PlayerDto.toDomain(): Player = Player(
 
 fun PlayerBalanceDto.toDomain(): PlayerBalance = PlayerBalance(
     playerId = playerId,
-    totalInvoiced = totalInvoiced,
-    totalPaid = totalPaid,
-    balance = balance,
+    totalInvoiced = totalInvoiced
+            ?: 0,
+    totalPaid = totalPaid
+            ?: 0,
+    balance = balance
+            ?: debt
+            ?: 0,
+    debt = debt
+            ?: balance
+            ?: 0,
     pendingPayments = pendingPayments
+            ?: pendingPaymentsCount?.toLong()
+            ?: 0,
+    pendingCount = pendingPaymentsCount
+            ?: pendingPayments?.toInt()
+            ?: 0,
+    pendingAmount = pendingAmount
+            ?: 0,
+    isDebtor = isDebtor
+            ?: ((debt
+                    ?: balance
+                    ?: 0) > 0),
+    classDebts = classDebts?.map { it.toDomain() }
+            ?: emptyList(),
+    classFees = classFees?.map { it.toDomain() }
+            ?: emptyList())
+
+fun ClassDebtDto.toDomain(): PlayerClassDebt = PlayerClassDebt(
+    classId = classId,
+    classTitle = classTitle
+            ?: "کلاس #${classId ?: 0}",
+    ageGroupTitle = ageGroupTitle,
+    total = total
+            ?: 0,
+    paid = paid
+            ?: 0,
+    remaining = remaining
+            ?: 0,
+    itemsCount = itemsCount
+            ?: 0
+)
+
+fun ClassFeeDto.toDomain(): PlayerClassFee = PlayerClassFee(
+    classId = classId,
+    classTitle = classTitle
+            ?: "کلاس #${classId ?: 0}",
+    ageGroupTitle = ageGroupTitle,
+    monthlyFee = monthlyFee,
+    sessionFee = sessionFee,
+    registrationFee = registrationFee,
+    debt = debt
+            ?: 0
 )
 
 fun CoachDto.toDomain(): Coach = Coach(
@@ -274,6 +322,10 @@ fun InvoiceItemDto.toDomain(): InvoiceItem = InvoiceItem(
     amount = amount,
     quantity = quantity,
     total = total,
+    classId = classId,
+    classTitle = classTitle,
+    ageGroupTitle = ageGroupTitle,
+    sessionId = sessionId,
     description = description,
     createdAt = createdAt,
     updatedAt = updatedAt
@@ -398,6 +450,11 @@ fun MatchDto.toDomain(): Match = Match(
     status = status,
     homeScore = homeScore,
     awayScore = awayScore,
+    result = result,
+    classTitle = classTitle
+            ?: classItem?.title,
+    ageGroupTitle = ageGroupTitle
+            ?: ageGroup?.title,
     notes = notes,
     players = players.orEmpty()
         .map { it.toDomain() },
@@ -405,25 +462,70 @@ fun MatchDto.toDomain(): Match = Match(
     updatedAt = updatedAt
 )
 
-fun MatchPlayerDto.toDomain(): MatchPlayer = MatchPlayer(
-    id = id,
-    matchId = matchId,
-    playerId = playerId,
-    player = player?.toDomain(),
-    invitationStatus = invitationStatus,
-    attendanceStatus = attendanceStatus,
-    jerseyNumber = jerseyNumber,
-    position = position,
-    goals = goals,
-    assists = assists,
-    yellowCards = yellowCards,
-    redCards = redCards,
-    minutesPlayed = minutesPlayed,
-    rating = rating,
-    notes = notes,
-    createdAt = createdAt,
-    updatedAt = updatedAt
-)
+fun MatchPlayerDto.toDomain(): MatchPlayer {
+    // اگر player نال باشد ولی first_name/last_name موجود باشد، یک Player موقت بساز
+    val resolvedPlayer = player?.toDomain()
+            ?: run {
+                val fn = firstName?.trim()
+                val ln = lastName?.trim()
+                val full = fullName?.trim()
+                    ?.takeIf { it.isNotBlank() }
+                        ?: listOfNotNull(
+                            fn,
+                            ln
+                        ).joinToString(" ")
+                            .trim()
+                            .takeIf { it.isNotBlank() }
+                if (full != null || fn != null || ln != null) {
+                    // Player minimal برای نمایش نام
+                    Player(
+                        id = playerId,
+                        firstName = fn
+                                ?: "",
+                        lastName = ln
+                                ?: "",
+                        fullName = full
+                                ?: "بازیکن #$playerId",
+                        nationalCode = null,
+                        birthDate = null,
+                        age = null,
+                        gender = "male",
+                        status = "active",
+                        medicalNotes = null,
+                        notes = null,
+                        avatarPath = null,
+                        createdBy = null,
+                        createdAt = null,
+                        updatedAt = null,
+                        guardians = emptyList(),
+                        currentClass = null,
+                        balance = null,
+                        userId = playerId
+                    )
+                } else null
+            }
+
+    return MatchPlayer(
+        id = id,
+        matchId = matchId,
+        playerId = playerId,
+        player = resolvedPlayer,
+        invitationStatus = invitationStatus,
+        attendanceStatus = attendanceStatus,
+        jerseyNumber = jerseyNumber,
+        position = position,
+        goals = goals,
+        assists = assists,
+        yellowCards = yellowCards,
+        redCards = redCards,
+        minutesPlayed = minutesPlayed,
+        rating = rating,
+        notes = notes,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        userId = playerId
+    )
+}
 
 // ═══════════════════════════════════════════════════════════════
 // Notifications, Chat, Settings
@@ -558,9 +660,18 @@ fun DebtsReportDto.toDomain(): DebtsReport = DebtsReport(
     playerId = playerId,
     playerName = playerName,
     totalDebt = totalDebt,
-    overdueDebt = overdueDebt,
+    total = total
+            ?: totalDebt,
+    paid = paid
+            ?: 0,
+    overdueDebt = overdueDebt
+            ?: totalDebt,
     oldestInvoiceDate = oldestInvoiceDate
-)
+            ?: oldestDueDate,
+    classDebts = classDebts?.map { it.toDomain() }
+            ?: emptyList(),
+    isDebtor = isDebtor
+            ?: true)
 
 fun AttendanceReportDto.toDomain(): AttendanceReport = AttendanceReport(
     playerId = playerId,

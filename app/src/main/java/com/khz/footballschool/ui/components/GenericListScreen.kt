@@ -25,7 +25,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.khz.footballschool.ui.theme.ErrorGlow
 import com.khz.footballschool.ui.theme.GoldPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,7 +66,7 @@ fun <T> GenericListScreen(
                         Modifier.align(Alignment.Center),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        GlassCard3D{
+                        GlassCard3D() {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Icon(
                                     Icons.Default.Warning,

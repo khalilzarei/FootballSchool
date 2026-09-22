@@ -98,7 +98,7 @@ fun AttendanceScreen(
                     .padding(16.dp),
                 contentAlignment = Alignment.Center
             ) {
-                GlassCard3D(glowColor = Color(0xFFA50044)) {
+                GlassCard3D(glowColor = Color(0xFFA50044),) {
                     Column(
                         Modifier.padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -209,10 +209,9 @@ private fun SummaryBar(
     absent: Int,
     excused: Int
 ) {
-    GlassCard3D(Modifier.fillMaxWidth()) {
+    GlassCard3D(Modifier.fillMaxWidth(),) {
         Row(
-            Modifier
-                .fillMaxWidth()
+            Modifier.fillMaxWidth()
                 .padding(
                     vertical = 10.dp,
                     horizontal = 6.dp
@@ -277,7 +276,7 @@ private fun PlayerAttendanceCard(
     // فیلد توضیح به‌صورت پیش‌فرض بسته است؛ با دکمه باز و بسته می‌شود
     var noteOpen by remember(row.playerId) { mutableStateOf(false) }
 
-    GlassCard3D(Modifier.fillMaxWidth()) {
+    GlassCard3D(Modifier.fillMaxWidth(),) {
         Column(
             Modifier.padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)

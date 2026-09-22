@@ -109,9 +109,10 @@ fun SessionListScreen(onSessionClick: (sessionId: Int, classId: Int) -> Unit) {
                     Modifier.fillMaxSize().padding(16.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    GlassCard3D(Modifier.fillMaxWidth()) {
+                    GlassCard3D(Modifier.fillMaxWidth(),) {
                         Column(
-                            Modifier.padding(24.dp).fillMaxWidth(),
+                            Modifier.padding(24.dp)
+                                .fillMaxWidth(),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
@@ -146,7 +147,7 @@ fun SessionListScreen(onSessionClick: (sessionId: Int, classId: Int) -> Unit) {
                     Modifier.fillMaxSize().padding(16.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    GlassCard3D(glowColor = Color(0xFFA50044)) {
+                    GlassCard3D(glowColor = Color(0xFFA50044),) {
                         Column(
                             Modifier.padding(16.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
@@ -156,7 +157,10 @@ fun SessionListScreen(onSessionClick: (sessionId: Int, classId: Int) -> Unit) {
                                 color = Color(0xFFFF8A80)
                             )
                             TextButton(onClick = { vm.load() }) {
-                                Text("تلاش مجدد", color = GoldPrimary)
+                                Text(
+                                    "تلاش مجدد",
+                                    color = GoldPrimary
+                                )
                             }
                         }
                     }
@@ -169,9 +173,10 @@ fun SessionListScreen(onSessionClick: (sessionId: Int, classId: Int) -> Unit) {
                             Modifier.fillMaxSize().padding(16.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            GlassCard3D(Modifier.fillMaxWidth()) {
+                            GlassCard3D(Modifier.fillMaxWidth(),) {
                                 Column(
-                                    Modifier.padding(24.dp).fillMaxWidth(),
+                                    Modifier.padding(24.dp)
+                                        .fillMaxWidth(),
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
@@ -238,10 +243,9 @@ private fun SessionCard(
     // جلسه‌ای که تاریخش گذشته: فقط نمایش — دکمه‌های ویرایش غیرفعال
     val isPast = remember(session.sessionDate) { isBeforeToday(session.sessionDate) }
 
-    GlassCard3D(Modifier.fillMaxWidth()) {
+    GlassCard3D(Modifier.fillMaxWidth(),) {
         Column(
-            Modifier
-                .padding(12.dp)
+            Modifier.padding(12.dp)
                 .alpha(if (isPast) 0.55f else 1f),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -252,7 +256,8 @@ private fun SessionCard(
             ) {
                 Column(Modifier.weight(1f)) {
                     Text(
-                        session.classItem?.title ?: "کلاس",
+                        session.classItem?.title
+                                ?: "کلاس",
                         style = MaterialTheme.typography.titleSmall,
                         color = GoldPrimary,
                         fontWeight = FontWeight.Bold
@@ -262,19 +267,37 @@ private fun SessionCard(
             }
 
             // ─── مشخصات: روز و تاریخ / ساعت / مکان / یادداشت ───
-            InfoLine(Icons.Default.Event, sessionDateLabel(session.sessionDate))
-            InfoLine(Icons.Default.Schedule, "${session.startTime} تا ${session.endTime}")
-            session.location?.takeIf { it.isNotBlank() }?.let {
-                InfoLine(Icons.Default.LocationOn, it)
-            }
-            session.notes?.takeIf { it.isNotBlank() && it.trim() != "تولیدشده از برنامه هفتگی" }?.let {
-                InfoLine(Icons.Default.Notes, it, maxLines = 2)
-            }
+            InfoLine(
+                Icons.Default.Event,
+                sessionDateLabel(session.sessionDate)
+            )
+            InfoLine(
+                Icons.Default.Schedule,
+                "${session.startTime} تا ${session.endTime}"
+            )
+            session.location?.takeIf { it.isNotBlank() }
+                ?.let {
+                    InfoLine(
+                        Icons.Default.LocationOn,
+                        it
+                    )
+                }
+            session.notes?.takeIf { it.isNotBlank() && it.trim() != "تولیدشده از برنامه هفتگی" }
+                ?.let {
+                    InfoLine(
+                        Icons.Default.Notes,
+                        it,
+                        maxLines = 2
+                    )
+                }
 
             // ─── دکمه‌ها ───
             Row(
                 Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End)
+                horizontalArrangement = Arrangement.spacedBy(
+                    4.dp,
+                    Alignment.End
+                )
             ) {
                 if (isPast) {
                     // جلسه گذشته: فقط مشاهده — امکان ویرایش ندارد
@@ -282,27 +305,41 @@ private fun SessionCard(
                         "جلسه گذشته — فقط قابل مشاهده",
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.White.copy(0.45f),
-                        modifier = Modifier
-                            .weight(1f)
+                        modifier = Modifier.weight(1f)
                             .align(Alignment.CenterVertically)
                     )
                     TextButton(onClick = onEditTopic) {
-                        Text("توضیح", color = Color.White.copy(0.55f))
+                        Text(
+                            "توضیح",
+                            color = Color.White.copy(0.55f)
+                        )
                     }
                 } else {
                     if (session.status == "scheduled") {
                         TextButton(onClick = onCancel) {
-                            Text("لغو", color = Color(0xFFFF8A80))
+                            Text(
+                                "لغو",
+                                color = Color(0xFFFF8A80)
+                            )
                         }
                         TextButton(onClick = onComplete) {
-                            Text("پایان", color = GoldPrimary)
+                            Text(
+                                "پایان",
+                                color = GoldPrimary
+                            )
                         }
                     }
                     TextButton(onClick = onAttendance) {
-                        Text("حضور و غیاب", color = GoldPrimary)
+                        Text(
+                            "حضور و غیاب",
+                            color = GoldPrimary
+                        )
                     }
                     TextButton(onClick = onEditTopic) {
-                        Text("توضیح", color = Color.White.copy(0.8f))
+                        Text(
+                            "توضیح",
+                            color = Color.White.copy(0.8f)
+                        )
                     }
                 }
             }

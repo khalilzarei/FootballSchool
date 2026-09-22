@@ -191,7 +191,7 @@ fun ClassFormScreen(
                 // ═════════════════════════════════════════
                 // اطلاعات پایه
                 // ═════════════════════════════════════════
-                GlassCard3D {
+                GlassCard3D() {
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -208,10 +208,14 @@ fun ClassFormScreen(
                             value = title,
                             onValueChange = { title = it },
                             label = "عنوان کلاس",
-                            leadingIcon = { Icon(Icons.Default.School, null) },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.School,
+                                    null
+                                )
+                            },
                             isError = formError != null && title.length < 3,
-                            supportingText = if (formError != null && title.length < 3)
-                                "عنوان باید حداقل ۳ کاراکتر باشد" else null
+                            supportingText = if (formError != null && title.length < 3) "عنوان باید حداقل ۳ کاراکتر باشد" else null
                         )
 
                         // توضیحات
@@ -219,7 +223,12 @@ fun ClassFormScreen(
                             value = description,
                             onValueChange = { description = it },
                             label = "توضیحات (اختیاری)",
-                            leadingIcon = { Icon(Icons.Default.TextFields, null) },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.TextFields,
+                                    null
+                                )
+                            },
                             singleLine = false
                         )
 
@@ -228,24 +237,35 @@ fun ClassFormScreen(
                             value = location,
                             onValueChange = { location = it },
                             label = "مکان (اختیاری)",
-                            leadingIcon = { Icon(Icons.Default.LocationOn, null) }
-                        )
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.LocationOn,
+                                    null
+                                )
+                            })
 
                         // ظرفیت
                         GlassTextField3D(
                             value = capacity,
-                            onValueChange = { v -> capacity = v.filter { it.isDigit() }.take(4) },
+                            onValueChange = { v ->
+                                capacity = v.filter { it.isDigit() }
+                                    .take(4)
+                            },
                             label = "ظرفیت (اختیاری)",
                             keyboardType = KeyboardType.Number,
-                            leadingIcon = { Icon(Icons.Default.Groups, null) }
-                        )
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Groups,
+                                    null
+                                )
+                            })
                     }
                 }
 
                 // ═════════════════════════════════════════
                 // گروه سنی و مربیان (دراپ‌داون از سرور)
                 // ═════════════════════════════════════════
-                GlassCard3D {
+                GlassCard3D() {
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -290,9 +310,9 @@ fun ClassFormScreen(
                                     add(NO_SELECTION to "بدون گروه سنی")
                                     ageGroups.forEach { ag -> add(ag.id to ag.title) }
                                 },
-                                selectedValue = ageGroupId ?: NO_SELECTION,
-                                onSelect = { v -> ageGroupId = v.takeIf { it != NO_SELECTION } }
-                            )
+                                selectedValue = ageGroupId
+                                        ?: NO_SELECTION,
+                                onSelect = { v -> ageGroupId = v.takeIf { it != NO_SELECTION } })
 
                             // مربی اصلی
                             GlassDropdown(
@@ -300,31 +320,34 @@ fun ClassFormScreen(
                                 options = buildList {
                                     add(NO_SELECTION to "بدون مربی")
                                     coaches.forEach { c ->
-                                        add(c.id to (c.user.fullName + (c.specialty?.let { " ($it)" } ?: "")))
+                                        add(c.id to (c.user.fullName + (c.specialty?.let { " ($it)" }
+                                                ?: "")))
                                     }
                                 },
-                                selectedValue = coachId ?: NO_SELECTION,
+                                selectedValue = coachId
+                                        ?: NO_SELECTION,
                                 onSelect = { v ->
                                     coachId = v.takeIf { it != NO_SELECTION }
                                     // مربی کمکی اگر همان شد، ریست شود
                                     if (coachId != null && assistantCoachId == coachId) {
                                         assistantCoachId = null
                                     }
-                                }
-                            )
+                                })
 
                             // مربی کمکی (بدون مربی اصلی)
                             GlassDropdown(
                                 label = "مربی کمکی (اختیاری)",
                                 options = buildList {
                                     add(NO_SELECTION to "بدون مربی کمکی")
-                                    coaches.filter { c -> c.id != coachId }.forEach { c ->
-                                        add(c.id to (c.user.fullName + (c.specialty?.let { " ($it)" } ?: "")))
-                                    }
+                                    coaches.filter { c -> c.id != coachId }
+                                        .forEach { c ->
+                                            add(c.id to (c.user.fullName + (c.specialty?.let { " ($it)" }
+                                                    ?: "")))
+                                        }
                                 },
-                                selectedValue = assistantCoachId ?: NO_SELECTION,
-                                onSelect = { v -> assistantCoachId = v.takeIf { it != NO_SELECTION } }
-                            )
+                                selectedValue = assistantCoachId
+                                        ?: NO_SELECTION,
+                                onSelect = { v -> assistantCoachId = v.takeIf { it != NO_SELECTION } })
 
                             if (coaches.isEmpty() && !refsLoading) {
                                 Text(
@@ -340,7 +363,7 @@ fun ClassFormScreen(
                 // ═════════════════════════════════════════
                 // قیمت‌گذاری
                 // ═════════════════════════════════════════
-                GlassCard3D {
+                GlassCard3D() {
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -357,8 +380,7 @@ fun ClassFormScreen(
                             label = "نوع قیمت‌گذاری",
                             options = PRICING_TYPES,
                             selectedValue = pricingType,
-                            onSelect = { pricingType = it }
-                        )
+                            onSelect = { pricingType = it })
 
                         // شهریه ماهانه
                         if (pricingType == "monthly" || pricingType == "both") {
@@ -367,8 +389,12 @@ fun ClassFormScreen(
                                 onValueChange = { v -> monthlyFee = formatThousands(v.filter { it.isDigit() }) },
                                 label = "شهریه ماهانه (تومان)",
                                 keyboardType = KeyboardType.Number,
-                                leadingIcon = { Icon(Icons.Default.Money, null) }
-                            )
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.Money,
+                                        null
+                                    )
+                                })
                         }
 
                         // هزینه هر جلسه
@@ -378,8 +404,12 @@ fun ClassFormScreen(
                                 onValueChange = { v -> sessionFee = formatThousands(v.filter { it.isDigit() }) },
                                 label = "هزینه هر جلسه (تومان)",
                                 keyboardType = KeyboardType.Number,
-                                leadingIcon = { Icon(Icons.Default.Money, null) }
-                            )
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.Money,
+                                        null
+                                    )
+                                })
                         }
 
                         // هزینه ثبت‌نام (مستقل از نوع قیمت‌گذاری)
@@ -388,15 +418,19 @@ fun ClassFormScreen(
                             onValueChange = { v -> registrationFee = formatThousands(v.filter { it.isDigit() }) },
                             label = "هزینه ثبت‌نام (تومان، اختیاری)",
                             keyboardType = KeyboardType.Number,
-                            leadingIcon = { Icon(Icons.Default.Money, null) }
-                        )
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Money,
+                                    null
+                                )
+                            })
                     }
                 }
 
                 // ═════════════════════════════════════════
                 // تاریخ‌ها
                 // ═════════════════════════════════════════
-                GlassCard3D {
+                GlassCard3D() {
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -445,7 +479,7 @@ fun ClassFormScreen(
                 // وضعیت (فقط در حالت ویرایش)
                 // ═════════════════════════════════════════
                 if (isEditMode) {
-                    GlassCard3D {
+                    GlassCard3D() {
                         Column(
                             modifier = Modifier.padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -454,8 +488,7 @@ fun ClassFormScreen(
                                 label = "وضعیت",
                                 options = STATUSES,
                                 selectedValue = status,
-                                onSelect = { status = it }
-                            )
+                                onSelect = { status = it })
                         }
                     }
                 }
@@ -467,8 +500,11 @@ fun ClassFormScreen(
                 // ═════════════════════════════════════════
                 val showScheduleSection = !isEditMode || schedules.isEmpty()
                 if (showScheduleSection) {
-                    GlassCard3D(Modifier.fillMaxWidth()) {
-                        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    GlassCard3D(Modifier.fillMaxWidth(),) {
+                        Column(
+                            Modifier.padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
                             Column {
                                 Text(
                                     "برنامه هفتگی (چند روز قابل انتخاب)",
@@ -477,9 +513,7 @@ fun ClassFormScreen(
                                     color = GoldPrimary
                                 )
                                 Text(
-                                    "برای هر روز، ساعت شروع و پایان را وارد کنید؛ می‌توانید چند روز اضافه کنید (مثلاً شنبه و سه‌شنبه). " +
-                                            "جلسات تا تاریخ پایان کلاس به‌صورت خودکار تولید می‌شوند" +
-                                            (if (isEditMode) " — این کلاس هنوز برنامه‌ای ندارد" else ""),
+                                    "برای هر روز، ساعت شروع و پایان را وارد کنید؛ می‌توانید چند روز اضافه کنید (مثلاً شنبه و سه‌شنبه). " + "جلسات تا تاریخ پایان کلاس به‌صورت خودکار تولید می‌شوند" + (if (isEditMode) " — این کلاس هنوز برنامه‌ای ندارد" else ""),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = Color.White.copy(0.6f)
                                 )
@@ -504,15 +538,17 @@ fun ClassFormScreen(
                                         androidx.compose.material3.TextButton(onClick = {
                                             draftSchedules.removeAt(index)
                                         }) {
-                                            Text("حذف", color = Color(0xFFFF8A80))
+                                            Text(
+                                                "حذف",
+                                                color = Color(0xFFFF8A80)
+                                            )
                                         }
                                     }
                                     GlassDropdown(
                                         label = "روز هفته",
                                         options = WEEKDAYS,
                                         selectedValue = draft.weekday.takeIf { it != 0 },
-                                        onSelect = { draftSchedules[index] = draft.copy(weekday = it) }
-                                    )
+                                        onSelect = { draftSchedules[index] = draft.copy(weekday = it) })
                                     Row(
                                         Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -541,8 +577,10 @@ fun ClassFormScreen(
                             GlassButton(
                                 text = "افزودن روز +",
                                 onClick = {
-                                    val used = draftSchedules.map { it.weekday }.toSet()
-                                    val next = (1..7).firstOrNull { it !in used } ?: 0
+                                    val used = draftSchedules.map { it.weekday }
+                                        .toSet()
+                                    val next = (1..7).firstOrNull { it !in used }
+                                            ?: 0
                                     draftSchedules.add(DraftSchedule(weekday = next))
                                 },
                                 primary = false
@@ -554,8 +592,7 @@ fun ClassFormScreen(
                                 ) {
                                     Checkbox(
                                         checked = autoGenerate,
-                                        onCheckedChange = { autoGenerate = it }
-                                    )
+                                        onCheckedChange = { autoGenerate = it })
                                     Column {
                                         Text(
                                             "تولید خودکار جلسات تا تاریخ پایان کلاس",
@@ -583,7 +620,7 @@ fun ClassFormScreen(
                 // ═════════════════════════════════════════
                 val shownError = formError ?: error
                 shownError?.let {
-                    GlassCard3D(glowColor = Color(0xFFA50044)) {
+                    GlassCard3D(glowColor = Color(0xFFA50044),) {
                         Text(
                             it,
                             color = Color(0xFFFF8A80),

@@ -166,7 +166,7 @@ fun UserFormScreen(
                 // ═════════════════════════════════════════
                 // بخش اطلاعات کاربر
                 // ═════════════════════════════════════════
-                GlassCard3D {
+                GlassCard3D() {
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -355,7 +355,7 @@ fun UserFormScreen(
                 // نمایش خطا
                 // ═════════════════════════════════════════
                 error?.let { errorMessage ->
-                    GlassCard3D(glowColor = Color(0xFFA50044)) {
+                    GlassCard3D(glowColor = Color(0xFFA50044),) {
                         Text(
                             errorMessage,
                             color = Color(0xFFFF8A80),

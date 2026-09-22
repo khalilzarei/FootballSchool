@@ -1,5 +1,9 @@
 package com.khz.footballschool.ui.news
 
+import android.app.DownloadManager
+import android.content.Context
+import android.net.Uri
+import android.os.Environment
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,7 +18,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -27,6 +30,7 @@ import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Image
@@ -58,6 +62,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -81,7 +86,6 @@ import com.khz.footballschool.ui.components.LoadingContent
 import com.khz.footballschool.ui.components.rememberAuthToken
 import com.khz.footballschool.ui.theme.BlueAccent
 import com.khz.footballschool.ui.theme.GoldPrimary
-import com.khz.footballschool.ui.theme.PurplePrimary
 import com.khz.footballschool.ui.theme.RedError
 import kotlinx.coroutines.launch
 
@@ -196,174 +200,101 @@ private fun NewsDetailContentModern(
     onEdit: () -> Unit
 ) {
     val token = rememberAuthToken()
+    val context = LocalContext.current
     var selectedMedia by remember { mutableStateOf<Media?>(null) }
+    var videoToPlay by remember { mutableStateOf<Media?>(null) }
+    var statusMsg by remember { mutableStateOf<String?>(null) }
+
+    fun downloadMedia(media: Media) {
+        try {
+            val url = media.url
+                    ?: media.streamUrl
+                    ?: run {
+                        statusMsg = "آدرس دانلود موجود نیست"
+                        return
+                    }
+            val fileName = media.originalName
+                    ?: media.fileName
+                    ?: "news_${media.id}"
+            val request = DownloadManager.Request(Uri.parse(url))
+                .apply {
+                    setTitle(fileName)
+                    setDescription("دانلود از اخبار")
+                    setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                    setDestinationInExternalPublicDir(
+                        Environment.DIRECTORY_DOWNLOADS,
+                        fileName
+                    )
+                    if (!token.isNullOrBlank()) addRequestHeader(
+                        "Authorization",
+                        "Bearer $token"
+                    )
+                }
+            val dm = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+            dm.enqueue(request)
+            statusMsg = "دانلود «$fileName» شروع شد"
+        } catch (e: Exception) {
+            statusMsg = e.message
+                    ?: "خطا در دانلود"
+        }
+    }
 
     val hasMedia = news.media.isNotEmpty()
-    val coverMedia = news.media.firstOrNull()
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(0.dp)
+        contentPadding = PaddingValues(bottom = 24.dp)
     ) {
-        // HERO
+        // عنوان اول
         item {
-            Box(
+            Spacer(Modifier.height(12.dp))
+            Text(
+                news.title,
+                color = Color.White,
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.ExtraBold),
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+            Spacer(Modifier.height(8.dp))
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(if (hasMedia) 300.dp else 180.dp)
-                    .padding(
-                        horizontal = 16.dp,
-                        vertical = 12.dp
-                    )
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(
-                        Brush.linearGradient(
-                            listOf(
-                                PurplePrimary.copy(alpha = 0.9f),
-                                BlueAccent.copy(alpha = 0.8f),
-                                GoldPrimary.copy(alpha = 0.6f)
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                StatusChipModern(status = news.status)
+                if (hasMedia) {
+                    Surface(
+                        color = Color.White.copy(0.08f),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            "${news.media.size} رسانه",
+                            color = Color.White.copy(0.8f),
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(
+                                horizontal = 10.dp,
+                                vertical = 5.dp
                             )
                         )
-                    )
-            ) {
-                if (hasMedia && coverMedia != null) {
-                    val heroUrl = coverMedia.streamUrl
-                            ?: coverMedia.url
-                            ?: coverMedia.thumbnailUrl
-                    AuthenticatedAsyncImage(
-                        url = heroUrl,
-                        token = token,
-                        contentDescription = news.title,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                    Box(
-                        Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    listOf(
-                                        Color.Transparent,
-                                        Color.Black.copy(alpha = 0.2f),
-                                        Color.Black.copy(alpha = 0.85f)
-                                    )
-                                )
-                            )
-                    )
-                    if (coverMedia.isVideo) {
-                        Box(
-                            Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Box(
-                                Modifier
-                                    .size(64.dp)
-                                    .clip(CircleShape)
-                                    .background(Color.White.copy(alpha = 0.18f))
-                                    .border(
-                                        1.5.dp,
-                                        Color.White.copy(alpha = 0.3f),
-                                        CircleShape
-                                    )
-                                    .clickable { selectedMedia = coverMedia },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    Icons.Default.PlayArrow,
-                                    null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(36.dp)
-                                )
-                            }
-                        }
-                    }
-                } else {
-                    Box(
-                        Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                Icons.Default.Image,
-                                null,
-                                tint = Color.White.copy(alpha = 0.5f),
-                                modifier = Modifier.size(48.dp)
-                            )
-                            Spacer(Modifier.height(8.dp))
-                            Text(
-                                "بدون تصویر",
-                                color = Color.White.copy(alpha = 0.6f),
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
                     }
                 }
+            }
+            Spacer(Modifier.height(12.dp))
+        }
 
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .fillMaxWidth()
-                        .padding(18.dp)
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        StatusChipModern(status = news.status)
-                        if (news.media.isNotEmpty()) {
-                            GlassInfoChip(
-                                icon = Icons.Default.Image,
-                                text = "${news.media.size} رسانه"
-                            )
-                        }
-                    }
-                    Spacer(Modifier.height(10.dp))
-                    Text(
-                        text = news.title,
-                        color = Color.White,
-                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.ExtraBold),
-                        maxLines = 3
-                    )
-                }
-
-                if (coverMedia?.isVideo == true) {
-                    Surface(
-                        color = Color.Black.copy(alpha = 0.55f),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(12.dp)
-                    ) {
-                        Row(
-                            Modifier.padding(
-                                horizontal = 10.dp,
-                                vertical = 6.dp
-                            ),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.Videocam,
-                                null,
-                                tint = Color.White,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                "ویدیو",
-                                color = Color.White,
-                                style = MaterialTheme.typography.labelSmall
-                            )
-                            coverMedia.humanDuration?.let {
-                                Text(
-                                    "· $it",
-                                    color = Color.White.copy(0.8f),
-                                    style = MaterialTheme.typography.labelSmall
-                                )
-                            }
-                        }
-                    }
-                }
+        // اسلایدر بالا - جایگزین هدر
+        if (hasMedia) {
+            item {
+                MediaSliderWithDownload(
+                    mediaList = news.media,
+                    token = token,
+                    onImageClick = { selectedMedia = it },
+                    onVideoClick = { videoToPlay = it },
+                    onDownloadClick = { downloadMedia(it) },
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+                Spacer(Modifier.height(16.dp))
             }
         }
 
@@ -374,7 +305,7 @@ private fun NewsDetailContentModern(
                     .fillMaxWidth()
                     .padding(
                         horizontal = 16.dp,
-                        vertical = 12.dp
+                        vertical = 8.dp
                     ),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -426,7 +357,7 @@ private fun NewsDetailContentModern(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(16.dp),
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Row(
@@ -434,8 +365,7 @@ private fun NewsDetailContentModern(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Box(
-                                Modifier
-                                    .size(32.dp)
+                                Modifier.size(32.dp)
                                     .clip(RoundedCornerShape(10.dp))
                                     .background(BlueAccent.copy(alpha = 0.15f)),
                                 contentAlignment = Alignment.Center
@@ -453,32 +383,22 @@ private fun NewsDetailContentModern(
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                             )
                         }
-
                         val roles = news.audiences.filter { it.audienceType == "role" }
                         val ageGroups = news.audiences.filter { it.audienceType == "age_group" }
                         val classes = news.audiences.filter { it.audienceType == "class" }
                         val players = news.audiences.filter { it.audienceType == "player" }
-
-                        if (roles.isNotEmpty()) {
-                            AudienceGroupRow(
-                                title = "نقش‌ها",
-                                items = roles.map { it.displayTitle })
-                        }
-                        if (ageGroups.isNotEmpty()) {
-                            AudienceGroupRow(
-                                title = "گروه‌های سنی",
-                                items = ageGroups.map { it.displayTitle })
-                        }
-                        if (classes.isNotEmpty()) {
-                            AudienceGroupRow(
-                                title = "کلاس‌ها",
-                                items = classes.map { it.displayTitle })
-                        }
-                        if (players.isNotEmpty()) {
-                            AudienceGroupRow(
-                                title = "بازیکنان خاص",
-                                items = players.map { it.displayTitle })
-                        }
+                        if (roles.isNotEmpty()) AudienceGroupRow(
+                            "نقش‌ها",
+                            roles.map { it.displayTitle })
+                        if (ageGroups.isNotEmpty()) AudienceGroupRow(
+                            "گروه‌های سنی",
+                            ageGroups.map { it.displayTitle })
+                        if (classes.isNotEmpty()) AudienceGroupRow(
+                            "کلاس‌ها",
+                            classes.map { it.displayTitle })
+                        if (players.isNotEmpty()) AudienceGroupRow(
+                            "بازیکنان خاص",
+                            players.map { it.displayTitle })
                     }
                 }
                 Spacer(Modifier.height(16.dp))
@@ -489,13 +409,14 @@ private fun NewsDetailContentModern(
         item {
             GlassSectionTitle(
                 "متن خبر",
+                modifier = Modifier.padding(horizontal = 16.dp)
             )
             Spacer(Modifier.height(8.dp))
             GlassCard3D(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(20.dp)
+                shape = RoundedCornerShape(20.dp),
             ) {
                 Text(
                     text = news.body,
@@ -507,20 +428,20 @@ private fun NewsDetailContentModern(
             Spacer(Modifier.height(20.dp))
         }
 
-        // GALLERY - SLIDER
-        if (hasMedia) {
+        statusMsg?.let { msg ->
             item {
-                GlassSectionTitle(
-                    "گالری رسانه‌ها (${news.media.size})",
-                )
+                GlassCard3D(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                ) {
+                    Text(
+                        msg,
+                        color = GoldPrimary,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
                 Spacer(Modifier.height(12.dp))
-                MediaSlider(
-                    mediaList = news.media,
-                    token = token,
-                    onMediaClick = { selectedMedia = it },
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-                Spacer(Modifier.height(20.dp))
             }
         }
 
@@ -530,7 +451,7 @@ private fun NewsDetailContentModern(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(20.dp)
+                shape = RoundedCornerShape(20.dp),
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
@@ -542,20 +463,16 @@ private fun NewsDetailContentModern(
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        if (news.isDraft) {
-                            GlassButton(
-                                text = "انتشار",
-                                onClick = onPublish,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                        if (news.isPublished) {
-                            GlassButton(
-                                text = "بایگانی",
-                                onClick = onArchive,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
+                        if (news.isDraft) GlassButton(
+                            text = "انتشار",
+                            onClick = onPublish,
+                            modifier = Modifier.weight(1f)
+                        )
+                        if (news.isPublished) GlassButton(
+                            text = "بایگانی",
+                            onClick = onArchive,
+                            modifier = Modifier.weight(1f)
+                        )
                         GlassButton(
                             text = "ویرایش",
                             onClick = onEdit,
@@ -575,7 +492,7 @@ private fun NewsDetailContentModern(
         }
     }
 
-    // FULLSCREEN PREVIEW
+    // پیش‌نمایش عکس
     selectedMedia?.let { media ->
         Dialog(
             onDismissRequest = { selectedMedia = null },
@@ -610,9 +527,8 @@ private fun NewsDetailContentModern(
                         tint = Color.White
                     )
                 }
-
                 Column(
-                    modifier = Modifier
+                    Modifier
                         .fillMaxWidth()
                         .padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -637,99 +553,56 @@ private fun NewsDetailContentModern(
                             modifier = Modifier.fillMaxWidth(),
                             contentScale = ContentScale.Fit
                         )
-                        if (media.isVideo) {
-                            Box(
-                                Modifier
-                                    .fillMaxSize()
-                                    .background(Color.Black.copy(alpha = 0.15f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Box(
-                                    Modifier
-                                        .size(72.dp)
-                                        .clip(CircleShape)
-                                        .background(Color.White.copy(alpha = 0.15f))
-                                        .border(
-                                            2.dp,
-                                            Color.White.copy(alpha = 0.3f),
-                                            CircleShape
-                                        ),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        Icons.Default.PlayArrow,
-                                        null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(40.dp)
-                                    )
-                                }
-                            }
-                        }
                     }
-                    Spacer(Modifier.height(16.dp))
-                    Surface(
-                        color = Color.White.copy(alpha = 0.08f),
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(
-                            Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        media.displayName,
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TextButton(onClick = { downloadMedia(media) }) {
                             Text(
-                                media.displayName,
-                                color = Color.White,
-                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                                maxLines = 2
+                                "دانلود",
+                                color = GoldPrimary
                             )
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Surface(
-                                    color = if (media.isVideo) BlueAccent.copy(alpha = 0.18f) else GoldPrimary.copy(alpha = 0.18f),
-                                    shape = RoundedCornerShape(8.dp)
-                                ) {
-                                    Text(
-                                        if (media.isVideo) "ویدیو" else "تصویر",
-                                        color = if (media.isVideo) BlueAccent else GoldPrimary,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        modifier = Modifier.padding(
-                                            horizontal = 10.dp,
-                                            vertical = 5.dp
-                                        )
-                                    )
-                                }
-                                Text(
-                                    media.humanSize,
-                                    color = Color.White.copy(0.6f),
-                                    style = MaterialTheme.typography.labelSmall
-                                )
-                                media.humanDuration?.let {
-                                    Text(
-                                        "· $it",
-                                        color = Color.White.copy(0.6f),
-                                        style = MaterialTheme.typography.labelSmall
-                                    )
-                                }
-                            }
+                        }
+                        TextButton(onClick = { selectedMedia = null }) {
+                            Text(
+                                "بستن",
+                                color = Color.White
+                            )
                         }
                     }
                 }
             }
         }
     }
+
+    // پخش ویدیو
+    videoToPlay?.let { media ->
+        val url = media.streamUrl
+                ?: media.url
+        if (!url.isNullOrBlank()) {
+            VideoPlayerDialog(
+                videoUrl = url,
+                token = token,
+                onDismiss = { videoToPlay = null })
+        }
+    }
 }
 
 @Composable
-private fun MediaSlider(
+private fun MediaSliderWithDownload(
     mediaList: List<Media>,
     token: String?,
-    onMediaClick: (Media) -> Unit,
+    onImageClick: (Media) -> Unit,
+    onVideoClick: (Media) -> Unit,
+    onDownloadClick: (Media) -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (mediaList.isEmpty()) return
-
     val pagerState = rememberPagerState(pageCount = { mediaList.size })
     val scope = rememberCoroutineScope()
 
@@ -737,11 +610,10 @@ private fun MediaSlider(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Pager اصلی
         Box(
-            modifier = Modifier
+            Modifier
                 .fillMaxWidth()
-                .height(260.dp)
+                .height(300.dp)
                 .clip(RoundedCornerShape(20.dp))
                 .background(Color.White.copy(alpha = 0.06f))
                 .border(
@@ -758,7 +630,9 @@ private fun MediaSlider(
                 Box(
                     Modifier
                         .fillMaxSize()
-                        .clickable { onMediaClick(media) }) {
+                        .clickable {
+                            if (media.isVideo) onVideoClick(media) else onImageClick(media)
+                        }) {
                     val url = media.thumbnailUrl
                             ?: media.streamUrl
                             ?: media.url
@@ -771,7 +645,6 @@ private fun MediaSlider(
                             contentScale = ContentScale.Crop
                         )
                     }
-                    // گرادیان پایین
                     Box(
                         Modifier
                             .fillMaxSize()
@@ -779,12 +652,12 @@ private fun MediaSlider(
                                 Brush.verticalGradient(
                                     listOf(
                                         Color.Transparent,
-                                        Color.Black.copy(alpha = 0.6f)
+                                        Color.Black.copy(0.65f)
                                     )
                                 )
                             )
                     )
-                    // Play برای ویدیو
+
                     if (media.isVideo) {
                         Box(
                             Modifier.fillMaxSize(),
@@ -792,12 +665,12 @@ private fun MediaSlider(
                         ) {
                             Box(
                                 Modifier
-                                    .size(64.dp)
+                                    .size(72.dp)
                                     .clip(CircleShape)
                                     .background(Color.Black.copy(alpha = 0.55f))
                                     .border(
                                         1.5.dp,
-                                        Color.White.copy(alpha = 0.25f),
+                                        Color.White.copy(0.25f),
                                         CircleShape
                                     ),
                                 contentAlignment = Alignment.Center
@@ -806,13 +679,13 @@ private fun MediaSlider(
                                     Icons.Default.PlayArrow,
                                     null,
                                     tint = Color.White,
-                                    modifier = Modifier.size(36.dp)
+                                    modifier = Modifier.size(40.dp)
                                 )
                             }
                         }
                         media.humanDuration?.let { dur ->
                             Surface(
-                                color = Color.Black.copy(alpha = 0.65f),
+                                color = Color.Black.copy(0.65f),
                                 shape = RoundedCornerShape(8.dp),
                                 modifier = Modifier
                                     .align(Alignment.TopEnd)
@@ -830,19 +703,48 @@ private fun MediaSlider(
                             }
                         }
                     }
-                    // نام فایل پایین
+
+                    IconButton(
+                        onClick = { onDownloadClick(media) },
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(10.dp)
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(Color.Black.copy(0.55f))
+                            .border(
+                                1.dp,
+                                Color.White.copy(0.2f),
+                                CircleShape
+                            )
+                    ) {
+                        Icon(
+                            Icons.Default.Download,
+                            "دانلود",
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
                     Box(
                         Modifier
                             .fillMaxWidth()
-                            .align(Alignment.BottomStart)
-                            .background(Color.Black.copy(alpha = 0.45f))
+                            .align(Alignment.BottomCenter)
                             .padding(
-                                horizontal = 12.dp,
-                                vertical = 8.dp
+                                start = 56.dp,
+                                end = 12.dp,
+                                bottom = 12.dp
                             )
                     ) {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color.Black.copy(0.45f))
+                                .padding(
+                                    horizontal = 12.dp,
+                                    vertical = 6.dp
+                                ),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -860,18 +762,45 @@ private fun MediaSlider(
                             )
                         }
                     }
+
+                    Surface(
+                        color = if (media.isVideo) BlueAccent.copy(0.85f) else GoldPrimary.copy(0.85f),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(10.dp)
+                    ) {
+                        Row(
+                            Modifier.padding(
+                                horizontal = 8.dp,
+                                vertical = 4.dp
+                            ),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                if (media.isVideo) Icons.Default.Videocam else Icons.Default.Image,
+                                null,
+                                tint = Color.White,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Text(
+                                if (media.isVideo) "ویدیو" else "عکس",
+                                color = Color.White,
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
+                    }
                 }
             }
 
-            // دکمه‌های قبلی/بعدی اگر بیش از 1 باشد
             if (mediaList.size > 1) {
-                // Indicator dots
                 Row(
-                    modifier = Modifier
+                    Modifier
                         .align(Alignment.BottomCenter)
-                        .padding(bottom = 44.dp)
+                        .padding(bottom = 56.dp)
                         .clip(RoundedCornerShape(20.dp))
-                        .background(Color.Black.copy(alpha = 0.35f))
+                        .background(Color.Black.copy(0.35f))
                         .padding(
                             horizontal = 10.dp,
                             vertical = 6.dp
@@ -882,81 +811,19 @@ private fun MediaSlider(
                     repeat(mediaList.size) { index ->
                         val isSelected = pagerState.currentPage == index
                         Box(
-                            modifier = Modifier
+                            Modifier
                                 .size(
                                     if (isSelected) 20.dp else 8.dp,
                                     8.dp
                                 )
                                 .clip(CircleShape)
-                                .background(if (isSelected) GoldPrimary else Color.White.copy(alpha = 0.4f))
+                                .background(if (isSelected) GoldPrimary else Color.White.copy(0.4f))
                         )
                     }
                 }
             }
         }
 
-        // اطلاعات رسانه فعلی
-        val currentMedia = mediaList.getOrNull(pagerState.currentPage)
-        currentMedia?.let { media ->
-            GlassCard3D(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Box(
-                            Modifier
-                                .size(36.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(if (media.isVideo) BlueAccent.copy(0.15f) else GoldPrimary.copy(0.15f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                if (media.isVideo) Icons.Default.Videocam else Icons.Default.Image,
-                                null,
-                                tint = if (media.isVideo) BlueAccent else GoldPrimary,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        Column {
-                            Text(
-                                media.displayName,
-                                color = Color.White,
-                                style = MaterialTheme.typography.bodySmall,
-                                maxLines = 1
-                            )
-                            Text("${if (media.isVideo) "ویدیو" else "عکس"} · ${media.humanSize}${media.humanDuration?.let { " · $it" } ?: ""}",
-                                color = Color.White.copy(0.5f),
-                                style = MaterialTheme.typography.labelSmall)
-                        }
-                    }
-                    Surface(
-                        color = if (media.isVideo) BlueAccent.copy(0.15f) else GoldPrimary.copy(0.15f),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            if (media.isVideo) "ویدیو" else "عکس",
-                            color = if (media.isVideo) BlueAccent else GoldPrimary,
-                            style = MaterialTheme.typography.labelSmall,
-                            modifier = Modifier.padding(
-                                horizontal = 8.dp,
-                                vertical = 4.dp
-                            )
-                        )
-                    }
-                }
-            }
-        }
-
-        // Thumbnails strip
         if (mediaList.size > 1) {
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -965,18 +832,16 @@ private fun MediaSlider(
                 itemsIndexed(mediaList) { index, media ->
                     val isSelected = index == pagerState.currentPage
                     Box(
-                        modifier = Modifier
-                            .size(64.dp)
+                        Modifier
+                            .size(72.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Color.White.copy(alpha = 0.06f))
+                            .background(Color.White.copy(0.06f))
                             .border(
                                 width = if (isSelected) 2.dp else 0.5.dp,
-                                color = if (isSelected) GoldPrimary else Color.White.copy(alpha = 0.1f),
+                                color = if (isSelected) GoldPrimary else Color.White.copy(0.1f),
                                 shape = RoundedCornerShape(12.dp)
                             )
-                            .clickable {
-                                scope.launch { pagerState.animateScrollToPage(index) }
-                            }) {
+                            .clickable { scope.launch { pagerState.animateScrollToPage(index) } }) {
                         val url = media.thumbnailUrl
                                 ?: media.streamUrl
                                 ?: media.url
@@ -996,16 +861,16 @@ private fun MediaSlider(
                             ) {
                                 Box(
                                     Modifier
-                                        .size(20.dp)
+                                        .size(24.dp)
                                         .clip(CircleShape)
-                                        .background(Color.Black.copy(alpha = 0.5f)),
+                                        .background(Color.Black.copy(0.55f)),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
                                         Icons.Default.PlayArrow,
                                         null,
                                         tint = Color.White,
-                                        modifier = Modifier.size(12.dp)
+                                        modifier = Modifier.size(14.dp)
                                     )
                                 }
                             }
@@ -1157,38 +1022,6 @@ private fun InfoChip(
                 color = Color.White.copy(alpha = 0.8f),
                 style = MaterialTheme.typography.labelSmall,
                 maxLines = 1
-            )
-        }
-    }
-}
-
-@Composable
-private fun GlassInfoChip(
-    icon: ImageVector,
-    text: String
-) {
-    Surface(
-        color = Color.Black.copy(alpha = 0.45f),
-        shape = RoundedCornerShape(8.dp)
-    ) {
-        Row(
-            Modifier.padding(
-                horizontal = 8.dp,
-                vertical = 4.dp
-            ),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Icon(
-                icon,
-                null,
-                tint = Color.White.copy(0.9f),
-                modifier = Modifier.size(12.dp)
-            )
-            Text(
-                text,
-                color = Color.White,
-                style = MaterialTheme.typography.labelSmall
             )
         }
     }

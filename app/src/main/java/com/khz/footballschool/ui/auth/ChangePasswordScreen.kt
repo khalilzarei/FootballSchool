@@ -28,7 +28,6 @@ import com.khz.footballschool.core.util.appViewModel
 import com.khz.footballschool.ui.components.GlassButton
 import com.khz.footballschool.ui.components.GlassCard3D
 import com.khz.footballschool.ui.components.GlassTextField
-import com.khz.footballschool.ui.theme.ErrorGlow
 import com.khz.footballschool.ui.theme.GoldPrimary
 
 @Composable
@@ -67,7 +66,7 @@ fun ChangePasswordScreen(onPasswordChanged: () -> Unit) {
         )
         Spacer(Modifier.height(24.dp))
 
-        GlassCard3D {
+        GlassCard3D() {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 GlassTextField(
                     value = oldPassword,
@@ -117,7 +116,7 @@ fun ChangePasswordScreen(onPasswordChanged: () -> Unit) {
 
         if (state is ChangePasswordState.Error) {
             Spacer(Modifier.height(16.dp))
-            GlassCard3D {
+            GlassCard3D() {
                 Text(
                     (state as ChangePasswordState.Error).message,
                     color = Color(0xFFFF8A80)

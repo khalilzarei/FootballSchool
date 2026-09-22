@@ -116,4 +116,9 @@ dependencies {
 
     // Pager برای اسلایدر گالری اخبار
     implementation(libs.androidx.compose.foundation)
+
+    // Video player - Media3 ExoPlayer
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.ui)
+    implementation(libs.androidx.media3.common)
 }

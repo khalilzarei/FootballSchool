@@ -40,7 +40,6 @@ import com.khz.footballschool.ui.components.GlassCard3D
 import com.khz.footballschool.ui.components.GlassSectionTitle
 import com.khz.footballschool.ui.components.GlassTextField
 import com.khz.footballschool.ui.components.GlassTopBar
-import com.khz.footballschool.ui.theme.ErrorGlow
 import com.khz.footballschool.ui.theme.GoldPrimary
 import kotlinx.coroutines.launch
 
@@ -95,7 +94,7 @@ fun SettingsScreen(
                     item { GlassSectionTitle("تنظیمات سیستم") }
 
                     items(settings) { s ->
-                        GlassCard3D {
+                        GlassCard3D() {
                             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                 Text(
                                     s.key,
@@ -124,7 +123,7 @@ fun SettingsScreen(
                         GlassSectionTitle("حساب کاربری")
                     }
                     item {
-                        GlassCard3D {
+                        GlassCard3D() {
                             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                 Text(
                                     "خروج از حساب کاربری",

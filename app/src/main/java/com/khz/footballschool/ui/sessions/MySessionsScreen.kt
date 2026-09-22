@@ -150,7 +150,7 @@ fun MySessionsScreen(onBack: () -> Unit) {
                     CircularProgressIndicator(color = GoldPrimary)
                 }
 
-                error != null                     -> GlassCard3D(Modifier.fillMaxWidth()) {
+                error != null                     -> GlassCard3D(Modifier.fillMaxWidth(),) {
                     Column(
                         Modifier.padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -172,7 +172,7 @@ fun MySessionsScreen(onBack: () -> Unit) {
                 }
 
                 sessions.orEmpty()
-                    .isEmpty()                    -> GlassCard3D(Modifier.fillMaxWidth()) {
+                    .isEmpty()                    -> GlassCard3D(Modifier.fillMaxWidth(),) {
                     Column(
                         Modifier.padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -189,10 +189,9 @@ fun MySessionsScreen(onBack: () -> Unit) {
                     }
                 }
 
-                selectedClass == null             -> GlassCard3D(Modifier.fillMaxWidth()) {
+                selectedClass == null             -> GlassCard3D(Modifier.fillMaxWidth(),) {
                     Column(
-                        Modifier
-                            .padding(24.dp)
+                        Modifier.padding(24.dp)
                             .fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(6.dp)
@@ -216,7 +215,7 @@ fun MySessionsScreen(onBack: () -> Unit) {
                     }
                 }
 
-                visibleSessions.isEmpty()         -> GlassCard3D(Modifier.fillMaxWidth()) {
+                visibleSessions.isEmpty()         -> GlassCard3D(Modifier.fillMaxWidth(),) {
                     Column(
                         Modifier.padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -275,7 +274,7 @@ private fun MySessionCard(
 ) {
     val (statusLabel, statusColor) = statusInfo(s.status)
 
-    GlassCard3D(Modifier.fillMaxWidth()) {
+    GlassCard3D(Modifier.fillMaxWidth(),) {
         Column(
             Modifier.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)

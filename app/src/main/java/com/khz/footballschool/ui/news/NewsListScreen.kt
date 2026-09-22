@@ -44,15 +44,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.khz.footballschool.core.util.appViewModel
 import com.khz.footballschool.domain.model.News
-import com.khz.footballschool.ui.components.AuthenticatedAsyncImage
 import com.khz.footballschool.ui.components.ErrorContent
 import com.khz.footballschool.ui.components.GlassBackground
 import com.khz.footballschool.ui.components.GlassCard3D
@@ -266,8 +263,7 @@ private fun NewsCard(
                 MediaCover(
                     media = firstMedia,
                     token = token,
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth()
                         .height(170.dp)
                 )
             }

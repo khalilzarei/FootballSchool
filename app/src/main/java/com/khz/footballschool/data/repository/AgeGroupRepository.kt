@@ -1,5 +1,6 @@
 package com.khz.footballschool.data.repository
 
+import com.khz.footballschool.core.network.ApiErrorHandler
 import com.khz.footballschool.core.network.JsonParser.parseField
 import com.khz.footballschool.core.network.JsonParser.unwrap
 import com.khz.footballschool.core.network.JsonParser.unwrapList
@@ -36,10 +37,7 @@ class AgeGroupRepository(private val api: AgeGroupApi) {
                     ?: "خطا در دریافت گروه‌های سنی"
         )
     } catch (e: Exception) {
-        NetworkResult.Error(
-            e.message
-                    ?: "خطای شبکه"
-        )
+        NetworkResult.Error(ApiErrorHandler.extractMessage(e))
     }
 
     suspend fun createAgeGroup(request: CreateAgeGroupRequest): NetworkResult<AgeGroup> = try {
@@ -51,10 +49,7 @@ class AgeGroupRepository(private val api: AgeGroupApi) {
                     ?: "خطا در ایجاد گروه سنی"
         )
     } catch (e: Exception) {
-        NetworkResult.Error(
-            e.message
-                    ?: "خطای شبکه"
-        )
+        NetworkResult.Error(ApiErrorHandler.extractMessage(e))
     }
 
     suspend fun getAgeGroup(id: Int): NetworkResult<AgeGroup> = try {
@@ -66,10 +61,7 @@ class AgeGroupRepository(private val api: AgeGroupApi) {
                     ?: "خطا در دریافت گروه سنی"
         )
     } catch (e: Exception) {
-        NetworkResult.Error(
-            e.message
-                    ?: "خطای شبکه"
-        )
+        NetworkResult.Error(ApiErrorHandler.extractMessage(e))
     }
 
     suspend fun updateAgeGroup(
@@ -87,10 +79,7 @@ class AgeGroupRepository(private val api: AgeGroupApi) {
                     ?: "خطا در به‌روزرسانی گروه سنی"
         )
     } catch (e: Exception) {
-        NetworkResult.Error(
-            e.message
-                    ?: "خطای شبکه"
-        )
+        NetworkResult.Error(ApiErrorHandler.extractMessage(e))
     }
 
     suspend fun toggleStatus(
@@ -103,10 +92,7 @@ class AgeGroupRepository(private val api: AgeGroupApi) {
                     ?: "خطا"
         )
     } catch (e: Exception) {
-        NetworkResult.Error(
-            e.message
-                    ?: "خطای شبکه"
-        )
+        NetworkResult.Error(ApiErrorHandler.extractMessage(e))
     }
 
     /**
@@ -129,9 +115,6 @@ class AgeGroupRepository(private val api: AgeGroupApi) {
             )
         }
     } catch (e: Exception) {
-        NetworkResult.Error(
-            e.message
-                    ?: "خطای شبکه"
-        )
+        NetworkResult.Error(ApiErrorHandler.extractMessage(e))
     }
 }

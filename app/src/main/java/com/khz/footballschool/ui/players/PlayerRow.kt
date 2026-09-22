@@ -88,11 +88,10 @@ fun PlayerRow(
             bottomStart = 50.dp,
             topEnd = 10.dp,
             bottomEnd = 10.dp
-        )
+        ),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
                 .padding(
                     vertical = 8.dp,
                     horizontal = 4.dp

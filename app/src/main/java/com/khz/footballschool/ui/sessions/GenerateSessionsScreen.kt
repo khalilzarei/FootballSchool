@@ -35,7 +35,6 @@ import com.khz.footballschool.ui.components.GlassDropdown
 import com.khz.footballschool.ui.components.GlassSectionTitle
 import com.khz.footballschool.ui.components.GlassTextField
 import com.khz.footballschool.ui.components.GlassTopBar
-import com.khz.footballschool.ui.theme.ErrorGlow
 import com.khz.footballschool.ui.theme.GoldPrimary
 import kotlinx.coroutines.launch
 
@@ -84,7 +83,7 @@ fun GenerateSessionsScreen(onBack: () -> Unit) {
                 GlassSectionTitle("تنظیمات تولید")
                 Spacer(Modifier.height(8.dp))
 
-                GlassCard3D {
+                GlassCard3D() {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         GlassDropdown(
                             label = "انتخاب کلاس",
@@ -142,7 +141,7 @@ fun GenerateSessionsScreen(onBack: () -> Unit) {
 
                 error?.let {
                     Spacer(Modifier.height(8.dp))
-                    GlassCard3D{
+                    GlassCard3D() {
                         Text(
                             it,
                             color = Color(0xFFFF8A80)
@@ -152,7 +151,7 @@ fun GenerateSessionsScreen(onBack: () -> Unit) {
 
                 generatedCount?.let { count ->
                     Spacer(Modifier.height(20.dp))
-                    GlassCard3D {
+                    GlassCard3D() {
                         Column(Modifier.padding(16.dp)) {
                             Text(
                                 if (count > 0) "$count جلسه با موفقیت تولید شد"

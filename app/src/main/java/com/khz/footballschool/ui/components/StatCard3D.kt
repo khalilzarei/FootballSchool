@@ -1,11 +1,9 @@
 package com.khz.footballschool.ui.components
 
-import android.R.attr.onClick
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
@@ -72,8 +70,7 @@ fun StatCard3D(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                Modifier
-                    .size(46.dp)
+                Modifier.size(46.dp)
                     .background(
                         Brush.linearGradient(
                             listOf(
@@ -97,8 +94,7 @@ fun StatCard3D(
             }
             Spacer(Modifier.width(12.dp))
             Row(
-                Modifier
-                    .weight(1f)
+                Modifier.weight(1f)
                     .background(Color.Transparent),
                 verticalAlignment = Alignment.CenterVertically,
             ) {

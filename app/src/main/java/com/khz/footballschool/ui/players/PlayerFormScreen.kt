@@ -1,6 +1,5 @@
 package com.khz.footballschool.ui.players
 
-import android.graphics.Color
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -168,7 +167,7 @@ fun PlayerFormScreen(
                     })
 
                 // ─── فرم اطلاعات ───
-                GlassCard3D {
+                GlassCard3D() {
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -223,10 +222,15 @@ fun PlayerFormScreen(
                                 ageDisplay = DateUtils.calculateAgeFromGregorian(g)
                             },
                             minYear = 1360,
-                            maxYear = DateUtils.gregorianToJalali(java.time.LocalDate.now().toString())
-                                .split("/").first().toIntOrNull() ?: 1415
+                            maxYear = DateUtils.gregorianToJalali(
+                                java.time.LocalDate.now()
+                                    .toString()
+                            )
+                                .split("/")
+                                .first()
+                                .toIntOrNull()
+                                    ?: 1415
                         )
-
 
                         // ─── نمایش سن محاسبه‌شده ───
                         if (ageDisplay.isNotBlank() && ageDisplay != "-") {
@@ -336,7 +340,7 @@ fun PlayerFormScreen(
                 )
 
                 error?.let {
-                    GlassCard3D(glowColor = ComposeColor(0xFFA50044)) {
+                    GlassCard3D(glowColor = ComposeColor(0xFFA50044),) {
                         Text(
                             it,
                             color = ComposeColor(0xFFFF8A80),

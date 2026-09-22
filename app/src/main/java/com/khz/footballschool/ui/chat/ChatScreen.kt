@@ -29,7 +29,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -54,7 +53,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.khz.footballschool.FootballSchoolApp
@@ -663,50 +661,48 @@ private fun MessageInputBar(
     GlassCard3D(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(12.dp)
+            .padding(12.dp),
     ) {
         CompositionLocalProvider(
             LocalLayoutDirection provides LayoutDirection.Rtl
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
+                modifier = Modifier.fillMaxWidth()
                     .padding(4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
                 Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .background(
-                            Brush.radialGradient(
-                                listOf(
-                                    GoldPrimary.copy(
-                                        alpha = if (text.isNotBlank()) {
-                                            0.95f
-                                        } else {
-                                            0.3f
-                                        }
-                                    ),
-                                    GoldPrimary.copy(
-                                        alpha = if (text.isNotBlank()) {
-                                            0.5f
-                                        } else {
-                                            0.15f
-                                        }
-                                    )
+                    modifier = Modifier.size(44.dp)
+                    .clip(CircleShape)
+                    .background(
+                        Brush.radialGradient(
+                            listOf(
+                                GoldPrimary.copy(
+                                    alpha = if (text.isNotBlank()) {
+                                        0.95f
+                                    } else {
+                                        0.3f
+                                    }
+                                ),
+                                GoldPrimary.copy(
+                                    alpha = if (text.isNotBlank()) {
+                                        0.5f
+                                    } else {
+                                        0.15f
+                                    }
                                 )
                             )
                         )
-                        .then(
-                            if (text.isNotBlank() && !sending) {
-                            Modifier.clickable {
-                                onSend()
-                            }
-                        } else {
-                            Modifier
-                        }),
+                    )
+                    .then(
+                        if (text.isNotBlank() && !sending) {
+                        Modifier.clickable {
+                            onSend()
+                        }
+                    } else {
+                        Modifier
+                    }),
                     contentAlignment = Alignment.Center) {
 
                     if (sending) {
@@ -724,8 +720,7 @@ private fun MessageInputBar(
                             } else {
                                 Color.White.copy(alpha = 0.4f)
                             },
-                            modifier = Modifier
-                                .size(20.dp)
+                            modifier = Modifier.size(20.dp)
                                 .scale(
                                     scaleX = -1f,
                                     scaleY = 1f
@@ -738,8 +733,7 @@ private fun MessageInputBar(
                     modifier = Modifier.width(8.dp)
                 )
                 Box(
-                    modifier = Modifier
-                        .weight(1f)
+                    modifier = Modifier.weight(1f)
                         .background(
                             Color.White.copy(alpha = 0.08f),
                             RoundedCornerShape(24.dp)

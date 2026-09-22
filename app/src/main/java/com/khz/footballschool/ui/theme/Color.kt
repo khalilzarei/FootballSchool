@@ -11,6 +11,7 @@ val PurpleOnPrimary = Color(0xFFFFFFFF)
 
 // رنگ‌های ثانویه - زرد طلایی
 val GoldPrimary = Color(0xFFFFD700)
+val GreenOnline = Color(0xFF72E307)
 val GoldDark = Color(0xFFF5C518)
 val GoldLight = Color(0xFFFFF8DC)
 val GoldOnSecondary = Color(0xFF1A0533)

@@ -34,7 +34,6 @@ import com.khz.footballschool.ui.components.GlassCard3D
 import com.khz.footballschool.ui.components.GlassSectionTitle
 import com.khz.footballschool.ui.components.GlassTextField
 import com.khz.footballschool.ui.components.GlassTopBar
-import com.khz.footballschool.ui.theme.ErrorGlow
 import com.khz.footballschool.ui.theme.GoldPrimary
 import kotlinx.coroutines.launch
 
@@ -123,7 +122,7 @@ fun SetMatchResultScreen(matchId: Int, onBack: () -> Unit, onSaved: () -> Unit) 
 
             error?.let {
                 Spacer(Modifier.height(8.dp))
-                GlassCard3D{
+                GlassCard3D() {
                     Text(
                         it,
                         color = Color(0xFFFF8A80)

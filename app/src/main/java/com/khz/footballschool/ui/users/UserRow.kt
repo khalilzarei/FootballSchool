@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -57,12 +56,14 @@ fun UserRow(
             bottomStart = 50.dp,
             topEnd = 10.dp,
             bottomEnd = 10.dp
-        )
+        ),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp, horizontal = 4.dp),
+            modifier = Modifier.fillMaxWidth()
+                .padding(
+                    vertical = 8.dp,
+                    horizontal = 4.dp
+                ),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // ─── آواتار با رنگ نقش ───
@@ -88,7 +89,9 @@ fun UserRow(
                     color = Color.White
                 )
                 Text(
-                    user.mobile ?: user.nationalCode ?: "-",
+                    user.mobile
+                            ?: user.nationalCode
+                            ?: "-",
                     modifier = Modifier.padding(vertical = 5.dp),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White.copy(0.6f)
@@ -117,8 +120,7 @@ fun UserRow(
                     accentColor = Color(0xFF66BB6A),   // سبز
                     contentDescription = "پیام",
                     enabled = true,
-                    onClick = { onChat(user.id) }
-                )
+                    onClick = { onChat(user.id) })
 
                 // دکمه تماس (فقط اگر موبایل داشت)
                 val phone = user.mobile
@@ -139,8 +141,7 @@ fun UserRow(
                                 onCall(phone)
                             }
                         }
-                    }
-                )
+                    })
             }
 
             Spacer(Modifier.width(8.dp))

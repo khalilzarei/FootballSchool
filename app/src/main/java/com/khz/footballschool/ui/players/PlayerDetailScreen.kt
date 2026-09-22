@@ -20,7 +20,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Badge
@@ -165,10 +164,9 @@ private fun PlayerDetailContent(
                     // هدر (آواتار + نام + badges)
                     // ═════════════════════════════════════════
                     item {
-                        GlassCard3D {
+                        GlassCard3D() {
                             Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth()
                                     .padding(16.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
@@ -238,7 +236,7 @@ private fun PlayerDetailContent(
                     // اطلاعات شخصی
                     // ═════════════════════════════════════════
                     item {
-                        GlassCard3D {
+                        GlassCard3D() {
                             Column(
                                 modifier = Modifier.padding(16.dp),
                                 verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -278,9 +276,9 @@ private fun PlayerDetailContent(
                                     icon = if (p.gender == "female") Icons.Default.Female else Icons.Default.Male,
                                     label = "جنسیت",
                                     value = when (p.gender) {
-                                        "male"   -> "پسر"
+                                        "male" -> "پسر"
                                         "female" -> "دختر"
-                                        else     -> "-"
+                                        else -> "-"
                                     }
                                 )
                                 InfoRowWithIcon(
@@ -298,7 +296,7 @@ private fun PlayerDetailContent(
                     // ═════════════════════════════════════════
                     if (!p.medicalNotes.isNullOrBlank() || !p.notes.isNullOrBlank()) {
                         item {
-                            GlassCard3D {
+                            GlassCard3D() {
                                 Column(
                                     modifier = Modifier.padding(16.dp),
                                     verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -331,22 +329,46 @@ private fun PlayerDetailContent(
                 }
 
                 // ═════════════════════════════════════════
-                // وضعیت مالی
+                // وضعیت مالی + تفکیک کلاس
                 // ═════════════════════════════════════════
                 balance?.let { b ->
                     item {
                         GlassCard3D(
-                            glowColor = if (b.balance > 0) Color(0x44FF8A80) else Color(0x4481C784)
+                            glowColor = if (b.debt > 0 || b.balance > 0) Color(0x44FF8A80) else Color(0x4481C784),
                         ) {
                             Column(
                                 modifier = Modifier.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                SectionTitle(
-                                    title = "وضعیت مالی",
-                                    icon = Icons.Default.AccountBalanceWallet,
-                                    color = GoldPrimary
-                                )
+                                Row(
+                                    Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    SectionTitle(
+                                        title = "وضعیت مالی",
+                                        icon = Icons.Default.AccountBalanceWallet,
+                                        color = GoldPrimary
+                                    )
+                                    if (b.isDebtor) {
+                                        Box(
+                                            Modifier.background(
+                                                    Color(0xFFFF8A80).copy(0.2f),
+                                                    RoundedCornerShape(8.dp)
+                                                )
+                                                .padding(
+                                                    horizontal = 8.dp,
+                                                    vertical = 4.dp
+                                                )
+                                        ) {
+                                            Text(
+                                                "بدهکار",
+                                                color = Color(0xFFFF8A80),
+                                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                                            )
+                                        }
+                                    }
+                                }
 
                                 Spacer(Modifier.height(4.dp))
 
@@ -361,11 +383,17 @@ private fun PlayerDetailContent(
                                     value = CurrencyUtils.formatCurrency(b.totalPaid),
                                     valueColor = Color(0xFF81C784)
                                 )
+                                if (b.pendingCount > 0) {
+                                    InfoRowWithIcon(
+                                        icon = Icons.Default.Receipt,
+                                        label = "در انتظار تایید",
+                                        value = "${b.pendingCount} پرداخت - ${CurrencyUtils.formatCurrency(b.pendingAmount)}",
+                                        valueColor = GoldPrimary
+                                    )
+                                }
 
-                                // خط جداکننده
                                 Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth()
                                         .height(1.dp)
                                         .padding(vertical = 4.dp)
                                         .background(Color.White.copy(0.1f))
@@ -373,11 +401,126 @@ private fun PlayerDetailContent(
 
                                 InfoRowWithIcon(
                                     icon = Icons.Default.AccountBalanceWallet,
-                                    label = "مانده",
-                                    value = CurrencyUtils.formatCurrency(b.balance),
-                                    valueColor = if (b.balance > 0) Color(0xFFFF8A80) else Color(0xFF81C784),
+                                    label = "بدهی کل",
+                                    value = CurrencyUtils.formatCurrency(b.debt),
+                                    valueColor = if (b.debt > 0) Color(0xFFFF8A80) else Color(0xFF81C784),
                                     isBold = true
                                 )
+
+                                // تفکیک به کلاس‌ها
+                                if (b.classDebts.isNotEmpty()) {
+                                    Spacer(Modifier.height(8.dp))
+                                    Text(
+                                        "بدهی به تفکیک کلاس:",
+                                        color = Color.White.copy(0.6f),
+                                        style = MaterialTheme.typography.labelMedium
+                                    )
+                                    Spacer(Modifier.height(4.dp))
+                                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        b.classDebts.forEach { cd ->
+                                            Row(
+                                                Modifier.fillMaxWidth()
+                                                    .clip(RoundedCornerShape(8.dp))
+                                                    .background(Color.White.copy(0.06f))
+                                                    .padding(
+                                                        horizontal = 10.dp,
+                                                        vertical = 8.dp
+                                                    ),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Column(Modifier.weight(1f)) {
+                                                    Text(
+                                                        cd.classTitle,
+                                                        color = Color.White,
+                                                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                                                        maxLines = 1
+                                                    )
+                                                    cd.ageGroupTitle?.let {
+                                                        Text(
+                                                            it,
+                                                            color = Color.White.copy(0.5f),
+                                                            style = MaterialTheme.typography.labelSmall
+                                                        )
+                                                    }
+                                                }
+                                                Column(horizontalAlignment = Alignment.End) {
+                                                    Text(
+                                                        CurrencyUtils.formatCurrency(cd.remaining),
+                                                        color = if (cd.remaining > 0) Color(0xFFFF8A80) else Color(0xFF81C784),
+                                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                                                    )
+                                                    if (cd.total > 0) Text(
+                                                        "کل: ${CurrencyUtils.formatCurrency(cd.total)}",
+                                                        color = Color.White.copy(0.45f),
+                                                        style = MaterialTheme.typography.labelSmall
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if (b.classFees.isNotEmpty()) {
+                                    Spacer(Modifier.height(8.dp))
+                                    Text(
+                                        "شهریه مصوب کلاس‌ها:",
+                                        color = Color.White.copy(0.6f),
+                                        style = MaterialTheme.typography.labelMedium
+                                    )
+                                    Spacer(Modifier.height(4.dp))
+                                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        b.classFees.take(5)
+                                            .forEach { cf ->
+                                                Row(
+                                                    Modifier.fillMaxWidth()
+                                                        .clip(RoundedCornerShape(8.dp))
+                                                        .background(GoldPrimary.copy(0.08f))
+                                                        .padding(
+                                                            horizontal = 10.dp,
+                                                            vertical = 8.dp
+                                                        ),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Column(Modifier.weight(1f)) {
+                                                        Text(
+                                                            cf.classTitle,
+                                                            color = Color.White,
+                                                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold)
+                                                        )
+                                                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                                            cf.monthlyFee?.let {
+                                                                Text(
+                                                                    "ماهانه: ${CurrencyUtils.formatCurrency(it)}",
+                                                                    color = Color.White.copy(0.5f),
+                                                                    style = MaterialTheme.typography.labelSmall
+                                                                )
+                                                            }
+                                                        }
+                                                    }
+                                                    if (cf.debt > 0) {
+                                                        Box(
+                                                            Modifier.background(
+                                                                    Color(0xFFFF8A80).copy(0.15f),
+                                                                    RoundedCornerShape(6.dp)
+                                                                )
+                                                                .padding(
+                                                                    horizontal = 6.dp,
+                                                                    vertical = 3.dp
+                                                                )
+                                                        ) {
+                                                            Text(
+                                                                CurrencyUtils.formatCurrency(cf.debt),
+                                                                color = Color(0xFFFF8A80),
+                                                                style = MaterialTheme.typography.labelSmall
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                    }
+                                }
                             }
                         }
                     }
@@ -402,10 +545,9 @@ private fun PlayerDetailContent(
 
                 if (guardians.isEmpty()) {
                     item {
-                        GlassCard3D {
+                        GlassCard3D() {
                             Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth()
                                     .padding(vertical = 16.dp),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -457,7 +599,7 @@ private fun PlayerDetailContent(
                     }
 
                     items(invoices) { inv ->
-                        GlassCard3D {
+                        GlassCard3D() {
                             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                 Row(
                                     Modifier.fillMaxWidth(),
@@ -498,15 +640,65 @@ private fun PlayerDetailContent(
                                     valueColor = Color(0xFF81C784)
                                 )
 
-                                // خط جداکننده
+                                // آیتم‌ها با تفکیک کلاس
+                                if (inv.items.isNotEmpty()) {
+                                    Spacer(Modifier.height(6.dp))
+                                    Text(
+                                        "آیتم‌ها:",
+                                        color = Color.White.copy(0.5f),
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        inv.items.take(5)
+                                            .forEach { item ->
+                                                Row(
+                                                    Modifier.fillMaxWidth()
+                                                        .clip(RoundedCornerShape(6.dp))
+                                                        .background(Color.White.copy(0.05f))
+                                                        .padding(
+                                                            horizontal = 8.dp,
+                                                            vertical = 6.dp
+                                                        ),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Column(Modifier.weight(1f)) {
+                                                        Text(
+                                                            item.title,
+                                                            color = Color.White.copy(0.9f),
+                                                            style = MaterialTheme.typography.labelSmall,
+                                                            maxLines = 1
+                                                        )
+                                                        item.classTitle?.let {
+                                                            Text(
+                                                                it,
+                                                                color = GoldPrimary.copy(0.7f),
+                                                                style = MaterialTheme.typography.labelSmall
+                                                            )
+                                                        }
+                                                    }
+                                                    Text(
+                                                        CurrencyUtils.formatCurrency(item.total),
+                                                        color = Color.White.copy(0.7f),
+                                                        style = MaterialTheme.typography.labelSmall
+                                                    )
+                                                }
+                                            }
+                                        if (inv.items.size > 5) Text(
+                                            "+ ${inv.items.size - 5} آیتم دیگر",
+                                            color = Color.White.copy(0.4f),
+                                            style = MaterialTheme.typography.labelSmall
+                                        )
+                                    }
+                                }
+
                                 Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth()
                                         .height(1.dp)
                                         .background(Color.White.copy(0.08f))
                                 )
 
-                                val remaining = inv.totalAmount - inv.paidAmount
+                                val remaining = inv.remainingAmount
                                 InfoRowWithIcon(
                                     icon = Icons.Default.AccountBalanceWallet,
                                     label = "مانده",
@@ -514,6 +706,29 @@ private fun PlayerDetailContent(
                                     valueColor = if (remaining > 0) Color(0xFFFF8A80) else Color(0xFF81C784),
                                     isBold = true
                                 )
+
+                                if (inv.classDebts.isNotEmpty()) {
+                                    Spacer(Modifier.height(4.dp))
+                                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        inv.classDebts.take(3)
+                                            .forEach { cd ->
+                                                Box(
+                                                    Modifier.clip(RoundedCornerShape(6.dp))
+                                                        .background(Color.White.copy(0.06f))
+                                                        .padding(
+                                                            horizontal = 6.dp,
+                                                            vertical = 3.dp
+                                                        )
+                                                ) {
+                                                    Text(
+                                                        "${cd.classTitle}: ${CurrencyUtils.formatCurrency(cd.total)}",
+                                                        color = Color.White.copy(0.6f),
+                                                        style = MaterialTheme.typography.labelSmall
+                                                    )
+                                                }
+                                            }
+                                    }
+                                }
                             }
                         }
                     }
@@ -723,10 +938,9 @@ private fun GuardianRow(
     val phone = guardianPlayer.guardian?.displayMobile
             ?: guardianPlayer.guardian?.user?.mobile
 
-    GlassCard3D(shape = RoundedCornerShape(16.dp)) {
+    GlassCard3D(shape = RoundedCornerShape(16.dp),) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
                 .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -754,8 +968,7 @@ private fun GuardianRow(
                     )
                     if (guardianPlayer.isPrimary) {
                         Box(
-                            modifier = Modifier
-                                .background(
+                            modifier = Modifier.background(
                                     GoldPrimary.copy(alpha = 0.25f),
                                     RoundedCornerShape(8.dp)
                                 )
@@ -800,7 +1013,8 @@ private fun GuardianRow(
                 GuardianActionButton(
                     icon = Icons.Default.Chat,
                     accentColor = Color(0xFF66BB6A),
-                    enabled = (guardianPlayer.guardian?.userId ?: 0) != 0,
+                    enabled = (guardianPlayer.guardian?.userId
+                            ?: 0) != 0,
                     onClick = {
                         val uid = guardianPlayer.guardian?.userId
                         if (uid != null && uid != 0) onChat(uid)

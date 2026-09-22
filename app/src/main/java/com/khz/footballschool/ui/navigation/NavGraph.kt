@@ -33,9 +33,13 @@ import com.khz.footballschool.ui.dashboard.DashboardScreen
 import com.khz.footballschool.ui.discounts.DiscountListScreen
 import com.khz.footballschool.ui.guardians.GuardianDetailScreen
 import com.khz.footballschool.ui.guardians.GuardianListScreen
+import com.khz.footballschool.ui.invoices.InvoiceDetailScreen
 import com.khz.footballschool.ui.invoices.InvoiceListScreen
+import com.khz.footballschool.ui.matches.MatchDetailScreen
+import com.khz.footballschool.ui.matches.MatchFormScreen
 import com.khz.footballschool.ui.matches.MatchListScreen
 import com.khz.footballschool.ui.matches.MatchPlayersScreen
+import com.khz.footballschool.ui.matches.MatchRefreshBus
 import com.khz.footballschool.ui.matches.SetMatchResultScreen
 import com.khz.footballschool.ui.media.MediaListScreen
 import com.khz.footballschool.ui.news.NewsDetailScreen
@@ -72,27 +76,18 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
 
     var startDestination by remember { mutableStateOf<String?>(null) }
 
-    /*
-     * بررسی وضعیت لاگین در شروع اپ
-     */
     LaunchedEffect(Unit) {
         val rememberMe = container.sessionManager.rememberMe.first()
         val token = container.sessionManager.authToken.first()
-
         if (!rememberMe) {
             container.sessionManager.clearSession()
             startDestination = Screen.Login.route
         } else {
-            startDestination = if (!token.isNullOrBlank()) {
-                Screen.Dashboard.route
-            } else {
-                Screen.Login.route
-            }
+            startDestination = if (!token.isNullOrBlank()) Screen.Dashboard.route else Screen.Login.route
         }
     }
 
     val start = startDestination
-
     if (start == null) {
         SplashScreen(
             isLoggedIn = false,
@@ -106,965 +101,432 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
         startDestination = start
     ) {
 
-        // ═════════════════════════════════════════════
-        // Auth & Splash
-        // ═════════════════════════════════════════════
-
         composable(Screen.Login.route) {
             LoginScreen(
-                onLoginSuccess = {
-                    nav.navigate(Screen.Dashboard.route) {
-                        popUpTo(Screen.Login.route) {
-                            inclusive = true
-                        }
-                    }
-                },
-                onRequirePasswordChange = {
-                    nav.navigate(Screen.ChangePassword.route) {
-                        popUpTo(Screen.Login.route) {
-                            inclusive = true
-                        }
-                    }
-                })
+                onLoginSuccess = { nav.navigate(Screen.Dashboard.route) { popUpTo(Screen.Login.route) { inclusive = true } } },
+                onRequirePasswordChange = { nav.navigate(Screen.ChangePassword.route) { popUpTo(Screen.Login.route) { inclusive = true } } })
         }
 
         composable(Screen.ChangePassword.route) {
-            ChangePasswordScreen(
-                onPasswordChanged = {
-                    nav.navigate(Screen.Dashboard.route) {
-                        popUpTo(Screen.ChangePassword.route) {
-                            inclusive = true
-                        }
-                    }
-                })
+            ChangePasswordScreen(onPasswordChanged = { nav.navigate(Screen.Dashboard.route) { popUpTo(Screen.ChangePassword.route) { inclusive = true } } })
         }
-
-        // ═════════════════════════════════════════════
-        // Dashboard & Settings
-        // ═════════════════════════════════════════════
 
         composable(Screen.Dashboard.route) {
             DashboardScreen(
-                onRequirePasswordChange = {
-                    nav.navigate(Screen.ChangePassword.route) {
-                        popUpTo(Screen.Dashboard.route) {
-                            inclusive = true
-                        }
-                    }
-                },
-
-                onNavigateToUsers = {
-                    nav.navigate(Screen.UserList.route)
-                },
-
-                onNavigateToPlayers = {
-                    nav.navigate(Screen.PlayerList.route)
-                },
-
-                onNavigateToClasses = {
-                    nav.navigate(Screen.ClassList.route)
-                },
-
-                onNavigateToSessions = {
-                    nav.navigate(Screen.SessionList.route)
-                },
-
-                onNavigateToMySessions = {
-                    nav.navigate(Screen.MySessions.route)
-                },
-
-                onNavigateToInvoices = {
-                    nav.navigate(Screen.InvoiceList.route)
-                },
-
-                onNavigateToPayments = {
-                    nav.navigate(Screen.PaymentList.route)
-                },
-
-                onNavigateToReports = {
-                    nav.navigate(Screen.Reports.route)
-                },
-
-                onNavigateToNews = {
-                    nav.navigate(Screen.NewsList.route)
-                },
-
-                onNavigateToChat = {
-                    nav.navigate(Screen.ChatRoomList.route)
-                },
-
-                onNavigateToAgeGroups = {
-                    nav.navigate(Screen.AgeGroupList.route)
-                },
-
-                onNavigateToSeasons = {
-                    nav.navigate(Screen.SeasonList.route)
-                },
-
-
-                onNavigateToDiscounts = {
-                    nav.navigate(Screen.DiscountList.route)
-                },
-
-                onNavigateToMatches = {
-                    nav.navigate(Screen.MatchList.route)
-                },
-
-                onNavigateToMedia = {
-                    nav.navigate(Screen.MediaList.route)
-                },
-
-                onNavigateToNotifications = {
-                    nav.navigate(Screen.NotificationList.route)
-                },
-
-                onNavigateToSettings = {
-                    nav.navigate(Screen.Settings.route)
-                },
-
-                onOpenChat = { roomId ->
-                    nav.navigate(
-                        Screen.Chat.createRoute(roomId)
-                    )
-                })
+                onRequirePasswordChange = { nav.navigate(Screen.ChangePassword.route) { popUpTo(Screen.Dashboard.route) { inclusive = true } } },
+                onNavigateToUsers = { nav.navigate(Screen.UserList.route) },
+                onNavigateToPlayers = { nav.navigate(Screen.PlayerList.route) },
+                onNavigateToClasses = { nav.navigate(Screen.ClassList.route) },
+                onNavigateToSessions = { nav.navigate(Screen.SessionList.route) },
+                onNavigateToMySessions = { nav.navigate(Screen.MySessions.route) },
+                onNavigateToInvoices = { nav.navigate(Screen.InvoiceList.route) },
+                onNavigateToPayments = { nav.navigate(Screen.PaymentList.route) },
+                onNavigateToReports = { nav.navigate(Screen.Reports.route) },
+                onNavigateToNews = { nav.navigate(Screen.NewsList.route) },
+                onNavigateToChat = { nav.navigate(Screen.ChatRoomList.route) },
+                onNavigateToAgeGroups = { nav.navigate(Screen.AgeGroupList.route) },
+                onNavigateToSeasons = { nav.navigate(Screen.SeasonList.route) },
+                onNavigateToDiscounts = { nav.navigate(Screen.DiscountList.route) },
+                onNavigateToMatches = { nav.navigate(Screen.MatchList.route) },
+                onNavigateToMedia = { nav.navigate(Screen.MediaList.route) },
+                onNavigateToNotifications = { nav.navigate(Screen.NotificationList.route) },
+                onNavigateToSettings = { nav.navigate(Screen.Settings.route) },
+                onOpenChat = { roomId -> nav.navigate(Screen.Chat.createRoute(roomId)) })
         }
-
-        // ═════════════════════════════════════════════
-        // News - لیست، جزئیات، فرم ساخت و ویرایش
-        // ═════════════════════════════════════════════
 
         composable(Screen.NewsList.route) {
             NewsListScreen(
                 onBack = { nav.popBackStack() },
                 onAdd = { nav.navigate(Screen.NewsForm.route) },
                 onEdit = { id -> nav.navigate(Screen.NewsEdit.createRoute(id)) },
-                onDetail = { id -> nav.navigate(Screen.NewsDetail.createRoute(id)) }
-            )
+                onDetail = { id -> nav.navigate(Screen.NewsDetail.createRoute(id)) })
         }
 
         composable(Screen.NewsForm.route) {
             NewsFormScreen(
                 newsId = null,
                 onBack = { nav.popBackStack() },
-                onSaved = {
-                    NewsRefreshBus.refresh()
-                    nav.popBackStack()
-                }
-            )
+                onSaved = { NewsRefreshBus.refresh(); nav.popBackStack() })
         }
 
         composable(
             route = Screen.NewsDetail.route,
             arguments = listOf(navArgument("newsId") { type = NavType.IntType })
         ) { backStack ->
-            val newsId = backStack.arguments?.getInt("newsId") ?: 0
+            val newsId = backStack.arguments?.getInt("newsId")
+                    ?: 0
             NewsDetailScreen(
                 newsId = newsId,
                 onBack = { nav.popBackStack() },
                 onEdit = { id -> nav.navigate(Screen.NewsEdit.createRoute(id)) },
-                onDeleted = {
-                    NewsRefreshBus.refresh()
-                    nav.popBackStack()
-                }
-            )
+                onDeleted = { NewsRefreshBus.refresh(); nav.popBackStack() })
         }
 
         composable(
             route = Screen.NewsEdit.route,
             arguments = listOf(navArgument("newsId") { type = NavType.IntType })
         ) { backStack ->
-            val newsId = backStack.arguments?.getInt("newsId") ?: 0
+            val newsId = backStack.arguments?.getInt("newsId")
+                    ?: 0
             NewsFormScreen(
                 newsId = newsId,
                 onBack = { nav.popBackStack() },
-                onSaved = {
-                    NewsRefreshBus.refresh()
-                    nav.popBackStack()
-                }
-            )
+                onSaved = { NewsRefreshBus.refresh(); nav.popBackStack() })
         }
 
-        // ═════════════════════════════════════════════
-        // Chat Room List
-        // ═════════════════════════════════════════════
-
         composable(Screen.ChatRoomList.route) {
-
-            var showCreateGroup by remember {
-                mutableStateOf(false)
-            }
-
+            var showCreateGroup by remember { mutableStateOf(false) }
             ChatRoomListScreen(
-                onBack = {
-                    nav.popBackStack()
-                },
-
-                onOpenChat = { roomId ->
-                    nav.navigate(
-                        Screen.Chat.createRoute(roomId)
-                    )
-                },
-
-                onOpenContacts = {
-                    nav.navigate(Screen.ChatContacts.route)
-                },
-
-                onOpenCreateGroup = {
-                    showCreateGroup = true
-                })
-
+                onBack = { nav.popBackStack() },
+                onOpenChat = { roomId -> nav.navigate(Screen.Chat.createRoute(roomId)) },
+                onOpenContacts = { nav.navigate(Screen.ChatContacts.route) },
+                onOpenCreateGroup = { showCreateGroup = true })
             if (showCreateGroup) {
                 CreateGroupRoomDialog(
                     onDismiss = { showCreateGroup = false },
-                    onCreated = { roomId ->
-                        showCreateGroup = false
-                        nav.navigate(Screen.Chat.createRoute(roomId))
-                    })
+                    onCreated = { roomId -> showCreateGroup = false; nav.navigate(Screen.Chat.createRoute(roomId)) })
             }
         }
 
-        // ═════════════════════════════════════════════
-        // Chat Contacts (شروع گفتگوی جدید — ادمین)
-        // ═════════════════════════════════════════════
-
         composable(Screen.ChatContacts.route) {
             ChatContactsScreen(
-                onBack = {
-                    nav.popBackStack()
-                },
-
+                onBack = { nav.popBackStack() },
                 onPick = { userId ->
-
                     scope.launch {
-
-                        when (val result = container.chatRepository.createPrivateRoom(
-                            targetUserId = userId
-                        )) {
-
-                            is NetworkResult.Success -> {
-                                nav.navigate(
-                                    Screen.Chat.createRoute(
-                                        result.data.id
-                                    )
-                                )
-                            }
-
-                            is NetworkResult.Error   -> {
-                                // خطا در صفحه تماس/پروفایل مدیریت می‌شود
-                            }
-
-                            is NetworkResult.Loading -> Unit
+                        when (val result = container.chatRepository.createPrivateRoom(targetUserId = userId)) {
+                            is NetworkResult.Success -> nav.navigate(Screen.Chat.createRoute(result.data.id))
+                            else                     -> {}
                         }
                     }
                 })
         }
-
-        // ═════════════════════════════════════════════
-        // Chat Room
-        // ═════════════════════════════════════════════
 
         composable(
             route = Screen.Chat.route,
-            arguments = listOf(
-                navArgument("roomId") {
-                    type = NavType.IntType
-                })) { backStackEntry ->
-
+            arguments = listOf(navArgument("roomId") { type = NavType.IntType })
+        ) { backStackEntry ->
             val roomId = backStackEntry.arguments?.getInt("roomId")
                     ?: return@composable
-
             ChatScreen(
                 roomId = roomId,
-                onBack = {
-                    nav.popBackStack()
-                })
+                onBack = { nav.popBackStack() })
         }
 
-        // ═════════════════════════════════════════════
-        // Age Groups
-        // ═════════════════════════════════════════════
+        composable(Screen.AgeGroupList.route) { AgeGroupListScreen(onBack = { nav.popBackStack() }) }
+        composable(Screen.SeasonList.route) { SeasonListScreen(onBack = { nav.popBackStack() }) }
+        composable(Screen.DiscountList.route) { DiscountListScreen(onBack = { nav.popBackStack() }) }
 
-        composable(Screen.AgeGroupList.route) {
-            AgeGroupListScreen(
-                onBack = {
-                    nav.popBackStack()
-                })
-        }
-
-        // ═════════════════════════════════════════════
-        // Seasons
-        // ═════════════════════════════════════════════
-
-        composable(Screen.SeasonList.route) {
-            SeasonListScreen(
-                onBack = {
-                    nav.popBackStack()
-                })
-        }
-
-
-        composable(Screen.DiscountList.route) {
-            DiscountListScreen(
-                onBack = {
-                    nav.popBackStack()
-                })
-        }
-
-        // ═════════════════════════════════════════════
-        // Matches
-        // ═════════════════════════════════════════════
-
+        // Matches - با رفرش باس
         composable(Screen.MatchList.route) {
             MatchListScreen(
-                onBack = {
-                    nav.popBackStack()
-                })
+                onBack = { nav.popBackStack() },
+                onAdd = { nav.navigate(Screen.MatchForm.route) },
+                onDetail = { id -> nav.navigate(Screen.MatchDetail.createRoute(id)) })
+        }
+        composable(
+            route = Screen.MatchDetail.route,
+            arguments = listOf(navArgument("matchId") { type = NavType.IntType })
+        ) { backStack ->
+            val matchId = backStack.arguments?.getInt("matchId")
+                    ?: 0
+            MatchDetailScreen(
+                matchId = matchId,
+                onBack = { nav.popBackStack() },
+                onEdit = { id -> nav.navigate(Screen.MatchEdit.createRoute(id)) },
+                onPlayers = { id -> nav.navigate(Screen.MatchPlayers.createRoute(id)) },
+                onSetResult = { id -> nav.navigate(Screen.SetMatchResult.createRoute(id)) })
+        }
+        composable(Screen.MatchForm.route) {
+            MatchFormScreen(
+                matchId = null,
+                onBack = { nav.popBackStack() },
+                onSaved = { MatchRefreshBus.refresh(); nav.popBackStack() })
+        }
+        composable(
+            route = Screen.MatchEdit.route,
+            arguments = listOf(navArgument("matchId") { type = NavType.IntType })
+        ) { backStack ->
+            val matchId = backStack.arguments?.getInt("matchId")
+                    ?: 0
+            MatchFormScreen(
+                matchId = matchId,
+                onBack = { nav.popBackStack() },
+                onSaved = { MatchRefreshBus.refresh(); nav.popBackStack() })
+        }
+        composable(
+            route = Screen.MatchPlayers.route,
+            arguments = listOf(navArgument("matchId") { type = NavType.IntType })
+        ) { backStack ->
+            val matchId = backStack.arguments?.getInt("matchId")
+                    ?: 0
+            MatchPlayersScreen(
+                matchId = matchId,
+                onBack = { MatchRefreshBus.refresh(); nav.popBackStack() })
+        }
+        composable(
+            route = Screen.SetMatchResult.route,
+            arguments = listOf(navArgument("matchId") { type = NavType.IntType })
+        ) { backStack ->
+            val matchId = backStack.arguments?.getInt("matchId")
+                    ?: 0
+            SetMatchResultScreen(
+                matchId = matchId,
+                onBack = { nav.popBackStack() },
+                onSaved = { MatchRefreshBus.refresh(); nav.popBackStack() })
         }
 
-        // ═════════════════════════════════════════════
-        // Media
-        // ═════════════════════════════════════════════
-
-        composable(Screen.MediaList.route) {
-            MediaListScreen(
-                onBack = {
-                    nav.popBackStack()
-                })
-        }
-
-        // ═════════════════════════════════════════════
-        // Notifications
-        // ═════════════════════════════════════════════
-
-        composable(Screen.NotificationList.route) {
-            NotificationListScreen(
-                onBack = {
-                    nav.popBackStack()
-                })
-        }
-
-        // ═════════════════════════════════════════════
-        // Settings
-        // ═════════════════════════════════════════════
-
+        composable(Screen.MediaList.route) { MediaListScreen(onBack = { nav.popBackStack() }) }
+        composable(Screen.NotificationList.route) { NotificationListScreen(onBack = { nav.popBackStack() }) }
         composable(Screen.Settings.route) {
             SettingsScreen(
-                onBack = {
-                    nav.popBackStack()
-                },
-
-                onLoggedOut = {
-                    nav.navigate(Screen.Login.route) {
-                        popUpTo(0) {
-                            inclusive = true
-                        }
-                    }
-                })
+                onBack = { nav.popBackStack() },
+                onLoggedOut = { nav.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } } })
         }
-
-        // ═════════════════════════════════════════════
-        // Users
-        // ═════════════════════════════════════════════
 
         composable(Screen.UserList.route) {
             UserListScreen(
-                onUserClick = { id ->
-                    nav.navigate(
-                        Screen.UserDetail.createRoute(id)
-                    )
-                },
-
-                onAddUser = {
-                    nav.navigate(Screen.UserForm.route)
-                },
-
+                onUserClick = { id -> nav.navigate(Screen.UserDetail.createRoute(id)) },
+                onAddUser = { nav.navigate(Screen.UserForm.route) },
                 onChat = { userId ->
-
                     scope.launch {
-
-                        when (val result = container.chatRepository.createPrivateRoom(
-                            targetUserId = userId
-                        )) {
-
-                            is NetworkResult.Success -> {
-                                nav.navigate(
-                                    Screen.Chat.createRoute(
-                                        result.data.id
-                                    )
-                                )
-                            }
-
-                            is NetworkResult.Error   -> {
-                                // خطا توسط UI فعلی مدیریت شود
-                            }
-
-                            is NetworkResult.Loading -> Unit
+                        when (val result = container.chatRepository.createPrivateRoom(targetUserId = userId)) {
+                            is NetworkResult.Success -> nav.navigate(Screen.Chat.createRoute(result.data.id))
+                            else                     -> {}
                         }
                     }
                 })
         }
-
-        // ═════════════════════════════════════════════
-        // User Form
-        // ═════════════════════════════════════════════
 
         composable(Screen.UserForm.route) {
             UserFormScreen(
                 userId = null,
-                onSaved = {
-                    nav.popBackStack()
-                },
-                onBack = {
-                    nav.popBackStack()
-                })
+                onSaved = { nav.popBackStack() },
+                onBack = { nav.popBackStack() })
         }
-
-        // ═════════════════════════════════════════════
-        // User Detail
-        // ═════════════════════════════════════════════
 
         composable(
             route = Screen.UserDetail.route,
-            arguments = listOf(
-                navArgument("userId") {
-                    type = NavType.IntType
-                })) { backStack ->
-
+            arguments = listOf(navArgument("userId") { type = NavType.IntType })
+        ) { backStack ->
             val userId = backStack.arguments?.getInt("userId")
                     ?: 0
-
             UserDetailScreen(
                 userId = userId,
-
-                onBack = {
-                    nav.popBackStack()
-                },
-
-                onEdit = {
-                    nav.navigate(
-                        Screen.UserEdit.createRoute(userId)
-                    )
-                })
+                onBack = { nav.popBackStack() },
+                onEdit = { nav.navigate(Screen.UserEdit.createRoute(userId)) })
         }
-
-        // ═════════════════════════════════════════════
-        // User Edit
-        // ═════════════════════════════════════════════
 
         composable(
             route = Screen.UserEdit.route,
-            arguments = listOf(
-                navArgument("userId") {
-                    type = NavType.IntType
-                })) { backStack ->
-
+            arguments = listOf(navArgument("userId") { type = NavType.IntType })
+        ) { backStack ->
             val userId = backStack.arguments?.getInt("userId")
                     ?: 0
-
             UserFormScreen(
                 userId = userId,
-
-                onSaved = {
-                    nav.popBackStack()
-                },
-
-                onBack = {
-                    nav.popBackStack()
-                })
+                onSaved = { nav.popBackStack() },
+                onBack = { nav.popBackStack() })
         }
-
-        // ═════════════════════════════════════════════
-        // Players
-        // ═════════════════════════════════════════════
 
         composable(Screen.PlayerList.route) {
             PlayerListScreen(
-
-                onPlayerClick = { id ->
-                    nav.navigate(
-                        Screen.PlayerDetail.createRoute(id)
-                    )
-                },
-
-                onAddPlayer = {
-                    nav.navigate(
-                        Screen.PlayerForm.route
-                    )
-                },
-
+                onPlayerClick = { id -> nav.navigate(Screen.PlayerDetail.createRoute(id)) },
+                onAddPlayer = { nav.navigate(Screen.PlayerForm.route) },
                 onChat = { userId ->
-
                     scope.launch {
-
-                        when (val result = container.chatRepository.createPrivateRoom(
-                            targetUserId = userId
-                        )) {
-
-                            is NetworkResult.Success -> {
-                                nav.navigate(
-                                    Screen.Chat.createRoute(
-                                        result.data.id
-                                    )
-                                )
-                            }
-
-                            is NetworkResult.Error   -> {
-                                // خطا توسط UI فعلی مدیریت شود
-                            }
-
-                            is NetworkResult.Loading -> Unit
+                        when (val result = container.chatRepository.createPrivateRoom(targetUserId = userId)) {
+                            is NetworkResult.Success -> nav.navigate(Screen.Chat.createRoute(result.data.id))
+                            else                     -> {}
                         }
                     }
                 })
         }
-
-        // ═════════════════════════════════════════════
-        // Player Form
-        // ═════════════════════════════════════════════
 
         composable(Screen.PlayerForm.route) {
             PlayerFormScreen(
                 playerId = null,
-
-                onSaved = {
-                    nav.popBackStack()
-                },
-
-                onBack = {
-                    nav.popBackStack()
-                })
+                onSaved = { nav.popBackStack() },
+                onBack = { nav.popBackStack() })
         }
-
-        // ═════════════════════════════════════════════
-        // Player Detail
-        // ═════════════════════════════════════════════
 
         composable(
             route = Screen.PlayerDetail.route,
-            arguments = listOf(
-                navArgument("playerId") {
-                    type = NavType.IntType
-                })) { backStack ->
-
+            arguments = listOf(navArgument("playerId") { type = NavType.IntType })
+        ) { backStack ->
             val playerId = backStack.arguments?.getInt("playerId")
                     ?: 0
-
             PlayerDetailScreen(
                 playerId = playerId,
-
-                onBack = {
-                    nav.popBackStack()
-                },
-
-                onEdit = {
-                    nav.navigate(
-                        Screen.PlayerEdit.createRoute(playerId)
-                    )
-                },
-
-                onAttachGuardian = {
-                    nav.navigate(
-                        Screen.AttachGuardianToPlayer.createRoute(
-                            playerId
-                        )
-                    )
-                },
-
+                onBack = { nav.popBackStack() },
+                onEdit = { nav.navigate(Screen.PlayerEdit.createRoute(playerId)) },
+                onAttachGuardian = { nav.navigate(Screen.AttachGuardianToPlayer.createRoute(playerId)) },
                 onChat = { userId ->
-
                     scope.launch {
-
-                        when (val result = container.chatRepository.createPrivateRoom(
-                            targetUserId = userId
-                        )) {
-
-                            is NetworkResult.Success -> {
-                                nav.navigate(
-                                    Screen.Chat.createRoute(
-                                        result.data.id
-                                    )
-                                )
-                            }
-
-                            is NetworkResult.Error   -> {
-                                // خطا توسط UI فعلی مدیریت شود
-                            }
-
-                            is NetworkResult.Loading -> Unit
+                        when (val result = container.chatRepository.createPrivateRoom(targetUserId = userId)) {
+                            is NetworkResult.Success -> nav.navigate(Screen.Chat.createRoute(result.data.id))
+                            else                     -> {}
                         }
                     }
                 })
         }
 
-        // ═════════════════════════════════════════════
-        // Player Edit
-        // ═════════════════════════════════════════════
-
         composable(
             route = Screen.PlayerEdit.route,
-            arguments = listOf(
-                navArgument("playerId") {
-                    type = NavType.IntType
-                })) { backStack ->
-
+            arguments = listOf(navArgument("playerId") { type = NavType.IntType })
+        ) { backStack ->
             val playerId = backStack.arguments?.getInt("playerId")
                     ?: 0
-
             PlayerFormScreen(
                 playerId = playerId,
-
-                onSaved = {
-                    nav.popBackStack()
-                },
-
-                onBack = {
-                    nav.popBackStack()
-                })
+                onSaved = { nav.popBackStack() },
+                onBack = { nav.popBackStack() })
         }
-
-        // ═════════════════════════════════════════════
-        // Attach Guardian
-        // ═════════════════════════════════════════════
 
         composable(
             route = Screen.AttachGuardianToPlayer.route,
-            arguments = listOf(
-                navArgument("playerId") {
-                    type = NavType.IntType
-                })) { backStack ->
-
+            arguments = listOf(navArgument("playerId") { type = NavType.IntType })
+        ) { backStack ->
             val playerId = backStack.arguments?.getInt("playerId")
                     ?: 0
-
             AttachGuardianToPlayerScreen(
                 playerId = playerId,
-
-                onBack = {
-                    nav.popBackStack()
-                })
+                onBack = { nav.popBackStack() })
         }
 
-        // ═════════════════════════════════════════════
-        // Guardians
-        // ═════════════════════════════════════════════
-
-        composable(Screen.GuardianList.route) {
-            GuardianListScreen(
-                onGuardianClick = { id ->
-                    nav.navigate(
-                        Screen.GuardianDetail.createRoute(id)
-                    )
-                })
-        }
+        composable(Screen.GuardianList.route) { GuardianListScreen(onGuardianClick = { id -> nav.navigate(Screen.GuardianDetail.createRoute(id)) }) }
 
         composable(
             route = Screen.GuardianDetail.route,
-            arguments = listOf(
-                navArgument("guardianId") {
-                    type = NavType.IntType
-                })) { backStack ->
-
+            arguments = listOf(navArgument("guardianId") { type = NavType.IntType })
+        ) { backStack ->
             val guardianId = backStack.arguments?.getInt("guardianId")
                     ?: 0
-
             GuardianDetailScreen(
                 guardianId = guardianId,
-
-                onBack = {
-                    nav.popBackStack()
-                },
-
-                onEdit = {
-                    // TODO: Guardian Edit
-                })
+                onBack = { nav.popBackStack() },
+                onEdit = { })
         }
-
-        // ═════════════════════════════════════════════
-        // Classes & Schedules
-        // ═════════════════════════════════════════════
 
         composable(
             route = Screen.ScheduleManager.route,
-            arguments = listOf(
-                navArgument("classId") {
-                    type = NavType.IntType
-                })) { backStack ->
-
+            arguments = listOf(navArgument("classId") { type = NavType.IntType })
+        ) { backStack ->
             val classId = backStack.arguments?.getInt("classId")
                     ?: 0
-
             ScheduleManagerScreen(
                 classId = classId,
-
-                onBack = {
-                    nav.popBackStack()
-                })
+                onBack = { nav.popBackStack() })
         }
 
         composable(
             route = Screen.EnrollmentManager.route,
-            arguments = listOf(
-                navArgument("classId") {
-                    type = NavType.IntType
-                })) { backStack ->
-
+            arguments = listOf(navArgument("classId") { type = NavType.IntType })
+        ) { backStack ->
             val classId = backStack.arguments?.getInt("classId")
                     ?: 0
-
             EnrollmentManagerScreen(
                 classId = classId,
-
-                onBack = {
-                    nav.popBackStack()
-                },
-
-                onEnrollPlayer = {
-                    nav.navigate(
-                        Screen.EnrollPlayer.createRoute(
-                            classId
-                        )
-                    )
-                })
+                onBack = { nav.popBackStack() },
+                onEnrollPlayer = { nav.navigate(Screen.EnrollPlayer.createRoute(classId)) })
         }
 
         composable(
             route = Screen.EnrollPlayer.route,
-            arguments = listOf(
-                navArgument("classId") {
-                    type = NavType.IntType
-                })) { backStack ->
-
+            arguments = listOf(navArgument("classId") { type = NavType.IntType })
+        ) { backStack ->
             val classId = backStack.arguments?.getInt("classId")
                     ?: 0
-
             EnrollPlayerScreen(
                 classId = classId,
-
-                onBack = {
-                    nav.popBackStack()
-                },
-
-                onEnrolled = {
-                    nav.popBackStack()
-                })
+                onBack = { nav.popBackStack() },
+                onEnrolled = { nav.popBackStack() })
         }
-
-        // ═════════════════════════════════════════════
-        // Sessions & Attendance
-        // ═════════════════════════════════════════════
 
         composable(Screen.SessionList.route) {
-            SessionListScreen(
-                onSessionClick = { sessionId, classId ->
-                    nav.navigate(
-                        Screen.Attendance.createRoute(
-                            sessionId,
-                            classId
-                        )
+            SessionListScreen(onSessionClick = { sessionId, classId ->
+                nav.navigate(
+                    Screen.Attendance.createRoute(
+                        sessionId,
+                        classId
                     )
-                })
+                )
+            })
         }
 
-        composable(Screen.MySessions.route) {
-            MySessionsScreen(
-                onBack = {
-                    nav.popBackStack()
-                })
-        }
+        composable(Screen.MySessions.route) { MySessionsScreen(onBack = { nav.popBackStack() }) }
 
         composable(
             route = Screen.Attendance.route,
             arguments = listOf(
-                navArgument("sessionId") {
-                    type = NavType.IntType
-                },
-                navArgument("classId") {
-                    type = NavType.IntType
-                })) { backStack ->
-
+                navArgument("sessionId") { type = NavType.IntType },
+                navArgument("classId") { type = NavType.IntType })
+        ) { backStack ->
             val sessionId = backStack.arguments?.getInt("sessionId")
                     ?: 0
-
             val classId = backStack.arguments?.getInt("classId")
                     ?: 0
-
             AttendanceScreen(
                 sessionId = sessionId,
                 classId = classId,
-
-                onBack = {
-                    nav.popBackStack()
-                })
+                onBack = { nav.popBackStack() })
         }
 
-        composable(Screen.GenerateSessions.route) {
-            GenerateSessionsScreen(
-                onBack = {
-                    nav.popBackStack()
-                })
-        }
+        composable(Screen.GenerateSessions.route) { GenerateSessionsScreen(onBack = { nav.popBackStack() }) }
 
         composable(
             route = Screen.SessionEvaluations.route,
-            arguments = listOf(
-                navArgument("sessionId") {
-                    type = NavType.IntType
-                })) { backStack ->
-
+            arguments = listOf(navArgument("sessionId") { type = NavType.IntType })
+        ) { backStack ->
             val sessionId = backStack.arguments?.getInt("sessionId")
                     ?: 0
-
             SessionEvaluationsScreen(
                 sessionId = sessionId,
-
-                onBack = {
-                    nav.popBackStack()
-                })
+                onBack = { nav.popBackStack() })
         }
 
-        // ═════════════════════════════════════════════
         // Finance
-        // ═════════════════════════════════════════════
-
         composable(Screen.InvoiceList.route) {
-            InvoiceListScreen()
+            InvoiceListScreen(onDetail = { id -> nav.navigate(Screen.InvoiceDetail.createRoute(id)) })
         }
-
-        composable(Screen.PaymentList.route) {
-            PaymentListScreen()
-        }
-
-        // ═════════════════════════════════════════════
-        // Matches
-        // ═════════════════════════════════════════════
-
-        composable(Screen.MatchList.route) {
-            MatchListScreen(
-                onBack = {
-                    nav.popBackStack()
-                })
-        }
-
         composable(
-            route = Screen.MatchPlayers.route,
-            arguments = listOf(
-                navArgument("matchId") {
-                    type = NavType.IntType
-                })) { backStack ->
-
-            val matchId = backStack.arguments?.getInt("matchId")
+            route = Screen.InvoiceDetail.route,
+            arguments = listOf(navArgument("invoiceId") { type = NavType.IntType })
+        ) { backStack ->
+            val invoiceId = backStack.arguments?.getInt("invoiceId")
                     ?: 0
-
-            MatchPlayersScreen(
-                matchId = matchId,
-
-                onBack = {
-                    nav.popBackStack()
-                })
+            InvoiceDetailScreen(
+                invoiceId = invoiceId,
+                onBack = { nav.popBackStack() })
         }
+        composable(Screen.PaymentList.route) { PaymentListScreen() }
 
-        composable(
-            route = Screen.SetMatchResult.route,
-            arguments = listOf(
-                navArgument("matchId") {
-                    type = NavType.IntType
-                })) { backStack ->
-
-            val matchId = backStack.arguments?.getInt("matchId")
-                    ?: 0
-
-            SetMatchResultScreen(
-                matchId = matchId,
-
-                onBack = {
-                    nav.popBackStack()
-                },
-
-                onSaved = {
-                    nav.popBackStack()
-                })
-        }
-
-        // ═════════════════════════════════════════════
-        // Reports
-        // ═════════════════════════════════════════════
-
-        composable(Screen.Reports.route) {
-            ReportsScreen()
-        }
-
-        // ═════════════════════════════════════════════
-        // Classes
-        // ═════════════════════════════════════════════
+        composable(Screen.Reports.route) { ReportsScreen() }
 
         composable(Screen.ClassList.route) {
             ClassListScreen(
-                onClassClick = { id ->
-                    nav.navigate(
-                        Screen.ClassEdit.createRoute(id)
-                    )
-                },
-
-                onAddClass = {
-                    nav.navigate(
-                        Screen.ClassForm.route
-                    )
-                })
+                onClassClick = { id -> nav.navigate(Screen.ClassEdit.createRoute(id)) },
+                onAddClass = { nav.navigate(Screen.ClassForm.route) })
         }
-
-        // ═════════════════════════════════════════════
-        // Class Form
-        // ═════════════════════════════════════════════
 
         composable(Screen.ClassForm.route) {
             ClassFormScreen(
                 classId = null,
-
-                onSaved = {
-                    nav.popBackStack()
-                },
-
-                onBack = {
-                    nav.popBackStack()
-                })
+                onSaved = { nav.popBackStack() },
+                onBack = { nav.popBackStack() })
         }
-
-        // ═════════════════════════════════════════════
-        // Class Edit
-        // ═════════════════════════════════════════════
 
         composable(
             route = Screen.ClassEdit.route,
-            arguments = listOf(
-                navArgument("classId") {
-                    type = NavType.IntType
-                })) { backStack ->
-
+            arguments = listOf(navArgument("classId") { type = NavType.IntType })
+        ) { backStack ->
             val classId = backStack.arguments?.getInt("classId")
                     ?: 0
-
             ClassFormScreen(
                 classId = classId,
-
-                onSaved = {
-                    nav.popBackStack()
-                },
-
-                onBack = {
-                    nav.popBackStack()
-                },
-
-                onManageSchedules = { id ->
-                    nav.navigate(
-                        Screen.ScheduleManager.createRoute(id)
-                    )
-                },
-
-                onManageEnrollments = { id ->
-                    nav.navigate(
-                        Screen.EnrollmentManager.createRoute(id)
-                    )
-                })
+                onSaved = { nav.popBackStack() },
+                onBack = { nav.popBackStack() },
+                onManageSchedules = { id -> nav.navigate(Screen.ScheduleManager.createRoute(id)) },
+                onManageEnrollments = { id -> nav.navigate(Screen.EnrollmentManager.createRoute(id)) })
         }
     }
 }

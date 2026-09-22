@@ -24,23 +24,27 @@ fun GlassTextField(
     visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardType: KeyboardType = KeyboardType.Text,
     leadingIcon: (@Composable () -> Unit)? = null,
+    trailingIcon: (@Composable () -> Unit)? = null,
     isError: Boolean = false,
-    supportingText: String? = null
+    supportingText: String? = null,
+    readOnly: Boolean = false,
+    enabled: Boolean = true
 ) {
     val shape = RoundedCornerShape(18.dp)
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(label) },
-        modifier = modifier
-            .fillMaxWidth()
-            ,
+        modifier = modifier.fillMaxWidth(),
         singleLine = singleLine,
         visualTransformation = visualTransformation,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         leadingIcon = leadingIcon,
+        trailingIcon = trailingIcon,
         isError = isError,
         supportingText = supportingText?.let { { Text(it) } },
+        readOnly = readOnly,
+        enabled = enabled,
         shape = shape,
         colors = OutlinedTextFieldDefaults.colors(
             focusedContainerColor = Color.White.copy(alpha = 0.10f),
@@ -54,7 +58,11 @@ fun GlassTextField(
             unfocusedTextColor = Color.White.copy(alpha = 0.90f),
             cursorColor = GoldPrimary,
             focusedLeadingIconColor = GoldPrimary,
-            unfocusedLeadingIconColor = Color.White.copy(alpha = 0.70f)
+            unfocusedLeadingIconColor = Color.White.copy(alpha = 0.70f),
+            disabledContainerColor = Color.White.copy(0.05f),
+            disabledBorderColor = Color.White.copy(0.15f),
+            disabledLabelColor = Color.White.copy(0.4f),
+            disabledTextColor = Color.White.copy(0.6f)
         )
     )
 }

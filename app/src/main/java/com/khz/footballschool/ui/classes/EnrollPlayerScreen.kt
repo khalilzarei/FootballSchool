@@ -43,7 +43,6 @@ import com.khz.footballschool.ui.components.GlassSearchField
 import com.khz.footballschool.ui.components.GlassSectionTitle
 import com.khz.footballschool.ui.components.GlassTextField
 import com.khz.footballschool.ui.components.GlassTopBar
-import com.khz.footballschool.ui.theme.ErrorGlow
 import com.khz.footballschool.ui.theme.GoldPrimary
 import kotlinx.coroutines.launch
 
@@ -116,7 +115,7 @@ fun EnrollPlayerScreen(
                     CircularProgressIndicator(color = GoldPrimary)
                 }
             } else if (players.isEmpty()) {
-                GlassCard3D {
+                GlassCard3D() {
                     Text(
                         "بازیکنی یافت نشد",
                         color = Color.White.copy(0.6f)
@@ -140,7 +139,7 @@ fun EnrollPlayerScreen(
             GlassSectionTitle("۲. جزئیات ثبت‌نام")
             Spacer(Modifier.height(8.dp))
 
-            GlassCard3D {
+            GlassCard3D() {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     GlassTextField(
                         value = enrolledAt,
@@ -210,7 +209,7 @@ fun EnrollPlayerScreen(
 
             error?.let {
                 Spacer(Modifier.height(8.dp))
-                GlassCard3D {
+                GlassCard3D() {
                     Text(
                         it,
                         color = Color(0xFFFF8A80)

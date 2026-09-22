@@ -39,7 +39,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.khz.footballschool.core.util.appViewModel
 import com.khz.footballschool.ui.components.AvatarView
@@ -104,7 +103,7 @@ fun UserDetailScreen(
                         Modifier.align(Alignment.Center),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        GlassCard3D(glowColor = Color(0x66A50044)) {
+                        GlassCard3D(glowColor = Color(0x66A50044),) {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier.padding(16.dp)
@@ -145,11 +144,10 @@ fun UserDetailScreen(
                         // بخش آواتار و نام
                         // ═════════════════════════════════════════
 
-                        GlassCard3D {
+                        GlassCard3D() {
 
                             Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth()
                                     .padding(
                                         horizontal = 16.dp,
                                         vertical = 8.dp
@@ -204,10 +202,9 @@ fun UserDetailScreen(
                         // ═════════════════════════════════════════
                         // بخش اطلاعات کاربر
                         // ═════════════════════════════════════════
-                        GlassCard3D {
+                        GlassCard3D() {
                             Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth()
                                     .padding(16.dp),
                                 verticalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
@@ -246,10 +243,9 @@ fun UserDetailScreen(
                         // ═════════════════════════════════════════
                         // بخش عملیات
                         // ═════════════════════════════════════════
-                        GlassCard3D {
+                        GlassCard3D() {
                             Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth()
                                     .padding(16.dp),
                                 verticalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
@@ -268,8 +264,7 @@ fun UserDetailScreen(
                                         text = if (u.status == "active") "غیرفعال کردن کاربر" else "فعال کردن کاربر",
                                         onClick = { showStatusDialog = true },
                                         primary = u.status != "active",
-                                        modifier = Modifier
-                                            .fillMaxWidth()
+                                        modifier = Modifier.fillMaxWidth()
                                             .weight(1f)
                                     )
                                     Spacer(Modifier.width(16.dp))
@@ -278,8 +273,7 @@ fun UserDetailScreen(
                                         text = "ریست رمز عبور",
                                         onClick = { showResetDialog = true },
                                         primary = false,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
+                                        modifier = Modifier.fillMaxWidth()
                                             .weight(1f)
                                     )
                                 }
@@ -422,7 +416,7 @@ fun UserDetailScreen(
                         style = MaterialTheme.typography.bodyMedium
                     )
 
-                    GlassCard3D {
+                    GlassCard3D() {
                         Text(
                             newPassword,
                             color = GoldPrimary,

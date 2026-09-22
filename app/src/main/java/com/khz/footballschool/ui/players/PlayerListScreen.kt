@@ -151,7 +151,7 @@ fun PlayerListScreen(
                     ) {
 
                         GlassCard3D(
-                            glowColor = Color(0x66A50044)
+                            glowColor = Color(0x66A50044),
                         ) {
                             Text(
                                 text = s.message,

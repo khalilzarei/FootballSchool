@@ -25,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.khz.footballschool.ui.components.AvatarView
-import com.khz.footballschool.ui.components.GlassButton
 import com.khz.footballschool.ui.components.GlassCard3D
 import com.khz.footballschool.ui.theme.GoldPrimary
 
@@ -46,10 +45,9 @@ fun AvatarPicker(
         if (uri != null) onImageSelected(uri)
     }
 
-    GlassCard3D(modifier = modifier) {
+    GlassCard3D(modifier = modifier,) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -73,8 +71,7 @@ fun AvatarPicker(
                     modifier = Modifier.align(Alignment.BottomEnd)
                 ) {
                     Box(
-                        modifier = Modifier
-                            .size(38.dp)
+                        modifier = Modifier.size(38.dp)
                             .background(
                                 GoldPrimary,
                                 CircleShape

@@ -7,6 +7,10 @@ data class MatchPlayerDto(
     @SerializedName("match_id") val matchId: Int,
     @SerializedName("player_id") val playerId: Int,
     @SerializedName("player") val player: PlayerDto?,
+    // fallback flat fields from server (for backward compat)
+    @SerializedName("first_name") val firstName: String? = null,
+    @SerializedName("last_name") val lastName: String? = null,
+    @SerializedName("full_name") val fullName: String? = null,
     @SerializedName("invitation_status") val invitationStatus: String?,
     @SerializedName("attendance_status") val attendanceStatus: String?,
     @SerializedName("jersey_number") val jerseyNumber: Int?,

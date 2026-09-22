@@ -1,15 +1,15 @@
 package com.khz.footballschool.ui.components
 
+import android.R.attr.onClick
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -27,19 +27,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.khz.footballschool.ui.theme.GoldGlow
 import com.khz.footballschool.ui.theme.GoldPrimary
-import com.khz.footballschool.ui.theme.PurpleDark
 
 /**
  * کارت شیشه‌ای سه‌بعدی بدون shadow مستطیلی Compose
@@ -56,7 +52,8 @@ fun GlassCard3D(
     modifier: Modifier = Modifier,
     shape: Shape = RoundedCornerShape(10.dp),
     glowColor: Color = Color.Transparent,
-    content: @Composable BoxScope.() -> Unit
+    onClick: (() -> Unit)? = null,
+    content: @Composable BoxScope.() -> Unit,
 ) {
 
     // ─── گرادیان اصلی سطح ───
@@ -100,6 +97,7 @@ fun GlassCard3D(
 
     Box(
         modifier = modifier
+            .clickable(onClick = { onClick?.invoke() })
             .padding(
                 5.dp,
             )
@@ -144,7 +142,7 @@ private fun GlassCard3DPreviewDark() {
         if (pressed) 0.96f else 1f,
         label = "statScale"
     )
-    GlassCard3D {
+    GlassCard3D() {
         Row(
             modifier = Modifier.background(Color.Transparent),
             verticalAlignment = Alignment.CenterVertically

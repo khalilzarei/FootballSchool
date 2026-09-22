@@ -22,7 +22,6 @@ import com.khz.footballschool.ui.components.GlassButton
 import com.khz.footballschool.ui.components.GlassCard3D
 import com.khz.footballschool.ui.components.GlassTextField
 import com.khz.footballschool.ui.theme.GoldPrimary
-import com.khz.footballschool.ui.theme.PurpleGlow
 
 @Composable
 fun LoginScreen(
@@ -89,7 +88,7 @@ fun LoginScreen(
 
         Spacer(Modifier.height(32.dp))
 
-        GlassCard3D {
+        GlassCard3D() {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 GlassTextField(
                     value = identifier,
@@ -151,7 +150,7 @@ fun LoginScreen(
 
         if (loginState is AuthState.Error) {
             Spacer(Modifier.height(14.dp))
-            GlassCard3D {
+            GlassCard3D() {
                 Text(
                     (loginState as AuthState.Error).message,
                     color = Color(0xFFFF8A80),

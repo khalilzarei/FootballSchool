@@ -176,7 +176,7 @@ fun AttachGuardianToPlayerScreen(
                     GlassSectionTitle("ثبت سرپرست")
                     Spacer(Modifier.height(8.dp))
 
-                    GlassCard3D {
+                    GlassCard3D() {
                         Text(
                             "هر بازیکن فقط یک سرپرست دارد. اگر سرپرستی با این شماره موبایل قبلاً ثبت شده باشد، همان حساب به بازیکن متصل می‌شود.",
                             style = MaterialTheme.typography.bodySmall,
@@ -188,7 +188,7 @@ fun AttachGuardianToPlayerScreen(
                     GlassSectionTitle("مشخصات سرپرست")
                     Spacer(Modifier.height(8.dp))
 
-                    GlassCard3D {
+                    GlassCard3D() {
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             GlassTextField(
                                 value = newName,
@@ -214,7 +214,7 @@ fun AttachGuardianToPlayerScreen(
                     GlassSectionTitle("نسبت و دسترسی‌ها")
                     Spacer(Modifier.height(8.dp))
 
-                    GlassCard3D {
+                    GlassCard3D() {
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             GlassDropdown(
                                 label = "نسبت",
@@ -281,7 +281,7 @@ fun AttachGuardianToPlayerScreen(
                     GlassSectionTitle("سرپرست بازیکن")
                     Spacer(Modifier.height(8.dp))
 
-                    GlassCard3D {
+                    GlassCard3D() {
                         Text(
                             "هر بازیکن فقط یک سرپرست دارد. برای تعویض سرپرست، ابتدا سرپرست فعلی را حذف کنید.",
                             style = MaterialTheme.typography.bodySmall,
@@ -312,7 +312,7 @@ fun AttachGuardianToPlayerScreen(
 
                 error?.let {
                     Spacer(Modifier.height(8.dp))
-                    GlassCard3D {
+                    GlassCard3D() {
                         Text(
                             it,
                             color = Color(0xFFFF8A80)
@@ -532,8 +532,11 @@ private fun GuardianCard(
     val user = guardianPlayer.guardian?.user
     val mobile = user?.mobile
 
-    GlassCard3D {
-        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    GlassCard3D() {
+        Column(
+            Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 AvatarView(
@@ -576,8 +579,14 @@ private fun GuardianCard(
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                PermissionChip("مشاهده گزارش‌ها", guardianPlayer.canViewReports)
-                PermissionChip("اجازه پرداخت", guardianPlayer.canPay)
+                PermissionChip(
+                    "مشاهده گزارش‌ها",
+                    guardianPlayer.canViewReports
+                )
+                PermissionChip(
+                    "اجازه پرداخت",
+                    guardianPlayer.canPay
+                )
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

@@ -219,6 +219,13 @@ private fun DashboardContent(
             null,
             onNavigateToNews
         ),
+        DashboardMenuItem(
+            "مسابقات",
+            Icons.Default.Star,
+            GoldPrimary,
+            null,
+            onNavigateToMatches
+        ),
 //        DashboardMenuItem(
 //            "فصل‌ها",
 //            Icons.Default.CalendarMonth,
@@ -247,13 +254,7 @@ private fun DashboardContent(
             null,
             onNavigateToDiscounts
         ),
-        DashboardMenuItem(
-            "مسابقات",
-            Icons.Default.Star,
-            GoldPrimary,
-            null,
-            onNavigateToMatches
-        ),
+
 //        DashboardMenuItem(
 //            "رسانه‌ها",
 //            Icons.Default.Image,

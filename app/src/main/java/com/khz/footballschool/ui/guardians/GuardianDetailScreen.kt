@@ -41,7 +41,6 @@ import com.khz.footballschool.ui.components.GlassCard3D
 import com.khz.footballschool.ui.components.GlassSectionTitle
 import com.khz.footballschool.ui.components.GlassTopBar
 import com.khz.footballschool.ui.components.InfoCard
-import com.khz.footballschool.ui.theme.ErrorGlow
 import com.khz.footballschool.ui.theme.GoldPrimary
 import kotlinx.coroutines.launch
 
@@ -109,7 +108,7 @@ fun GuardianDetailScreen(
                     .fillMaxSize()
             ) {
                 error?.let {
-                    GlassCard3D{
+                    GlassCard3D() {
                         Text(
                             it,
                             color = Color(0xFFFF8A80)
@@ -134,7 +133,7 @@ fun GuardianDetailScreen(
 
                     if (players.isEmpty()) {
                         item {
-                            GlassCard3D {
+                            GlassCard3D() {
                                 Text(
                                     "هنوز بازیکنی به این سرپرست متصل نشده است",
                                     color = Color.White.copy(0.6f)
@@ -227,7 +226,7 @@ private fun GuardianPlayerCard(
 
 @Composable
 private fun PermissionBadge(label: String) {
-    GlassCard3D {
+    GlassCard3D() {
         Text(
             label,
             style = MaterialTheme.typography.labelSmall,

@@ -1,10 +1,8 @@
 package com.khz.footballschool.ui.news
 
-import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -212,7 +210,7 @@ fun NewsFormScreen(
                     item { GlassSectionTitle("مخاطبان") }
 
                     item {
-                        GlassCard3D(shape = RoundedCornerShape(16.dp)) {
+                        GlassCard3D(shape = RoundedCornerShape(16.dp),) {
                             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                 // همه
                                 Row(
@@ -459,7 +457,7 @@ fun NewsFormScreen(
 
                     if (state.isUploading) {
                         item {
-                            GlassCard3D {
+                            GlassCard3D() {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     CircularProgressIndicator(
                                         modifier = Modifier.size(20.dp),
@@ -479,7 +477,7 @@ fun NewsFormScreen(
 
                     state.error?.let { message ->
                         item {
-                            GlassCard3D {
+                            GlassCard3D() {
                                 Text(
                                     text = message,
                                     color = RedError,
@@ -514,15 +512,14 @@ private fun ExistingMediaRow(
     undoMode: Boolean = false,
     onAction: () -> Unit
 ) {
-    GlassCard3D {
+    GlassCard3D() {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // پیش‌نمایش تصویر
             Box(
-                modifier = Modifier
-                    .size(72.dp)
+                modifier = Modifier.size(72.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(Color.White.copy(alpha = if (dimmed) 0.03f else 0.08f))
             ) {
@@ -555,8 +552,7 @@ private fun ExistingMediaRow(
                         contentAlignment = Alignment.Center
                     ) {
                         Box(
-                            Modifier
-                                .size(28.dp)
+                            Modifier.size(28.dp)
                                 .clip(androidx.compose.foundation.shape.CircleShape)
                                 .background(Color.Black.copy(alpha = 0.5f)),
                             contentAlignment = Alignment.Center
@@ -617,15 +613,14 @@ private fun PendingMediaRow(
     enabled: Boolean = true,
     onRemove: () -> Unit
 ) {
-    GlassCard3D {
+    GlassCard3D() {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // پیش‌نمایش محلی
             Box(
-                modifier = Modifier
-                    .size(72.dp)
+                modifier = Modifier.size(72.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(Color.White.copy(alpha = 0.08f))
             ) {
@@ -641,8 +636,7 @@ private fun PendingMediaRow(
                         contentAlignment = Alignment.Center
                     ) {
                         Box(
-                            Modifier
-                                .size(28.dp)
+                            Modifier.size(28.dp)
                                 .clip(androidx.compose.foundation.shape.CircleShape)
                                 .background(Color.Black.copy(alpha = 0.5f)),
                             contentAlignment = Alignment.Center
