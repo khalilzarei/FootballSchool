@@ -4,12 +4,12 @@ plugins {
 }
 
 android {
-    namespace = "com.khz.footballschool"
+    namespace = "com.khz.malekadmin"
 
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.khz.footballschool"
+        applicationId = "com.khz.malekadmin"
 
         minSdk = 27
         targetSdk = 37

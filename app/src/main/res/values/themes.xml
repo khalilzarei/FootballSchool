@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="Theme.FootballSchool" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.FootballSchool" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@drawable/splash_background</item>
+        <item name="android:statusBarColor">@color/splash_background</item>
+        <!-- اندروید 12+ - اسپلش سیستمی -->
+        <item name="android:windowSplashScreenBackground" tools:targetApi="31">
+            @color/splash_background
+        </item>
+        <item name="android:windowSplashScreenAnimatedIcon" tools:targetApi="31">
+            @drawable/splash_logo
+        </item>
+    </style>
+
+
+    <style name="Theme.FootballSchool.Main" parent="Theme.FootballSchool">
+        <item name="android:windowBackground">@color/splash_background</item>
+    </style>
 </resources>
