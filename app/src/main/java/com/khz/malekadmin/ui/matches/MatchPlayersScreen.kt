@@ -47,7 +47,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.khz.malekadmin.FootballSchoolApp
+import com.khz.malekadmin.MalekAdminApp
 import com.khz.malekadmin.core.network.ApiErrorHandler
 import com.khz.malekadmin.core.network.NetworkResult
 import com.khz.malekadmin.core.util.DateUtils
@@ -73,7 +73,7 @@ fun MatchPlayersScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
-    val container = (context.applicationContext as FootballSchoolApp).container
+    val container = (context.applicationContext as MalekAdminApp).container
     val matchRepo = container.matchRepository
     val playerRepo = container.playerRepository
     val ageGroupRepo = container.ageGroupRepository

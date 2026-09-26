@@ -2,6 +2,7 @@ package com.khz.malekadmin.domain.mapper
 
 import com.khz.malekadmin.data.dto.response.*
 import com.khz.malekadmin.domain.model.*
+import java.lang.Boolean.parseBoolean
 
 // ═══════════════════════════════════════════════════════════════
 // Users & Guardians & Players
@@ -641,9 +642,12 @@ fun ChatRoomDto.toDomain(): ChatRoom {
             ChatRoomUser(
                 id = it.id,
                 fullName = it.fullName.orEmpty(),
+                mobile = it.mobile,
                 avatar = it.avatar,
                 role = it.role,
-                memberRole = it.memberRole
+                memberRole = it.memberRole,
+                lastReadMessageId = it.lastReadMessageId
+                        ?: 0
             )
         },
         lastMessage = lastMessage?.toDomain(),
@@ -695,7 +699,8 @@ fun ChatMessageDto.toDomain(): ChatMessage {
         isRead = isRead,
         readAt = readAt,
         createdAt = effectiveCreatedAt,
-        senderName = effectiveSenderName
+        senderName = effectiveSenderName,
+        deliveredAt = deliveredAt
     )
 }
 

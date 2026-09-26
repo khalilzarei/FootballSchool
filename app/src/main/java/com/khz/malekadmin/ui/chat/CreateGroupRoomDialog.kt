@@ -40,7 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
-import com.khz.malekadmin.FootballSchoolApp
+import com.khz.malekadmin.MalekAdminApp
 import com.khz.malekadmin.core.network.NetworkResult
 import com.khz.malekadmin.domain.model.ChatContact
 import com.khz.malekadmin.ui.components.AvatarView
@@ -54,7 +54,7 @@ fun CreateGroupRoomDialog(
 ) {
     val context = LocalContext.current
     val chatRepo = remember {
-        (context.applicationContext as FootballSchoolApp).container.chatRepository
+        (context.applicationContext as MalekAdminApp).container.chatRepository
     }
     val scope = rememberCoroutineScope()
 

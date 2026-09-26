@@ -31,7 +31,10 @@ data class ChatMessageDto(
 
     @SerializedName("sent_at") val sentAt: String? = null,
 
-    @SerializedName("created_at") val createdAt: String? = null
+    @SerializedName("created_at") val createdAt: String? = null,
+
+    /* زمان تحویل پیام به اپِ گیرنده (UTC) — برای تیک ✓✓ */
+    @SerializedName("delivered_at") val deliveredAt: String? = null
 ) {
     val effectiveRoomId: Int
         get() = roomId

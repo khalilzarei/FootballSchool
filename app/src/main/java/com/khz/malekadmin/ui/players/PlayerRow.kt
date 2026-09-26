@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -25,6 +26,7 @@ import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -36,12 +38,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.khz.malekadmin.core.util.CurrencyUtils
+import com.khz.malekadmin.domain.model.FootballClass
 import com.khz.malekadmin.domain.model.GuardianPlayer
 import com.khz.malekadmin.domain.model.Player
+import com.khz.malekadmin.domain.model.PlayerBalance
 import com.khz.malekadmin.ui.components.AvatarView
 import com.khz.malekadmin.ui.components.GlassCard3D
+import com.khz.malekadmin.ui.theme.FootballSchoolTheme
 import com.khz.malekadmin.ui.theme.GoldPrimary
 
 /**
@@ -85,10 +91,7 @@ fun PlayerRow(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(
-                    vertical = 8.dp,
-                    horizontal = 4.dp
-                )
+
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -97,64 +100,23 @@ fun PlayerRow(
                 AvatarView(
                     name = player.fullName,
                     avatarUrl = player.avatarPath,
-                    size = 72.dp,
+                    size = 70.dp,
                     accentColor = accentColor
                 )
 
                 Spacer(Modifier.width(12.dp))
 
                 Column(Modifier.weight(1f)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Text(
-                            player.fullName,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            modifier = Modifier.weight(
-                                1f,
-                                fill = false
-                            )
-                        )
-                        // وضعیت مالی Badge
-                        player.balance?.let { bal ->
-                            if (bal.isDebtor) {
-                                Box(
-                                    Modifier
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(Color(0xFFFF8A80).copy(0.2f))
-                                        .padding(
-                                            horizontal = 6.dp,
-                                            vertical = 2.dp
-                                        )
-                                ) {
-                                    Text(
-                                        "بدهکار ${CurrencyUtils.formatCurrency(bal.debt)}",
-                                        color = Color(0xFFFF8A80),
-                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
-                                    )
-                                }
-                            } else if (bal.totalInvoiced > 0) {
-                                Box(
-                                    Modifier
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(Color(0xFF81C784).copy(0.2f))
-                                        .padding(
-                                            horizontal = 6.dp,
-                                            vertical = 2.dp
-                                        )
-                                ) {
-                                    Text(
-                                        "تسویه",
-                                        color = Color(0xFF81C784),
-                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
-                                    )
-                                }
-                            }
-                        }
-                    }
+
+                    Text(
+                        player.fullName,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+
+                    )
+
+
 
                     Text(
                         "سن: ${player.age ?: "-"} | ${player.nationalCode ?: "-"}",
@@ -169,28 +131,7 @@ fun PlayerRow(
                         color = GoldPrimary
                     )
 
-                    // جزئیات مالی کوچک
-                    player.balance?.let { bal ->
-                        if (bal.totalInvoiced > 0) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                modifier = Modifier.padding(top = 3.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.Receipt,
-                                    null,
-                                    tint = Color.White.copy(0.4f),
-                                    modifier = Modifier.size(12.dp)
-                                )
-                                Text(
-                                    "فاکتور: ${CurrencyUtils.formatCurrency(bal.totalInvoiced)} | پرداختی: ${CurrencyUtils.formatCurrency(bal.totalPaid)}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = Color.White.copy(0.5f)
-                                )
-                            }
-                        }
-                    }
+
 
                     if (guardianName != null) {
                         Row(
@@ -276,20 +217,7 @@ fun PlayerRow(
 
                 Spacer(Modifier.width(8.dp))
 
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        if (player.status == "active") "فعال" else "غیرفعال",
-                        color = if (player.status == "active") Color(0xFF81C784) else Color(0xFFFF8A80),
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                    TextButton(onClick = onToggle) {
-                        Text(
-                            if (player.status == "active") "غیرفعال" else "فعال",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = GoldPrimary
-                        )
-                    }
-                }
+
             }
 
             // نوار پایین برای فاکتور و بدهی (اگر بدهکار باشد)
@@ -375,3 +303,58 @@ private fun ActionIconButton(
         )
     }
 }
+
+@Preview(
+    name = "PlayerRow - Debtor Player",
+    showBackground = true,
+    backgroundColor = 0xFF0F1419,
+)
+@Composable
+private fun PlayerRowPreview() {
+    FootballSchoolTheme {
+
+        PlayerRow(
+            player = mockPlayer(),
+            onClick = {},
+            onToggle = {})
+
+    }
+}
+
+private fun mockPlayer(
+    id: Int = 1,
+    fullName: String = "علی محمدی",
+    nationalCode: String? = "0012345678",
+    age: Int? = 12,
+    gender: String = "male",
+    status: String = "active",
+    avatarPath: String? = null,
+    className: String? = "کلاس A - زیر ۱۳ سال",
+    guardians: List<GuardianPlayer> = emptyList(),
+    balance: PlayerBalance? = null,
+    userId: Int? = 1001
+) = Player(
+    id = id,
+    userId = userId,
+    firstName = fullName.substringBefore(" "),
+    lastName = fullName.substringAfter(
+        " ",
+        ""
+    ),
+    fullName = fullName,
+    nationalCode = nationalCode,
+    mobile = "09121112233",
+    birthDate = "2012-05-10",
+    age = age,
+    gender = gender,
+    status = status,
+    medicalNotes = null,
+    notes = null,
+    avatarPath = avatarPath,
+    createdBy = 1,
+    createdAt = "2024-01-01",
+    updatedAt = "2024-06-01",
+    guardians = guardians,
+    currentClass = null,
+    balance = balance
+)

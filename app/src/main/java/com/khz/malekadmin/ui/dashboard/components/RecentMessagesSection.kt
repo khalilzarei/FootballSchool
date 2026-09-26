@@ -32,7 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.khz.malekadmin.FootballSchoolApp
+import com.khz.malekadmin.MalekAdminApp
 import com.khz.malekadmin.core.network.NetworkResult
 import com.khz.malekadmin.domain.model.ChatRoom
 import com.khz.malekadmin.ui.components.GlassCard3D
@@ -45,7 +45,7 @@ fun RecentMessagesSection(
     onOpenChat: (Int) -> Unit
 ) {
     val context = LocalContext.current
-    val container = (context.applicationContext as FootballSchoolApp).container
+    val container = (context.applicationContext as MalekAdminApp).container
 
     val chatRepository = container.chatRepository
 

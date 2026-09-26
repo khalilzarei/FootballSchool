@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
-import com.khz.malekadmin.FootballSchoolApp
+import com.khz.malekadmin.MalekAdminApp
 import com.khz.malekadmin.domain.model.Media
 import com.khz.malekadmin.ui.theme.BlueAccent
 import com.khz.malekadmin.ui.theme.GoldPrimary
@@ -36,7 +36,7 @@ import com.khz.malekadmin.ui.theme.PurplePrimary
 @Composable
 fun rememberAuthToken(): String? {
     val context = LocalContext.current
-    val container = (context.applicationContext as FootballSchoolApp).container
+    val container = (context.applicationContext as MalekAdminApp).container
     val tokenState = produceState<String?>(initialValue = null) {
         value = container.sessionManager.getTokenSync()
     }

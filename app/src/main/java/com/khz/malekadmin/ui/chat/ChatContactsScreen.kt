@@ -30,7 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.khz.malekadmin.FootballSchoolApp
+import com.khz.malekadmin.MalekAdminApp
 import com.khz.malekadmin.core.network.NetworkResult
 import com.khz.malekadmin.domain.model.ChatContact
 import com.khz.malekadmin.ui.components.AvatarView
@@ -51,7 +51,7 @@ fun ChatContactsScreen(
     onPick: (userId: Int) -> Unit
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    val container = (context.applicationContext as FootballSchoolApp).container
+    val container = (context.applicationContext as MalekAdminApp).container
 
     val chatRepo = container.chatRepository
     val scope = rememberCoroutineScope()
@@ -79,12 +79,12 @@ fun ChatContactsScreen(
     }
 
     val filtered = contacts?.filter {
-            query.isBlank() || (it.fullName?.contains(
-                query,
-                ignoreCase = true
-            )
-                    ?: false)
-        }
+        query.isBlank() || (it.fullName?.contains(
+            query,
+            ignoreCase = true
+        )
+                ?: false)
+    }
             ?: emptyList()
 
     GlassBackground {
@@ -189,11 +189,16 @@ private fun ContactRow(
     contact: ChatContact,
     onClick: () -> Unit
 ) {
-    val roleLabel = when (contact.role) {
-        "player" -> "بازیکن"
-        "coach"  -> "مربی"
-        else     -> contact.role
-                ?: ""
+    val roleLabel = when (contact.role?.trim()
+        ?.lowercase()) {
+        "player", "athlete" -> "بازیکن"
+        "admin", "administrator", "manager", "owner" -> "مدیر"
+        "coach", "trainer" -> "مربی"
+        "guardian", "parent" -> "سرپرست"
+        "teacher" -> "مربی آموزشی"
+        "accountant" -> "حسابدار"
+        "staff" -> "کادر اجرایی"
+        else -> contact.role.orEmpty()
     }
 
     val subtitle = contact.classTitle?.takeIf { it.isNotBlank() }
@@ -203,10 +208,11 @@ private fun ContactRow(
     GlassCard3D(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {

@@ -37,9 +37,14 @@ data class ChatRoomUserDto(
 
     @SerializedName("full_name") val fullName: String? = null,
 
+    @SerializedName("mobile") val mobile: String? = null,
+
     @SerializedName("avatar") val avatar: String? = null,
 
     @SerializedName("role") val role: String? = null,
 
-    @SerializedName("member_role") val memberRole: String? = null
+    @SerializedName("member_role") val memberRole: String? = null,
+
+    /** آخرین پیام خوانده‌شده‌ی این عضو — برای تیک سبز ✓✓ */
+    @SerializedName("last_read_message_id") val lastReadMessageId: Int? = null
 )

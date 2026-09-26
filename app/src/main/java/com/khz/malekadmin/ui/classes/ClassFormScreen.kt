@@ -42,7 +42,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.khz.malekadmin.FootballSchoolApp
+import com.khz.malekadmin.MalekAdminApp
 import com.khz.malekadmin.core.network.NetworkResult
 import com.khz.malekadmin.core.util.appViewModel
 import com.khz.malekadmin.ui.components.GlassButton
@@ -146,7 +146,7 @@ fun ClassFormScreen(
     var preparing by remember { mutableStateOf(false) }
     var prepSummary by remember { mutableStateOf<String?>(null) }
 
-    val container = (context.applicationContext as FootballSchoolApp).container
+    val container = (context.applicationContext as MalekAdminApp).container
     val classRepo = container.classRepository
     val sessionRepo = container.sessionRepository
     val scope = rememberCoroutineScope()

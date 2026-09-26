@@ -40,7 +40,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.khz.malekadmin.FootballSchoolApp
+import com.khz.malekadmin.MalekAdminApp
 import com.khz.malekadmin.core.network.NetworkResult
 import com.khz.malekadmin.data.dto.request.CreateGuardianForPlayerRequest
 import com.khz.malekadmin.data.dto.request.UpdateGuardianRequest
@@ -87,7 +87,7 @@ fun AttachGuardianToPlayerScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
-    val container = (context.applicationContext as FootballSchoolApp).container
+    val container = (context.applicationContext as MalekAdminApp).container
     val playerRepo = container.playerRepository
     val scope = rememberCoroutineScope()
 

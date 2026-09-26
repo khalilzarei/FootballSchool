@@ -38,7 +38,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.khz.malekadmin.FootballSchoolApp
+import com.khz.malekadmin.MalekAdminApp
 import com.khz.malekadmin.core.network.NetworkResult
 import com.khz.malekadmin.core.util.DateUtils
 import com.khz.malekadmin.domain.model.Match
@@ -60,7 +60,7 @@ fun MatchDetailScreen(
     onSetResult: (Int) -> Unit
 ) {
     val context = LocalContext.current
-    val container = (context.applicationContext as FootballSchoolApp).container
+    val container = (context.applicationContext as MalekAdminApp).container
     val repo = container.matchRepository
     val scope = rememberCoroutineScope()
 

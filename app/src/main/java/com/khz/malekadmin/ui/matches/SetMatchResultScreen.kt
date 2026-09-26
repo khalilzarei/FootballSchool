@@ -26,7 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.khz.malekadmin.FootballSchoolApp
+import com.khz.malekadmin.MalekAdminApp
 import com.khz.malekadmin.core.network.NetworkResult
 import com.khz.malekadmin.data.dto.request.SetMatchResultRequest
 import com.khz.malekadmin.ui.components.GlassButton
@@ -41,7 +41,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun SetMatchResultScreen(matchId: Int, onBack: () -> Unit, onSaved: () -> Unit) {
     val context = LocalContext.current
-    val container = (context.applicationContext as FootballSchoolApp).container
+    val container = (context.applicationContext as MalekAdminApp).container
     val repo = container.matchRepository
     val scope = rememberCoroutineScope()
 

@@ -32,6 +32,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.khz.malekadmin.domain.model.User
 import com.khz.malekadmin.ui.components.AvatarView
 import com.khz.malekadmin.ui.components.GlassCard3D
@@ -60,17 +61,14 @@ fun UserRow(
     ) {
         Row(
             modifier = Modifier.fillMaxWidth()
-                .padding(
-                    vertical = 8.dp,
-                    horizontal = 4.dp
-                ),
+               ,
             verticalAlignment = Alignment.CenterVertically
         ) {
             // ─── آواتار با رنگ نقش ───
             AvatarView(
                 name = user.fullName,
                 avatarUrl = user.avatarUrl,
-                size = 80.dp,
+                size = 60.dp,
                 accentColor = when (user.role) {
                     "admin" -> Color(0xFFBA68C8)
                     "coach" -> Color(0xFF4FC3F7)
@@ -84,7 +82,7 @@ fun UserRow(
             Column(Modifier.weight(1f)) {
                 Text(
                     user.fullName,
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
@@ -94,7 +92,7 @@ fun UserRow(
                             ?: "-",
                     modifier = Modifier.padding(vertical = 5.dp),
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.White.copy(0.6f)
+                    color = Color.White.copy(0.8f)
                 )
                 Text(
                     roleLabel(user.role),
@@ -147,20 +145,20 @@ fun UserRow(
             Spacer(Modifier.width(8.dp))
 
             // ─── وضعیت و دکمه تغییر ───
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    if (user.status == "active") "فعال" else "غیرفعال",
-                    color = if (user.status == "active") Color(0xFF81C784) else Color(0xFFFF8A80),
-                    style = MaterialTheme.typography.labelMedium
-                )
-                TextButton(onClick = onToggle) {
-                    Text(
-                        if (user.status == "active") "غیرفعال" else "فعال",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = GoldPrimary
-                    )
-                }
-            }
+//            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+//                Text(
+//                    if (user.status == "active") "فعال" else "غیرفعال",
+//                    color = if (user.status == "active") Color(0xFF81C784) else Color(0xFFFF8A80),
+//                    fontSize = 12.sp,
+//                )
+//                TextButton(onClick = onToggle) {
+//                    Text(
+//                        if (user.status == "active") "غیرفعال" else "فعال",
+//                        fontSize = 12.sp,
+//                        color = GoldPrimary
+//                    )
+//                }
+//            }
         }
     }
 }

@@ -60,11 +60,12 @@ fun SplashScreen(
                     contentScale = ContentScale.Crop
                 )
 
+                Spacer(Modifier.height(32.dp))
                 Text(
                     "مدرسه فوتبال - مالک‌اشتر",
                     color = GoldPrimary
                 )
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(32.dp))
                 Text(
                     text = "نسخه ادمین",
                     style = MaterialTheme.typography.headlineLarge,
@@ -99,18 +100,18 @@ fun SplashScreenPreview() {
                     contentScale = ContentScale.Crop
                 )
 
-                Spacer(Modifier.height(18.dp))
+                Spacer(Modifier.height(32.dp))
                 Text(
                     "مدرسه فوتبال - مالک‌اشتر",
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Bold,
                     color = GoldPrimary
                 )
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(18.dp))
                 Text(
                     text = "نسخه ادمین",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color =  Color.White,
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = GoldPrimary
                 )
                 Spacer(Modifier.height(32.dp))
                 CircularProgressIndicator(

@@ -21,7 +21,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         // دسترسی به AppContainer از Application
-        val app = application as FootballSchoolApp
+        val app = application as MalekAdminApp
         viewModelFactory = ViewModelFactory(app.container)
 
         setContent {

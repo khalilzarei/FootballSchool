@@ -17,7 +17,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.khz.malekadmin.FootballSchoolApp
+import com.khz.malekadmin.MalekAdminApp
 import com.khz.malekadmin.core.di.ViewModelFactory
 import com.khz.malekadmin.core.network.NetworkResult
 import com.khz.malekadmin.ui.age_groups.AgeGroupListScreen
@@ -76,7 +76,7 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
 
     val nav = rememberNavController()
     val context = LocalContext.current
-    val container = (context.applicationContext as FootballSchoolApp).container
+    val container = (context.applicationContext as MalekAdminApp).container
     val scope = rememberCoroutineScope()
 
     var startDestination by remember { mutableStateOf<String?>(null) }

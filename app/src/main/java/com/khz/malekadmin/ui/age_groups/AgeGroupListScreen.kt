@@ -41,7 +41,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.khz.malekadmin.FootballSchoolApp
+import com.khz.malekadmin.MalekAdminApp
 import com.khz.malekadmin.core.network.NetworkResult
 import com.khz.malekadmin.core.util.DateUtils
 import com.khz.malekadmin.data.dto.request.CreateAgeGroupRequest
@@ -70,7 +70,7 @@ fun AgeGroupListScreen(onBack: () -> Unit) {
     val state by vm.state.collectAsState()
 
     val context = LocalContext.current
-    val container = (context.applicationContext as FootballSchoolApp).container
+    val container = (context.applicationContext as MalekAdminApp).container
     val repo = container.ageGroupRepository
     val scope = rememberCoroutineScope()
 
@@ -557,7 +557,7 @@ private fun AgeGroupPlayersDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
-    val container = (context.applicationContext as FootballSchoolApp).container
+    val container = (context.applicationContext as MalekAdminApp).container
     val repo = container.ageGroupRepository
     var players by remember(group.id) { mutableStateOf<List<Player>?>(null) }
     var loadError by remember(group.id) { mutableStateOf<String?>(null) }

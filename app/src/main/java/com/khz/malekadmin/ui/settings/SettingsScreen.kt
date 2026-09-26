@@ -33,7 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.khz.malekadmin.FootballSchoolApp
+import com.khz.malekadmin.MalekAdminApp
 import com.khz.malekadmin.core.util.appViewModel
 import com.khz.malekadmin.ui.components.GlassButton
 import com.khz.malekadmin.ui.components.GlassCard3D
@@ -56,7 +56,7 @@ fun SettingsScreen(
 
     // دسترسی به AuthRepository برای خروج
     val context = LocalContext.current
-    val container = (context.applicationContext as FootballSchoolApp).container
+    val container = (context.applicationContext as MalekAdminApp).container
     val authRepository = container.authRepository
     val scope = rememberCoroutineScope()
 

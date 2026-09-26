@@ -37,7 +37,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.khz.malekadmin.FootballSchoolApp
+import com.khz.malekadmin.MalekAdminApp
 import com.khz.malekadmin.core.network.NetworkResult
 import com.khz.malekadmin.domain.model.ChatRoom
 import com.khz.malekadmin.ui.components.AvatarView
@@ -62,7 +62,7 @@ fun ChatRoomListScreen(
     onOpenCreateGroup: () -> Unit
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    val container = (context.applicationContext as FootballSchoolApp).container
+    val container = (context.applicationContext as MalekAdminApp).container
 
     val chatRepo = container.chatRepository
     val scope = rememberCoroutineScope()

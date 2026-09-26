@@ -13,5 +13,11 @@ data class ChatMessage(
     val media: Media?,
     val isRead: Boolean,
     val readAt: String?,
-    val createdAt: String?
+    val createdAt: String?,
+
+    /**
+     * زمان تحویل پیام به اپِ گیرنده (UTC).
+     * null = هنوز تحویل نشده (تیک ✓) — اگر مقدار دارد (تیک ✓✓).
+     */
+    val deliveredAt: String? = null
 )

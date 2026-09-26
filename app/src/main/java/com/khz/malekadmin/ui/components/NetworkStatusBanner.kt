@@ -18,7 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.khz.malekadmin.FootballSchoolApp
+import com.khz.malekadmin.MalekAdminApp
 import com.khz.malekadmin.core.network.ConnectivityMonitor
 import com.khz.malekadmin.core.network.NetState
 
@@ -32,7 +32,7 @@ import com.khz.malekadmin.core.network.NetState
  */
 @Composable
 fun NetworkStatusBanner(modifier: Modifier = Modifier) {
-    val container = (LocalContext.current.applicationContext as FootballSchoolApp).container
+    val container = (LocalContext.current.applicationContext as MalekAdminApp).container
     val netState by container.connectivity.state.collectAsState()
 
     val message = ConnectivityMonitor.messageFor(netState)

@@ -25,7 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.khz.malekadmin.FootballSchoolApp
+import com.khz.malekadmin.MalekAdminApp
 import com.khz.malekadmin.core.network.NetworkResult
 import com.khz.malekadmin.domain.model.Evaluation
 import com.khz.malekadmin.ui.components.GlassCard3D
@@ -39,7 +39,7 @@ fun SessionEvaluationsScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
-    val container = (context.applicationContext as FootballSchoolApp).container
+    val container = (context.applicationContext as MalekAdminApp).container
     val repo = container.evaluationRepository
 
     var evaluations by remember { mutableStateOf<List<Evaluation>>(emptyList()) }

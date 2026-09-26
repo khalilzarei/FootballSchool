@@ -28,7 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.khz.malekadmin.FootballSchoolApp
+import com.khz.malekadmin.MalekAdminApp
 import com.khz.malekadmin.core.network.NetworkResult
 import com.khz.malekadmin.data.dto.request.CreateMatchRequest
 import com.khz.malekadmin.data.dto.request.UpdateMatchRequest
@@ -52,7 +52,7 @@ fun MatchFormScreen(
     onSaved: () -> Unit
 ) {
     val context = LocalContext.current
-    val container = (context.applicationContext as FootballSchoolApp).container
+    val container = (context.applicationContext as MalekAdminApp).container
     val matchRepo = container.matchRepository
     val classRepo = container.classRepository
     val ageGroupRepo = container.ageGroupRepository

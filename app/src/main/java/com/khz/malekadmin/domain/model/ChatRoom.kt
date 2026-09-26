@@ -25,5 +25,12 @@ data class ChatRoomUser(
     val fullName: String,
     val avatar: String?,
     val role: String?,
-    val memberRole: String?
+    val memberRole: String?,
+
+    /**
+     * آخرین پیامی که این عضو خوانده — برای تیک سبز ✓✓:
+     * پیام من خوانده شده ⇐ lastReadMessageId >= پیام.id
+     */
+    val lastReadMessageId: Int = 0,
+    val mobile: String? = null
 )
