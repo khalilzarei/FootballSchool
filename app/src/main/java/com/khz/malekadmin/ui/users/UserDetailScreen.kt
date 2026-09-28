@@ -103,7 +103,7 @@ fun UserDetailScreen(
                         Modifier.align(Alignment.Center),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        GlassCard3D(glowColor = Color(0x66A50044),) {
+                        GlassCard3D(glowColor = Color(0x66A50044)) {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier.padding(16.dp)
@@ -147,7 +147,8 @@ fun UserDetailScreen(
                         GlassCard3D() {
 
                             Column(
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
                                     .padding(
                                         horizontal = 16.dp,
                                         vertical = 8.dp
@@ -204,7 +205,8 @@ fun UserDetailScreen(
                         // ═════════════════════════════════════════
                         GlassCard3D() {
                             Column(
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
                                     .padding(16.dp),
                                 verticalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
@@ -245,7 +247,8 @@ fun UserDetailScreen(
                         // ═════════════════════════════════════════
                         GlassCard3D() {
                             Column(
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
                                     .padding(16.dp),
                                 verticalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
@@ -261,10 +264,11 @@ fun UserDetailScreen(
 
                                     // ─── تغییر وضعیت ───
                                     GlassButton(
-                                        text = if (u.status == "active") "غیرفعال کردن کاربر" else "فعال کردن کاربر",
+                                        text = if (u.status == "active") "غیرفعال کردن" else "فعال کردن",
                                         onClick = { showStatusDialog = true },
                                         primary = u.status != "active",
-                                        modifier = Modifier.fillMaxWidth()
+                                        modifier = Modifier
+                                            .fillMaxWidth()
                                             .weight(1f)
                                     )
                                     Spacer(Modifier.width(16.dp))
@@ -273,7 +277,8 @@ fun UserDetailScreen(
                                         text = "ریست رمز عبور",
                                         onClick = { showResetDialog = true },
                                         primary = false,
-                                        modifier = Modifier.fillMaxWidth()
+                                        modifier = Modifier
+                                            .fillMaxWidth()
                                             .weight(1f)
                                     )
                                 }
@@ -303,7 +308,7 @@ fun UserDetailScreen(
             },
             title = {
                 Text(
-                    if (isActive) "غیرفعال کردن کاربر" else "فعال کردن کاربر",
+                    if (isActive) "غیرفعال کردن" else "فعال کردن",
                     style = MaterialTheme.typography.titleLarge
                 )
             },

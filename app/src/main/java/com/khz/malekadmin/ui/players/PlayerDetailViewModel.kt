@@ -4,12 +4,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.khz.malekadmin.core.network.NetworkResult
 import com.khz.malekadmin.data.repository.PlayerRepository
+import com.khz.malekadmin.data.repository.UserRepository
 import com.khz.malekadmin.domain.model.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class PlayerDetailViewModel(private val repo: PlayerRepository) : ViewModel() {
+class PlayerDetailViewModel(
+    private val repo: PlayerRepository,
+    private val userRepository: UserRepository
+) : ViewModel() {
 
     private val _player = MutableStateFlow<Player?>(null)
     val player: StateFlow<Player?> = _player
@@ -25,6 +29,12 @@ class PlayerDetailViewModel(private val repo: PlayerRepository) : ViewModel() {
 
     private val _loading = MutableStateFlow(true)
     val loading: StateFlow<Boolean> = _loading
+
+    private val _resetPasswordResult = MutableStateFlow<String?>(null)
+    val resetPasswordResult: StateFlow<String?> = _resetPasswordResult
+
+    private val _resetPasswordError = MutableStateFlow<String?>(null)
+    val resetPasswordError: StateFlow<String?> = _resetPasswordError
 
     private var currentPlayerId: Int = 0
 
@@ -42,5 +52,28 @@ class PlayerDetailViewModel(private val repo: PlayerRepository) : ViewModel() {
 
     fun refresh() {
         if (currentPlayerId != 0) load(currentPlayerId)
+    }
+
+    fun resetPassword(userId: Int) {
+        viewModelScope.launch {
+            _resetPasswordError.value = null
+            when (val result = userRepository.resetPassword(userId)) {
+                is NetworkResult.Success -> {
+                    _resetPasswordResult.value = result.data
+                            ?: "رمز جدید در دسترس نیست"
+                }
+
+                is NetworkResult.Error   -> _resetPasswordError.value = result.message
+                else                     -> Unit
+            }
+        }
+    }
+
+    fun clearResetPasswordResult() {
+        _resetPasswordResult.value = null
+    }
+
+    fun clearResetPasswordError() {
+        _resetPasswordError.value = null
     }
 }

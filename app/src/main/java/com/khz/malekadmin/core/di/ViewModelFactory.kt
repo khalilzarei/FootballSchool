@@ -39,7 +39,10 @@ class ViewModelFactory(private val container: AppContainer) : ViewModelProvider.
         modelClass.isAssignableFrom(UserDetailViewModel::class.java)       -> UserDetailViewModel(container.userRepository) as T
 
         modelClass.isAssignableFrom(PlayerListViewModel::class.java)       -> PlayerListViewModel(container.playerRepository) as T
-        modelClass.isAssignableFrom(PlayerDetailViewModel::class.java)     -> PlayerDetailViewModel(container.playerRepository) as T
+        modelClass.isAssignableFrom(PlayerDetailViewModel::class.java)     -> PlayerDetailViewModel(
+            container.playerRepository,
+            container.userRepository
+        ) as T
         modelClass.isAssignableFrom(ClassFormViewModel::class.java)        -> {
             ClassFormViewModel(
                 container.classRepository,

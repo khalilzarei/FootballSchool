@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.Cake
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Female
+import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Male
 import androidx.compose.material.icons.filled.Notes
 import androidx.compose.material.icons.filled.People
@@ -36,6 +37,7 @@ import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -43,6 +45,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -121,11 +124,14 @@ private fun PlayerDetailContent(
     val balance by vm.balance.collectAsState()
     val invoices by vm.invoices.collectAsState()
     val loading by vm.loading.collectAsState()
+    val resetPasswordResult by vm.resetPasswordResult.collectAsState()
+    val resetPasswordError by vm.resetPasswordError.collectAsState()
     val context = LocalContext.current
 
     var showPaymentDialog by remember { mutableStateOf(false) }
     var selectedInvoiceId by remember { mutableStateOf<Int?>(null) }
     var selectedAmount by remember { mutableStateOf(0L) }
+    var showResetPasswordDialog by remember { mutableStateOf(false) }
 
     val accentColor = when (player?.gender) {
         "female" -> Color(0xFFF06292)
@@ -300,6 +306,36 @@ private fun PlayerDetailContent(
                                             context.startActivity(intent)
                                         },
                                         modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    if (p.userId != null) {
+                        item {
+                            GlassCard3D {
+                                Column(
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    SectionTitle(
+                                        title = "دسترسی حساب بازیکن",
+                                        icon = Icons.Default.Key,
+                                        color = GoldPrimary
+                                    )
+                                    Text(
+                                        "با ریست رمز، رمز موقت جدید ساخته می‌شود و بازیکن باید در ورود بعدی آن را تغییر دهد.",
+                                        color = Color.White.copy(alpha = 0.7f),
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                    GlassButton(
+                                        text = "ریست رمز عبور بازیکن",
+                                        onClick = { showResetPasswordDialog = true },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        primary = false
                                     )
                                 }
                             }
@@ -634,7 +670,8 @@ private fun PlayerDetailContent(
                     }
 
                     items(invoices) { inv ->
-                        GlassCard3D(onClick = if (onInvoiceDetail != null) {
+                        GlassCard3D(
+                            onClick = if (onInvoiceDetail != null) {
                             { onInvoiceDetail(inv.id) }
                         } else null) {
                             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -783,6 +820,100 @@ private fun PlayerDetailContent(
                         showPaymentDialog = false
                         vm.refresh()
                     })
+            }
+
+            if (showResetPasswordDialog) {
+                AlertDialog(
+                    onDismissRequest = { showResetPasswordDialog = false },
+                    icon = {
+                        Icon(
+                            Icons.Default.Key,
+                            null,
+                            tint = GoldPrimary
+                        )
+                    },
+                    title = { Text("ریست رمز بازیکن") },
+                    text = {
+                        Text("رمز موقت جدید ساخته می‌شود و نشست‌های قبلی بازیکن خارج خواهند شد. ادامه می‌دهید؟")
+                    },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            showResetPasswordDialog = false
+                            player?.userId?.let(vm::resetPassword)
+                        }) {
+                            Text(
+                                "ریست رمز",
+                                color = GoldPrimary
+                            )
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showResetPasswordDialog = false }) {
+                            Text(
+                                "انصراف",
+                                color = Color.White.copy(alpha = 0.7f)
+                            )
+                        }
+                    },
+                    containerColor = Color(0xFF241040)
+                )
+            }
+
+            resetPasswordResult?.let { newPassword ->
+                AlertDialog(
+                    onDismissRequest = vm::clearResetPasswordResult,
+                    icon = {
+                        Icon(
+                            Icons.Default.Key,
+                            null,
+                            tint = GoldPrimary
+                        )
+                    },
+                    title = { Text("رمز موقت بازیکن") },
+                    text = {
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Text("این رمز را به بازیکن بدهید. پس از بستن این پنجره دوباره نمایش داده نمی‌شود.")
+                            GlassCard3D {
+                                Text(
+                                    newPassword,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(14.dp),
+                                    color = GoldPrimary,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = vm::clearResetPasswordResult) {
+                            Text(
+                                "متوجه شدم",
+                                color = GoldPrimary
+                            )
+                        }
+                    },
+                    containerColor = Color(0xFF241040)
+                )
+            }
+
+            resetPasswordError?.let { message ->
+                AlertDialog(
+                    onDismissRequest = vm::clearResetPasswordError,
+                    title = { Text("خطا در ریست رمز") },
+                    text = { Text(message) },
+                    confirmButton = {
+                        TextButton(onClick = vm::clearResetPasswordError) {
+                            Text(
+                                "باشه",
+                                color = GoldPrimary
+                            )
+                        }
+                    },
+                    containerColor = Color(0xFF241040)
+                )
             }
         }
     }
