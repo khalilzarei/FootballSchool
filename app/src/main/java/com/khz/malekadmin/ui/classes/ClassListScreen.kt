@@ -54,6 +54,18 @@ fun ClassListScreen(
     val query by viewModel.query.collectAsState()
     val statusFilter by viewModel.statusFilter.collectAsState()
 
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    var firstResumeHandled by remember { mutableStateOf(false) }
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                if (firstResumeHandled) viewModel.load() else firstResumeHandled = true
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     var classToDelete by remember { mutableStateOf<FootballClass?>(null) }
 
     Scaffold(
@@ -63,12 +75,14 @@ fun ClassListScreen(
                 title = "کلاس‌ها",
                 actions = {
                     IconButton(onClick = onAddClass) {
-                        Icon(Icons.Default.Add, "افزودن کلاس", tint = GoldPrimary)
+                        Icon(
+                            Icons.Default.Add,
+                            "افزودن کلاس",
+                            tint = GoldPrimary
+                        )
                     }
-                }
-            )
-        }
-    ) { padding ->
+                })
+        }) { padding ->
         Column(
             Modifier
                 .padding(padding)
@@ -98,8 +112,7 @@ fun ClassListScreen(
                 GlassChip3D(
                     label = "همه",
                     selected = statusFilter == null,
-                    onClick = { viewModel.setStatusFilter(null) }
-                )
+                    onClick = { viewModel.setStatusFilter(null) })
                 GlassChip3D(
                     label = "فعال",
                     selected = statusFilter == "active",
@@ -124,12 +137,12 @@ fun ClassListScreen(
                     CircularProgressIndicator(color = GoldPrimary)
                 }
 
-                is ClassListState.Error -> Column(
+                is ClassListState.Error   -> Column(
                     Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    GlassCard3D(glowColor = Color(0x66A50044),) {
+                    GlassCard3D(glowColor = Color(0x66A50044)) {
                         Text(
                             s.message,
                             color = Color.White.copy(0.85f),
@@ -137,12 +150,17 @@ fun ClassListScreen(
                         )
                     }
                     Spacer(Modifier.height(12.dp))
-                    GlassButton(text = "تلاش مجدد", onClick = { viewModel.load() })
+                    GlassButton(
+                        text = "تلاش مجدد",
+                        onClick = { viewModel.load() })
                 }
 
                 is ClassListState.Success -> {
                     if (s.classes.isEmpty()) {
-                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Box(
+                            Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
                                     "کلاسی یافت نشد",
@@ -165,13 +183,14 @@ fun ClassListScreen(
                         )
 
                         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            items(s.classes, key = { it.id }) { cls ->
+                            items(
+                                s.classes,
+                                key = { it.id }) { cls ->
                                 ClassRow(
                                     cls = cls,
                                     onClick = { onClassClick(cls.id) },
                                     onToggle = { viewModel.toggleStatus(cls) },
-                                    onDelete = { classToDelete = cls }
-                                )
+                                    onDelete = { classToDelete = cls })
                             }
                         }
                     }
@@ -185,23 +204,33 @@ fun ClassListScreen(
         AlertDialog(
             onDismissRequest = { classToDelete = null },
             icon = {
-                Icon(Icons.Default.Delete, null, tint = Color(0xFFFF8A80))
+                Icon(
+                    Icons.Default.Delete,
+                    null,
+                    tint = Color(0xFFFF8A80)
+                )
             },
             title = { Text("حذف کلاس") },
             text = {
-                Text("آیا از حذف کلاس «${cls.title}» اطمینان دارید؟ این عمل قابل بازگشت نیست.")
+                Text("کلاس «${cls.title}» آرشیو می‌شود و ثبت‌نام‌های فعال آن پایان می‌یابد. سوابق گذشته حفظ می‌شوند. ادامه می‌دهید؟")
             },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.delete(cls)
                     classToDelete = null
                 }) {
-                    Text("بله، حذف کن", color = Color(0xFFFF8A80))
+                    Text(
+                        "بله، حذف کن",
+                        color = Color(0xFFFF8A80)
+                    )
                 }
             },
             dismissButton = {
                 TextButton(onClick = { classToDelete = null }) {
-                    Text("انصراف", color = Color.White.copy(0.7f))
+                    Text(
+                        "انصراف",
+                        color = Color.White.copy(0.7f)
+                    )
                 }
             },
             containerColor = Color(0xFF241040)

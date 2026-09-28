@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -82,6 +83,7 @@ fun ScheduleManagerScreen(
     var loading by remember { mutableStateOf(true) }
     var showAddDialog by remember { mutableStateOf(false) }
     var editSchedule by remember { mutableStateOf<ClassSchedule?>(null) }
+    var scheduleToDelete by remember { mutableStateOf<ClassSchedule?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
 
@@ -90,10 +92,10 @@ fun ScheduleManagerScreen(
     var generating by remember { mutableStateOf(false) }
     var generatedCount by remember { mutableStateOf<Int?>(null) }
 
-    fun reload() {
+    fun reload(clearError: Boolean = true) {
         scope.launch {
             loading = true
-            error = null
+            if (clearError) error = null
             when (val r = repo.getSchedules(classId)) {
                 is NetworkResult.Success -> schedules = r.data
                 is NetworkResult.Error   -> error = r.message
@@ -106,6 +108,16 @@ fun ScheduleManagerScreen(
                 is NetworkResult.Success -> cls = r.data
                 else                     -> {}
             }
+        }
+    }
+
+    suspend fun syncSessionsAfterScheduleChange(): String? {
+        val currentClass = cls ?: return null
+        if (!currentClass.isActive || currentClass.endDate.isNullOrBlank()) return null
+        return when (val result = sessionRepo.generateSessionsForClass(classId)) {
+            is NetworkResult.Success -> null
+            is NetworkResult.Error -> "برنامه هفتگی ذخیره شد، اما همگام‌سازی جلسات انجام نشد: ${result.message}"
+            else -> null
         }
     }
 
@@ -190,6 +202,7 @@ fun ScheduleManagerScreen(
                                 schedule = s,
                                 busy = busy,
                                 onEdit = { editSchedule = s },
+                                onDelete = { scheduleToDelete = s },
                                 onToggle = {
                                     scope.launch {
                                         busy = true
@@ -197,7 +210,10 @@ fun ScheduleManagerScreen(
                                             s.id,
                                             !s.isActive
                                         )) {
-                                            is NetworkResult.Success -> reload()
+                                            is NetworkResult.Success -> {
+                                                error = syncSessionsAfterScheduleChange()
+                                                reload(clearError = false)
+                                            }
                                             is NetworkResult.Error   -> error = r.message
                                             else                     -> {}
                                         }
@@ -316,7 +332,8 @@ fun ScheduleManagerScreen(
                     )) {
                         is NetworkResult.Success -> {
                             showAddDialog = false
-                            reload()
+                            error = syncSessionsAfterScheduleChange()
+                            reload(clearError = false)
                         }
 
                         is NetworkResult.Error   -> error = r.message
@@ -345,7 +362,8 @@ fun ScheduleManagerScreen(
                     )) {
                         is NetworkResult.Success -> {
                             editSchedule = null
-                            reload()
+                            error = syncSessionsAfterScheduleChange()
+                            reload(clearError = false)
                         }
 
                         is NetworkResult.Error   -> error = r.message
@@ -355,6 +373,47 @@ fun ScheduleManagerScreen(
                 }
             })
     }
+
+    scheduleToDelete?.let { s ->
+        AlertDialog(
+            onDismissRequest = { if (!busy) scheduleToDelete = null },
+            title = { Text("حذف برنامه هفتگی") },
+            text = {
+                Text(
+                    "برنامه‌ی ${weekdayLabel(s.weekday)} ساعت ${s.startTime} حذف شود؟ سوابق گذشته حفظ می‌شوند و جلسه‌های آینده با برنامه‌ی باقی‌مانده همگام می‌شوند."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = !busy,
+                    onClick = {
+                        scope.launch {
+                            busy = true
+                            when (val result = repo.deleteSchedule(s.id)) {
+                                is NetworkResult.Success -> {
+                                    scheduleToDelete = null
+                                    schedules = schedules.filterNot { it.id == s.id }
+                                    error = syncSessionsAfterScheduleChange()
+                                    reload(clearError = false)
+                                }
+                                is NetworkResult.Error -> error = result.message
+                                else -> Unit
+                            }
+                            busy = false
+                        }
+                    }
+                ) {
+                    Text("حذف برنامه", color = Color(0xFFFF8A80))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { scheduleToDelete = null }, enabled = !busy) {
+                    Text("انصراف", color = Color.White.copy(alpha = 0.7f))
+                }
+            },
+            containerColor = Color(0xFF241040)
+        )
+    }
 }
 
 @Composable
@@ -362,6 +421,7 @@ private fun ScheduleCard(
     schedule: ClassSchedule,
     busy: Boolean,
     onEdit: () -> Unit,
+    onDelete: () -> Unit,
     onToggle: () -> Unit
 ) {
     GlassCard3D(modifier = Modifier.fillMaxWidth(),) {
@@ -406,6 +466,14 @@ private fun ScheduleCard(
                     Icons.Default.Edit,
                     "ویرایش",
                     tint = GoldPrimary.copy(alpha = 0.8f)
+                )
+            }
+
+            IconButton(onClick = onDelete, enabled = !busy) {
+                Icon(
+                    Icons.Default.Delete,
+                    "حذف برنامه",
+                    tint = Color(0xFFFF8A80)
                 )
             }
 

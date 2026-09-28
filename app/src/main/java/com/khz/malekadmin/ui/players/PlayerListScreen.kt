@@ -110,7 +110,7 @@ fun PlayerListScreen(
 
             // فیلترهای مالی و وضعیت
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(PlayerFinanceFilter.values()) { filter ->
+                items(PlayerFinanceFilter.entries.toTypedArray()) { filter ->
                     FilterChip(
                         selected = selectedFilter == filter,
                         onClick = { selectedFilter = filter },

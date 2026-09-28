@@ -85,7 +85,6 @@ else digits.reversed()
 
 // روزهای هفته - قرارداد سرور 1=شنبه ... 7=جمعه
 
-
 // ─── یک ردیف برنامه هفتگی قبل از ثبت (weekday صفر = انتخاب نشده) ───
 private data class DraftSchedule(
     val weekday: Int = 0,
@@ -844,6 +843,15 @@ fun ClassFormScreen(
                                             } else {
                                                 notes += "برای تولید جلسات، تاریخ پایان کلاس را وارد کنید"
                                             }
+                                        }
+                                    }
+
+                                    // هنگام ویرایش کلاس، جلسه‌های آینده را با تاریخ‌ها، ساعت‌ها و محل برنامه‌ی هفتگی همگام کن.
+                                    if (classId != null && autoGenerate && endDateGregorian != null) {
+                                        when (val g = sessionRepo.generateSessionsForClass(savedClassId)) {
+                                            is NetworkResult.Success -> notes += "جلسات آینده با برنامه‌ی جدید کلاس همگام شد (${g.data} جلسه‌ی جدید)"
+                                            is NetworkResult.Error   -> notes += "کلاس ذخیره شد، اما همگام‌سازی جلسات ناموفق بود: ${g.message}"
+                                            else                     -> Unit
                                         }
                                     }
 

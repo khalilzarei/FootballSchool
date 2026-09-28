@@ -73,19 +73,24 @@ private fun statusInfo(status: String): Pair<String, Color> = when (status) {
 }
 
 /**
- * «جلسات من» — پنل بازیکن/سرپرست (و مربی):
- * جلسات کلاس‌های ثبت‌نام‌شده به همراه موضوع و یادداشتی که مربی ثبت کرده است.
- * داده از GET me/schedule (۱۴ روز گذشته تا آینده).
+ * «جلسات من» — جلسه‌های کلاس‌هایی که ادمین ساخته یا به او تخصیص داده شده‌اند.
+ * موضوع و یادداشت هر جلسه در برنامه بازیکنان فعال همان کلاس نیز نمایش داده می‌شود.
+ * داده از GET me/schedule.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MySessionsScreen(onBack: () -> Unit) {
+fun MySessionsScreen(
+    onBack: () -> Unit,
+    onSessionClick: (sessionId: Int, classId: Int) -> Unit
+) {
     val context = LocalContext.current
     val container = (context.applicationContext as MalekAdminApp).container
     val repo = container.clientRepository
+    val sessionRepo = container.sessionRepository
 
     var sessions by remember { mutableStateOf<List<MyScheduleItem>?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
+    var actionError by remember { mutableStateOf<String?>(null) }
     var reloadKey by remember { mutableStateOf(0) }
 
     val scope = rememberCoroutineScope()
@@ -141,6 +146,14 @@ fun MySessionsScreen(onBack: () -> Unit) {
                 selectedValue = selectedClass,
                 onSelect = { selectedClass = it })
             Spacer(Modifier.height(12.dp))
+            actionError?.let {
+                Text(
+                    it,
+                    color = Color(0xFFFF8A80),
+                    style = MaterialTheme.typography.bodySmall
+                )
+                Spacer(Modifier.height(8.dp))
+            }
 
             when {
                 sessions == null && error == null -> Box(
@@ -150,7 +163,7 @@ fun MySessionsScreen(onBack: () -> Unit) {
                     CircularProgressIndicator(color = GoldPrimary)
                 }
 
-                error != null                     -> GlassCard3D(Modifier.fillMaxWidth(),) {
+                error != null                     -> GlassCard3D(Modifier.fillMaxWidth()) {
                     Column(
                         Modifier.padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -172,26 +185,27 @@ fun MySessionsScreen(onBack: () -> Unit) {
                 }
 
                 sessions.orEmpty()
-                    .isEmpty()                    -> GlassCard3D(Modifier.fillMaxWidth(),) {
+                    .isEmpty()                    -> GlassCard3D(Modifier.fillMaxWidth()) {
                     Column(
                         Modifier.padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            "هنوز جلسه‌ای برای شما ثبت نشده است",
+                            "برای کلاس‌های شما جلسه‌ای ثبت نشده است",
                             color = Color.White.copy(0.6f)
                         )
                         Text(
-                            "پس از ثبت‌نام در کلاس، جلسات اینجا نمایش داده می‌شوند",
+                            "جلسات کلاس‌هایی که ساخته‌اید یا به شما تخصیص داده شده‌اند اینجا نمایش داده می‌شوند",
                             color = Color.White.copy(0.4f),
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
                 }
 
-                selectedClass == null             -> GlassCard3D(Modifier.fillMaxWidth(),) {
+                selectedClass == null             -> GlassCard3D(Modifier.fillMaxWidth()) {
                     Column(
-                        Modifier.padding(24.dp)
+                        Modifier
+                            .padding(24.dp)
                             .fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(6.dp)
@@ -215,7 +229,7 @@ fun MySessionsScreen(onBack: () -> Unit) {
                     }
                 }
 
-                visibleSessions.isEmpty()         -> GlassCard3D(Modifier.fillMaxWidth(),) {
+                visibleSessions.isEmpty()         -> GlassCard3D(Modifier.fillMaxWidth()) {
                     Column(
                         Modifier.padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -233,7 +247,55 @@ fun MySessionsScreen(onBack: () -> Unit) {
                         key = { it.id }) { s ->
                         MySessionCard(
                             s,
-                            onEdit = { editTarget = s })
+                            onEdit = { editTarget = s },
+                            onOpen = {
+                                onSessionClick(
+                                    s.id,
+                                    s.classId
+                                )
+                            },
+                            onComplete = {
+                                scope.launch {
+                                    actionError = null
+                                    when (val result = sessionRepo.completeSession(s.id)) {
+                                        is NetworkResult.Success -> reloadKey++
+                                        is NetworkResult.Error   -> actionError = result.message
+                                        else                     -> Unit
+                                    }
+                                }
+                            },
+                            onCancel = {
+                                scope.launch {
+                                    actionError = null
+                                    when (val result = sessionRepo.cancelSession(s.id)) {
+                                        is NetworkResult.Success -> reloadKey++
+                                        is NetworkResult.Error   -> actionError = result.message
+                                        else                     -> Unit
+                                    }
+                                }
+                            },
+                            onMakeup = {
+                                scope.launch {
+                                    actionError = null
+                                    val result = sessionRepo.updateSession(
+                                        s.id,
+                                        UpdateSessionRequest(
+                                            sessionDate = null,
+                                            startTime = null,
+                                            endTime = null,
+                                            location = null,
+                                            topic = null,
+                                            status = "makeup",
+                                            notes = null
+                                        )
+                                    )
+                                    when (result) {
+                                        is NetworkResult.Success -> reloadKey++
+                                        is NetworkResult.Error   -> actionError = result.message
+                                        else                     -> Unit
+                                    }
+                                }
+                            })
                     }
                 }
             }
@@ -257,7 +319,8 @@ fun MySessionsScreen(onBack: () -> Unit) {
                             location = null,
                             topic = topic.takeIf { it.isNotBlank() },
                             status = null,
-                            notes = notes.takeIf { it.isNotBlank() }))
+                            notes = notes.takeIf { it.isNotBlank() })
+                    )
                     if (r is NetworkResult.Success) {
                         editTarget = null
                         reloadKey++
@@ -270,11 +333,19 @@ fun MySessionsScreen(onBack: () -> Unit) {
 @Composable
 private fun MySessionCard(
     s: MyScheduleItem,
-    onEdit: () -> Unit
+    onEdit: () -> Unit,
+    onOpen: () -> Unit,
+    onComplete: () -> Unit,
+    onCancel: () -> Unit,
+    onMakeup: () -> Unit
 ) {
     val (statusLabel, statusColor) = statusInfo(s.status)
+    val isPast = isBeforeToday(s.sessionDate)
 
-    GlassCard3D(Modifier.fillMaxWidth(),) {
+    GlassCard3D(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onOpen
+    ) {
         Column(
             Modifier.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
@@ -339,16 +410,57 @@ private fun MySessionCard(
                 )
             }
 
-            // ─── ویرایش توضیح ───
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                TextButton(onClick = onEdit) {
-                    Text(
-                        "توضیح",
-                        color = GoldPrimary
+            // ─── وضعیت جلسه و ورود به فهرست بازیکنان همین جلسه ───
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                if (s.status == "scheduled" || s.status == "makeup") {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(
+                            4.dp,
+                            Alignment.End
+                        )
+                    ) {
+                        TextButton(onClick = onComplete) {
+                            Text(
+                                if (isPast) "برگزار شد" else "پایان جلسه",
+                                color = Color(0xFF81C784)
+                            )
+                        }
+                        TextButton(onClick = onCancel) {
+                            Text(
+                                "لغو جلسه",
+                                color = Color(0xFFFF8A80)
+                            )
+                        }
+                        if (s.status == "scheduled") {
+                            TextButton(onClick = onMakeup) {
+                                Text(
+                                    "جبرانی",
+                                    color = Color(0xFF4FC3F7)
+                                )
+                            }
+                        }
+                    }
+                }
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(
+                        4.dp,
+                        Alignment.End
                     )
+                ) {
+                    TextButton(onClick = onEdit) {
+                        Text(
+                            "توضیح جلسه",
+                            color = Color.White.copy(alpha = 0.8f)
+                        )
+                    }
+                    TextButton(onClick = onOpen) {
+                        Text(
+                            if (s.status == "cancelled") "جزئیات وضعیت جلسه" else "بازیکنان و حضورغیاب",
+                            color = GoldPrimary
+                        )
+                    }
                 }
             }
         }
@@ -398,6 +510,11 @@ private fun MySessionEditDialog(
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.White.copy(0.75f))
                 } else {
+                    Text(
+                        "توضیح این جلسه در برنامه بازیکنان فعال همین کلاس هم نمایش داده می‌شود.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.62f)
+                    )
                     GlassTextField(
                         value = topic,
                         onValueChange = { topic = it },

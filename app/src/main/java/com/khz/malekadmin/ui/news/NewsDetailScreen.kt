@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -41,6 +42,7 @@ import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -51,6 +53,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -87,6 +90,8 @@ import com.khz.malekadmin.ui.components.rememberAuthToken
 import com.khz.malekadmin.ui.theme.BlueAccent
 import com.khz.malekadmin.ui.theme.GoldPrimary
 import com.khz.malekadmin.ui.theme.RedError
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 @Composable
@@ -204,14 +209,19 @@ private fun NewsDetailContentModern(
     var selectedMedia by remember { mutableStateOf<Media?>(null) }
     var videoToPlay by remember { mutableStateOf<Media?>(null) }
     var statusMsg by remember { mutableStateOf<String?>(null) }
+    val downloadIds = remember { mutableStateMapOf<Int, Long>() }
+    val downloadProgress = remember { mutableStateMapOf<Int, Int>() }
+    val downloadManager = remember {
+        context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+    }
 
-    fun downloadMedia(media: Media) {
-        try {
+    fun enqueueDownload(media: Media): Long? {
+        return try {
             val url = media.url
                     ?: media.streamUrl
                     ?: run {
                         statusMsg = "آدرس دانلود موجود نیست"
-                        return
+                        return null
                     }
             val fileName = media.originalName
                     ?: media.fileName
@@ -230,12 +240,76 @@ private fun NewsDetailContentModern(
                         "Bearer $token"
                     )
                 }
-            val dm = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-            dm.enqueue(request)
+            val id = downloadManager.enqueue(request)
             statusMsg = "دانلود «$fileName» شروع شد"
+            id
         } catch (e: Exception) {
             statusMsg = e.message
                     ?: "خطا در دانلود"
+            null
+        }
+    }
+
+    fun requestDownload(media: Media) {
+        if (downloadIds.containsKey(media.id)) {
+            statusMsg = "این رسانه در حال دانلود است"
+            return
+        }
+        enqueueDownload(media)?.let { id ->
+            downloadIds[media.id] = id
+            downloadProgress[media.id] = -1
+        }
+    }
+
+    // نمایش درصد واقعی دانلود داخل خبر، هماهنگ با DownloadManager سیستم.
+    LaunchedEffect(Unit) {
+        while (isActive) {
+            downloadIds.toMap()
+                .forEach { (mediaId, downloadId) ->
+                    val cursor = downloadManager.query(
+                        DownloadManager.Query()
+                            .setFilterById(downloadId)
+                    )
+                    var remove = false
+                    cursor?.use {
+                        if (it.moveToFirst()) {
+                            when (it.getInt(it.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))) {
+                                DownloadManager.STATUS_SUCCESSFUL -> {
+                                    downloadProgress[mediaId] = 100
+                                    statusMsg = "دانلود رسانه با موفقیت انجام شد"
+                                    remove = true
+                                }
+
+                                DownloadManager.STATUS_FAILED     -> {
+                                    statusMsg = "دانلود رسانه ناموفق بود"
+                                    remove = true
+                                }
+
+                                else                              -> {
+                                    val total = it.getLong(
+                                        it.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)
+                                    )
+                                    val downloaded = it.getLong(
+                                        it.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)
+                                    )
+                                    downloadProgress[mediaId] = if (total > 0L) ((downloaded * 100L) / total).toInt()
+                                        .coerceIn(
+                                            0,
+                                            100
+                                        )
+                                    else -1
+                                }
+                            }
+                        } else {
+                            remove = true
+                        }
+                    }
+                    if (remove) {
+                        downloadIds.remove(mediaId)
+                        downloadProgress.remove(mediaId)
+                    }
+                }
+            delay(350)
         }
     }
 
@@ -291,7 +365,8 @@ private fun NewsDetailContentModern(
                     token = token,
                     onImageClick = { selectedMedia = it },
                     onVideoClick = { videoToPlay = it },
-                    onDownloadClick = { downloadMedia(it) },
+                    downloadProgress = downloadProgress,
+                    onDownloadClick = { requestDownload(it) },
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
                 Spacer(Modifier.height(16.dp))
@@ -357,7 +432,7 @@ private fun NewsDetailContentModern(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Row(
@@ -365,7 +440,8 @@ private fun NewsDetailContentModern(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Box(
-                                Modifier.size(32.dp)
+                                Modifier
+                                    .size(32.dp)
                                     .clip(RoundedCornerShape(10.dp))
                                     .background(BlueAccent.copy(alpha = 0.15f)),
                                 contentAlignment = Alignment.Center
@@ -416,7 +492,7 @@ private fun NewsDetailContentModern(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(20.dp)
             ) {
                 Text(
                     text = news.body,
@@ -433,7 +509,7 @@ private fun NewsDetailContentModern(
                 GlassCard3D(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                        .padding(horizontal = 16.dp)
                 ) {
                     Text(
                         msg,
@@ -451,7 +527,7 @@ private fun NewsDetailContentModern(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(20.dp)
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
@@ -562,7 +638,7 @@ private fun NewsDetailContentModern(
                     )
                     Spacer(Modifier.height(8.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        TextButton(onClick = { downloadMedia(media) }) {
+                        TextButton(onClick = { requestDownload(media) }) {
                             Text(
                                 "دانلود",
                                 color = GoldPrimary
@@ -597,6 +673,7 @@ private fun NewsDetailContentModern(
 private fun MediaSliderWithDownload(
     mediaList: List<Media>,
     token: String?,
+    downloadProgress: Map<Int, Int>,
     onImageClick: (Media) -> Unit,
     onVideoClick: (Media) -> Unit,
     onDownloadClick: (Media) -> Unit,
@@ -704,26 +781,73 @@ private fun MediaSliderWithDownload(
                         }
                     }
 
-                    IconButton(
-                        onClick = { onDownloadClick(media) },
-                        modifier = Modifier
-                            .align(Alignment.BottomStart)
-                            .padding(10.dp)
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(Color.Black.copy(0.55f))
-                            .border(
-                                1.dp,
-                                Color.White.copy(0.2f),
-                                CircleShape
+                    val progress = downloadProgress[media.id]
+                    if (progress == null) {
+                        IconButton(
+                            onClick = { onDownloadClick(media) },
+                            modifier = Modifier
+                                .align(Alignment.BottomStart)
+                                .padding(10.dp)
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(Color.Black.copy(0.55f))
+                                .border(
+                                    1.dp,
+                                    Color.White.copy(0.2f),
+                                    CircleShape
+                                )
+                        ) {
+                            Icon(
+                                Icons.Default.Download,
+                                "دانلود",
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
                             )
-                    ) {
-                        Icon(
-                            Icons.Default.Download,
-                            "دانلود",
-                            tint = Color.White,
-                            modifier = Modifier.size(20.dp)
-                        )
+                        }
+                    } else {
+                        Column(
+                            modifier = Modifier
+                                .align(Alignment.BottomStart)
+                                .padding(10.dp)
+                                .width(82.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color.Black.copy(alpha = 0.72f))
+                                .padding(
+                                    horizontal = 8.dp,
+                                    vertical = 6.dp
+                                ),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            if (progress < 0) {
+                                LinearProgressIndicator(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(3.dp),
+                                    color = GoldPrimary,
+                                    trackColor = Color.White.copy(alpha = 0.18f)
+                                )
+                                Text(
+                                    "در حال دانلود",
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            } else {
+                                LinearProgressIndicator(
+                                    progress = { progress / 100f },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(3.dp),
+                                    color = GoldPrimary,
+                                    trackColor = Color.White.copy(alpha = 0.18f)
+                                )
+                                Text(
+                                    "${DateUtils.toPersianDigits(progress.toString())}٪",
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            }
+                        }
                     }
 
                     Box(
@@ -731,7 +855,7 @@ private fun MediaSliderWithDownload(
                             .fillMaxWidth()
                             .align(Alignment.BottomCenter)
                             .padding(
-                                start = 56.dp,
+                                start = if (progress == null) 56.dp else 104.dp,
                                 end = 12.dp,
                                 bottom = 12.dp
                             )

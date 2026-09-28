@@ -411,6 +411,9 @@ interface ClassScheduleApi {
         @Body request: UpdateScheduleRequest
     ): ApiResponse<JsonElement>
 
+    @DELETE("schedules/{id}")
+    suspend fun deleteSchedule(@Path("id") id: Int): ApiResponse<Unit>
+
     @POST("schedules/{id}/activate")
     suspend fun activateSchedule(@Path("id") id: Int): ApiResponse<Unit>
 

@@ -352,6 +352,17 @@ class ClassRepository(
         NetworkResult.Error(ApiErrorHandler.extractMessage(e))
     }
 
+    suspend fun deleteSchedule(scheduleId: Int): NetworkResult<Unit> = try {
+        val r = classScheduleApi.deleteSchedule(scheduleId)
+        if (r.success) NetworkResult.Success(Unit)
+        else NetworkResult.Error(
+            r.message
+                    ?: "خطا در حذف برنامه هفتگی"
+        )
+    } catch (e: Exception) {
+        NetworkResult.Error(ApiErrorHandler.extractMessage(e))
+    }
+
     // ═════════════════════════════════════════════
     // Enrollments (ثبت‌نام بازیکنان در کلاس)
     // ═════════════════════════════════════════════

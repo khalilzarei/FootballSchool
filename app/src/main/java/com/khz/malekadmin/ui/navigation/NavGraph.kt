@@ -463,7 +463,18 @@ fun AppNavigation(viewModelFactory: ViewModelFactory) {
                 })
             }
 
-            composable(Screen.MySessions.route) { MySessionsScreen(onBack = { nav.popBackStack() }) }
+            composable(Screen.MySessions.route) {
+                MySessionsScreen(
+                    onBack = { nav.popBackStack() },
+                    onSessionClick = { sessionId, classId ->
+                        nav.navigate(
+                            Screen.Attendance.createRoute(
+                                sessionId,
+                                classId
+                            )
+                        )
+                    })
+            }
 
             composable(
                 route = Screen.Attendance.route,

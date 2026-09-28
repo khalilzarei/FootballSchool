@@ -55,7 +55,7 @@ fun GlassChip3D(
         label = "chipScale"
     )
 
-    val shape = RoundedCornerShape(16.dp)
+    val shape = RoundedCornerShape(10.dp)
 
     // ─── گرادیان پس‌زمینه بر اساس وضعیت انتخاب ───
     val backgroundBrush = if (selected) {
@@ -99,26 +99,33 @@ fun GlassChip3D(
     val textColor = if (selected) accentColor else Color.White.copy(alpha = 0.75f)
     val labelWeight = if (selected) FontWeight.Bold else FontWeight.Medium
 
-    Box(
-        modifier = modifier
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-            .clip(shape)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = {
-                    pressed = true
-                    onClick()
-                }
-            )
-            .background(backgroundBrush, shape)
-            .border(width = 1.dp, brush = borderBrush, shape = shape)
-            .padding(horizontal = 20.dp, vertical = 10.dp),
-        contentAlignment = Alignment.Center
-    ) {
+    Box(modifier = modifier
+        .graphicsLayer {
+            scaleX = scale
+            scaleY = scale
+        }
+        .clip(shape)
+        .clickable(
+            interactionSource = remember { MutableInteractionSource() },
+            indication = null,
+            onClick = {
+                pressed = true
+                onClick()
+            })
+        .background(
+            backgroundBrush,
+            shape
+        )
+        .border(
+            width = 1.dp,
+            brush = borderBrush,
+            shape = shape
+        )
+        .padding(
+            horizontal = 10.dp,
+            vertical = 5.dp
+        ),
+        contentAlignment = Alignment.Center) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             // ─── آیکون چک در حالت انتخاب‌شده ───
             if (selected && showCheckmark) {
@@ -133,7 +140,7 @@ fun GlassChip3D(
 
             Text(
                 text = label,
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.titleSmall,
                 fontWeight = labelWeight,
                 color = textColor
             )

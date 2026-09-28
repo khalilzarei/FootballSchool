@@ -65,6 +65,7 @@ fun AttendanceScreen(
     val saving by vm.saving.collectAsState()
     val saved by vm.saved.collectAsState()
     val error by vm.error.collectAsState()
+    val sessionStatus by vm.sessionStatus.collectAsState()
 
     LaunchedEffect(sessionId) {
         vm.load(
@@ -98,7 +99,7 @@ fun AttendanceScreen(
                     .padding(16.dp),
                 contentAlignment = Alignment.Center
             ) {
-                GlassCard3D(glowColor = Color(0xFFA50044),) {
+                GlassCard3D(glowColor = Color(0xFFA50044)) {
                     Column(
                         Modifier.padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -121,6 +122,33 @@ fun AttendanceScreen(
                     }
                 }
             }
+        } else if (sessionStatus == "cancelled") {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(20.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                GlassCard3D(glowColor = Color(0xFFFF8A80)) {
+                    Column(
+                        Modifier.padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            "جلسه لغو شده است",
+                            color = Color(0xFFFF8A80),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(
+                            "برای جلسه‌ی لغوشده حضور و غیاب و یادداشت عملکرد ثبت نمی‌شود.",
+                            color = Color.White.copy(alpha = 0.75f),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            }
         } else {
             Column(
                 Modifier
@@ -132,7 +160,19 @@ fun AttendanceScreen(
                     SummaryBar(
                         present = rows.count { it.status == "present" },
                         absent = rows.count { it.status == "absent" },
-                        excused = rows.count { it.status == "excused" })
+                        excused = rows.count { it.status == "excused" },
+                        unmarked = rows.count { it.status == null })
+                    if (rows.any { it.status == null }) {
+                        Text(
+                            "وضعیت بازیکنان ثبت‌نشده را مشخص کنید؛ یادداشت عملکرد همراه وضعیت حضور ذخیره می‌شود.",
+                            modifier = Modifier.padding(
+                                horizontal = 16.dp,
+                                vertical = 6.dp
+                            ),
+                            color = Color.White.copy(alpha = 0.65f),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
                 }
 
                 LazyColumn(
@@ -163,9 +203,9 @@ fun AttendanceScreen(
                 // ─── دکمه‌ی ثبت پایین صفحه ───
                 Column(Modifier.padding(16.dp)) {
                     GlassButton(
-                        text = "ثبت حضور و غیاب",
+                        text = "ثبت حضور، غیاب و یادداشت عملکرد",
                         onClick = { vm.save(sessionId) },
-                        enabled = !saving && rows.isNotEmpty(),
+                        enabled = !saving && rows.any { it.status != null },
                         loading = saving,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -207,11 +247,13 @@ fun AttendanceScreen(
 private fun SummaryBar(
     present: Int,
     absent: Int,
-    excused: Int
+    excused: Int,
+    unmarked: Int
 ) {
-    GlassCard3D(Modifier.fillMaxWidth(),) {
+    GlassCard3D(Modifier.fillMaxWidth()) {
         Row(
-            Modifier.fillMaxWidth()
+            Modifier
+                .fillMaxWidth()
                 .padding(
                     vertical = 10.dp,
                     horizontal = 6.dp
@@ -233,6 +275,12 @@ private fun SummaryBar(
                 "موجه",
                 excused,
                 ExcusedColor,
+                Modifier.weight(1f)
+            )
+            SummaryItem(
+                "ثبت‌نشده",
+                unmarked,
+                Color.White.copy(alpha = 0.6f),
                 Modifier.weight(1f)
             )
         }
@@ -265,7 +313,7 @@ private fun SummaryItem(
 }
 
 // ═════════════════════════════════════════════
-// کارت بازیکن — عکس و نام و وضعیت در یک ردیف
+// کارت بازیکن — حضور و یادداشت عملکرد هر نفر در این جلسه
 // ═════════════════════════════════════════════
 @Composable
 private fun PlayerAttendanceCard(
@@ -276,12 +324,12 @@ private fun PlayerAttendanceCard(
     // فیلد توضیح به‌صورت پیش‌فرض بسته است؛ با دکمه باز و بسته می‌شود
     var noteOpen by remember(row.playerId) { mutableStateOf(false) }
 
-    GlassCard3D(Modifier.fillMaxWidth(),) {
+    GlassCard3D(Modifier.fillMaxWidth()) {
         Column(
             Modifier.padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // ─── عکس + نام + وضعیت (یک ردیف) ───
+            // ─── عکس و نام ───
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -300,23 +348,37 @@ private fun PlayerAttendanceCard(
                     maxLines = 1,
                     modifier = Modifier.weight(1f)
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    StatusPill(
-                        "حاضر",
-                        PresentColor,
-                        row.status == "present"
-                    ) { onStatus("present") }
-                    StatusPill(
-                        "غایب",
-                        AbsentColor,
-                        row.status == "absent"
-                    ) { onStatus("absent") }
-                    StatusPill(
-                        "موجه",
-                        ExcusedColor,
-                        row.status == "excused"
-                    ) { onStatus("excused") }
-                }
+            }
+
+            // ─── وضعیت حضور — بدون پیش‌فرض تا حضور بازیکن ناخواسته تأیید نشود ───
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                StatusPill(
+                    "حاضر",
+                    PresentColor,
+                    row.status == "present"
+                ) { onStatus("present") }
+                StatusPill(
+                    "غایب",
+                    AbsentColor,
+                    row.status == "absent"
+                ) { onStatus("absent") }
+                StatusPill(
+                    "موجه",
+                    ExcusedColor,
+                    row.status == "excused"
+                ) { onStatus("excused") }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                StatusPill(
+                    "دیرکرد",
+                    Color(0xFF4FC3F7),
+                    row.status == "late"
+                ) { onStatus("late") }
+                StatusPill(
+                    "مصدوم",
+                    Color(0xFFFFB74D),
+                    row.status == "injured"
+                ) { onStatus("injured") }
             }
 
             // ─── دکمه نمایش/مخفی کردن توضیح ───
@@ -325,13 +387,13 @@ private fun PlayerAttendanceCard(
                 hasNote = !row.note.isNullOrBlank(),
                 onToggle = { noteOpen = !noteOpen })
 
-            // ─── توضیح (چندخطی) — فقط وقتی باز باشد ───
+            // ─── یادداشت عملکرد (چندخطی) — فقط وقتی باز باشد ───
             if (noteOpen) {
                 GlassTextField(
                     value = row.note
                             ?: "",
                     onValueChange = onNote,
-                    label = "توضیح (اختیاری)",
+                    label = "عملکرد بازیکن در این جلسه",
                     singleLine = false,
                     modifier = Modifier.heightIn(min = 96.dp)
                 )
@@ -360,7 +422,7 @@ private fun NoteTogglePill(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically) {
         Text(
-            "توضیحات",
+            "یادداشت عملکرد",
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold,
             color = tint

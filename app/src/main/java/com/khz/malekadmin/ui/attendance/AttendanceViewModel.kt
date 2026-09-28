@@ -14,7 +14,7 @@ data class AttendanceRow(
     val playerId: Int,
     val playerName: String,
     val playerAvatar: String? = null,
-    val status: String = "present",
+    val status: String? = null,
     val isBillable: Boolean = true,
     val note: String? = null
 )
@@ -36,13 +36,27 @@ class AttendanceViewModel(
     private val _saved = MutableStateFlow(false)
     val saved: StateFlow<Boolean> = _saved
 
+    private val _sessionStatus = MutableStateFlow<String?>(null)
+    val sessionStatus: StateFlow<String?> = _sessionStatus
+
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
-    fun load(sessionId: Int, classId: Int) {
+    fun load(
+        sessionId: Int,
+        classId: Int
+    ) {
         viewModelScope.launch {
             _loading.value = true
             _error.value = null
+            _saved.value = false
+            _sessionStatus.value = null
+
+            when (val sessionResult = sessionRepo.getSession(sessionId)) {
+                is NetworkResult.Success -> _sessionStatus.value = sessionResult.data.status
+                is NetworkResult.Error   -> _error.value = sessionResult.message
+                else                     -> Unit
+            }
 
             // ─── ریکوئست جدید سرور: بازیکنان + حضور و غیاب ذخیره‌شده در یک پاسخ ───
             val sheet = sessionRepo.getAttendanceSheet(sessionId)
@@ -52,19 +66,29 @@ class AttendanceViewModel(
                     AttendanceRow(
                         playerId = p.playerId,
                         playerName = p.fullName?.takeIf { it.isNotBlank() }
-                                ?: listOfNotNull(p.firstName, p.lastName).joinToString(" ").ifBlank { "بازیکن" },
+                                ?: listOfNotNull(
+                                    p.firstName,
+                                    p.lastName
+                                ).joinToString(" ")
+                                    .ifBlank { "بازیکن" },
                         playerAvatar = p.avatarUrl,
-                        status = p.status ?: "present",
-                        isBillable = p.isBillable ?: true,
+                        status = p.status,
+                        isBillable = p.isBillable
+                                ?: true,
                         note = p.note
                     )
                 }
             } else {
                 // ─── فالبک: هاست هنوز endpoint جدید را ندارد → مثل قبل دو ریکوئست ───
-                val enrollmentsResult = classRepo.getClassPlayers(classId, perPage = 100)
-                val enrollments = (enrollmentsResult as? NetworkResult.Success)?.data?.items ?: emptyList()
+                val enrollmentsResult = classRepo.getClassPlayers(
+                    classId,
+                    perPage = 100
+                )
+                val enrollments = (enrollmentsResult as? NetworkResult.Success)?.data?.items
+                        ?: emptyList()
                 val attendanceResult = sessionRepo.getSessionAttendance(sessionId)
-                val existing = (attendanceResult as? NetworkResult.Success)?.data ?: emptyList()
+                val existing = (attendanceResult as? NetworkResult.Success)?.data
+                        ?: emptyList()
 
                 _rows.value = enrollments.map { e ->
                     val att = existing.find { it.playerId == e.playerId }
@@ -72,20 +96,18 @@ class AttendanceViewModel(
                         playerId = e.playerId,
                         playerName = e.playerFullName,
                         playerAvatar = e.player?.avatarPath,
-                        status = att?.status ?: "present",
-                        isBillable = att?.isBillable ?: true,
+                        status = att?.status,
+                        isBillable = att?.isBillable
+                                ?: true,
                         note = att?.note
                     )
                 }
 
                 _error.value = when {
-                    enrollments.isEmpty() && enrollmentsResult is NetworkResult.Error ->
-                        enrollmentsResult.message
-                    attendanceResult is NetworkResult.Error ->
-                        "خطا در دریافت حضور و غیاب ذخیره‌شده: ${attendanceResult.message}"
-                    enrollments.isEmpty() && sheet is NetworkResult.Error ->
-                        sheet.message
-                    else -> null
+                    enrollments.isEmpty() && enrollmentsResult is NetworkResult.Error -> enrollmentsResult.message
+                    attendanceResult is NetworkResult.Error                           -> "خطا در دریافت حضور و غیاب ذخیره‌شده: ${attendanceResult.message}"
+                    enrollments.isEmpty() && sheet is NetworkResult.Error             -> sheet.message
+                    else                                                              -> null
                 }
             }
 
@@ -93,24 +115,49 @@ class AttendanceViewModel(
         }
     }
 
-    fun setStatus(playerId: Int, status: String) {
+    fun setStatus(
+        playerId: Int,
+        status: String
+    ) {
         _rows.value = _rows.value.map { if (it.playerId == playerId) it.copy(status = status) else it }
     }
 
-    fun setNote(playerId: Int, note: String) {
+    fun setNote(
+        playerId: Int,
+        note: String
+    ) {
         _rows.value = _rows.value.map { if (it.playerId == playerId) it.copy(note = note) else it }
     }
 
     fun save(sessionId: Int) {
         viewModelScope.launch {
+            if (_rows.value.any { it.status == null && !it.note.isNullOrBlank() }) {
+                _error.value = "برای ذخیره توضیح هر بازیکن، ابتدا وضعیت حضور او را انتخاب کنید."
+                return@launch
+            }
+            val markedRows = _rows.value.filter { it.status != null }
+            if (markedRows.isEmpty()) {
+                _error.value = "ابتدا وضعیت حضور حداقل یک بازیکن را ثبت کنید."
+                return@launch
+            }
             _saving.value = true
             _error.value = null
-            val items = _rows.value.map { AttendanceItemRequest(it.playerId, it.status, it.isBillable, it.note) }
+            val items = markedRows.map {
+                AttendanceItemRequest(
+                    it.playerId,
+                    it.status!!,
+                    it.isBillable,
+                    it.note
+                )
+            }
             val request = com.khz.malekadmin.data.dto.request.SaveBulkAttendanceRequest(items)
-            when (val result = sessionRepo.saveBulkAttendance(sessionId, request)) {
+            when (val result = sessionRepo.saveBulkAttendance(
+                sessionId,
+                request
+            )) {
                 is NetworkResult.Success -> _saved.value = true
-                is NetworkResult.Error -> _error.value = result.message
-                else -> {}
+                is NetworkResult.Error   -> _error.value = result.message
+                else                     -> {}
             }
             _saving.value = false
         }
