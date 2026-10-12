@@ -196,7 +196,9 @@ internal fun TelegramChatTopBar(
                         name = title,
                         avatarUrl = avatarUrl,
                         size = 38.dp,
-                        accentColor = GoldPrimary
+                        accentColor = GoldPrimary,
+                        // این آواتار صرفاً تزئینی (بک‌دراپ) است
+                        enableFullscreenPreview = false
                     )
 
                     Spacer(modifier = Modifier.width(9.dp))

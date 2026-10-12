@@ -1,16 +1,19 @@
 package com.khz.malekadmin.ui.components
 
 import android.net.Uri
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,11 +39,17 @@ import com.khz.malekadmin.ui.theme.GoldPrimary
  * اولویت نمایش:
  * localUri > avatarUrl > حرف اول نام
  *
+ * لمسِ آواتار (وقتی عکسی وجود داشته باشد) تصویر را در [FullScreenImageViewer]
+ * تمام‌صفحه با امکان زوم نمایش می‌دهد.
+ *
  * @param name نام کاربر/بازیکن برای حالت پیش‌فرض
  * @param avatarUrl مسیر یا URL آواتار از سرور
  * @param localUri آدرس محلی عکس انتخاب‌شده (برای پیش‌نمایش آنی)
  * @param size اندازه آواتار
  * @param accentColor رنگ گرادیان پس‌زمینه
+ * @param enableFullscreenPreview با لمس، عکس بزرگ و تمام‌صفحه نمایش داده شود؟
+ *        (در جاهایی که خودِ آواتار نقش دکمه‌ی انتخاب دارد، false بدهید)
+ * @param onAvatarClick اکشن دلخواهِ اضافه هنگام لمس (اختیاری)
  */
 @Composable
 fun AvatarView(
@@ -49,21 +58,24 @@ fun AvatarView(
     localUri: Uri? = null,
     size: Dp = 48.dp,
     accentColor: Color = GoldPrimary,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enableFullscreenPreview: Boolean = true,
+    onAvatarClick: (() -> Unit)? = null
 ) {
     // ساخت URL کامل از مسیر نسبی (با کش)
     val fullUrl = remember(avatarUrl) { buildFullUrl(avatarUrl) }
-    Log.d(
-        "AvatarView",
-        "AvatarView: $fullUrl"
-    )
 
     // تعیین منبع تصویر بر اساس اولویت
     val imageSource: Any? = when {
-        localUri != null         -> localUri              // ← اولویت اول: عکس محلی انتخاب‌شده
+        localUri != null -> localUri              // ← اولویت اول: عکس محلی انتخاب‌شده
         !fullUrl.isNullOrBlank() -> fullUrl       // ← اولویت دوم: آواتار سرور
-        else                     -> null                              // ← حالت پیش‌فرض: حرف اول نام
+        else -> null                              // ← حالت پیش‌فرض: حرف اول نام
     }
+
+    // فقط وقتی عکسی برای نمایش وجود دارد لمس معنا دارد
+    val isClickable = imageSource != null && (enableFullscreenPreview || onAvatarClick != null)
+
+    var showFullscreen by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier
@@ -81,9 +93,19 @@ fun AvatarView(
                 width = 1.5.dp,
                 color = Color.White.copy(alpha = 0.25f),
                 shape = CircleShape
-            ),
-        contentAlignment = Alignment.Center
-    ) {
+            )
+            .then(
+                if (isClickable) {
+                Modifier.clickable {
+                    onAvatarClick?.invoke()
+                    if (enableFullscreenPreview) showFullscreen = true
+                }
+            } else {
+                Modifier
+            })
+            // تموجِ (ripple) لمس هم به‌شکل دایره برش می‌خورد
+        .clip(CircleShape),
+        contentAlignment = Alignment.Center) {
         if (imageSource != null) {
             // ─── نمایش عکس با Coil ───
             AsyncImage(
@@ -109,6 +131,14 @@ fun AvatarView(
                 color = Color.White
             )
         }
+    }
+
+    // ─── نمایش تمام‌صفحه با زوم ───
+    if (showFullscreen) {
+        FullScreenImageViewer(
+            model = imageSource,
+            title = name,
+            onDismiss = { showFullscreen = false })
     }
 }
 

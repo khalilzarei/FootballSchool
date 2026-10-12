@@ -285,7 +285,9 @@ fun CreateGroupRoomDialog(
                                             name = contact.fullName
                                                     ?: "?",
                                             avatarUrl = contact.avatarUrl,
-                                            size = 32.dp
+                                            size = 32.dp,
+                                            // خودِ ردیف نقش انتخاب/عدم‌انتخاب را دارد
+                                            enableFullscreenPreview = false
                                         )
 
                                         Spacer(Modifier.width(10.dp))

@@ -17,6 +17,11 @@ class MainActivity : ComponentActivity() {
     lateinit var viewModelFactory: ViewModelFactory
         private set
 
+    override fun onResume() {
+        super.onResume()
+        (application as? MalekAdminApp)?.container?.connectivity?.refresh()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

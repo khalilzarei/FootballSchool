@@ -723,7 +723,7 @@ fun ClassFormScreen(
                 // ═════════════════════════════════════════
                 // مدیریت برنامه هفتگی و ثبت‌نام (فقط ویرایش) — یک ردیف
                 // ═════════════════════════════════════════
-                if (isEditMode && classId != null) {
+                if (isEditMode) {
                     Row(
                         Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)

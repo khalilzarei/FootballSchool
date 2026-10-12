@@ -37,28 +37,63 @@ fun GlassButton(
     primary: Boolean = true
 ) {
     var pressed by remember { mutableStateOf(false) }
-    val scale by animateFloatAsState(if (pressed) 0.95f else 1f, label = "scale")
-    val rotationX by animateFloatAsState(if (pressed) 6f else 0f, label = "rotX")
-    val elevation by animateDpAsState(if (pressed) 4.dp else 14.dp, label = "elev")
+    val scale by animateFloatAsState(
+        if (pressed) 0.95f else 1f,
+        label = "scale"
+    )
+    val rotationX by animateFloatAsState(
+        if (pressed) 6f else 0f,
+        label = "rotX"
+    )
+    val elevation by animateDpAsState(
+        if (pressed) 4.dp else 14.dp,
+        label = "elev"
+    )
 
     val shape = RoundedCornerShape(18.dp)
     val bgBrush = if (primary) {
-        Brush.linearGradient(listOf(GoldPrimary, Color(0xFFFFB300), GoldPrimary.copy(alpha = 0.85f)))
+        Brush.linearGradient(
+            listOf(
+                GoldPrimary,
+                Color(0xFFFFB300),
+                GoldPrimary.copy(alpha = 0.85f)
+            )
+        )
     } else {
-        Brush.linearGradient(listOf(Color.White.copy(0.22f), Color.White.copy(0.06f)))
+        Brush.linearGradient(
+            listOf(
+                Color.White.copy(0.22f),
+                Color.White.copy(0.06f)
+            )
+        )
     }
     val contentColor = if (primary) PurpleDark else Color.White
     val glow = if (primary) GoldGlow else PurpleGlow
 
     Box(
         modifier = modifier
-            .graphicsLayer3D(scale, rotationX)
-            .shadow(elevation, shape, spotColor = glow, ambientColor = Color.Black.copy(0.5f))
-            .background(bgBrush, shape)
+            .graphicsLayer3D(
+                scale,
+                rotationX
+            )
+            .shadow(
+                elevation,
+                shape,
+                spotColor = glow,
+                ambientColor = Color.Black.copy(0.5f)
+            )
+            .background(
+                bgBrush,
+                shape
+            )
             .border(
                 1.dp,
                 Brush.linearGradient(
-                    listOf(Color.White.copy(0.75f), Color.White.copy(0.15f), Color.White.copy(0.45f))
+                    listOf(
+                        Color.White.copy(0.75f),
+                        Color.White.copy(0.15f),
+                        Color.White.copy(0.45f)
+                    )
                 ),
                 shape
             )
@@ -72,13 +107,12 @@ fun GlassButton(
                         tryAwaitRelease()
                         pressed = false
                     },
-                    onTap = { if (!loading) onClick() }
-                )
+                    onTap = { if (!loading) onClick() })
             },
         contentAlignment = Alignment.Center
     ) {
         Row(
-            Modifier.padding(horizontal = 24.dp, vertical = 14.dp),
+            Modifier.padding(14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
@@ -92,7 +126,7 @@ fun GlassButton(
                 Text(
                     text,
                     color = contentColor,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -101,12 +135,13 @@ fun GlassButton(
 }
 
 /** افکت سه‌بعدی: مقیاس + چرخش حول محور X */
-private fun Modifier.graphicsLayer3D(scale: Float, rotationX: Float): Modifier =
-    this.then(
-        Modifier.graphicsLayer {
-            scaleX = scale
-            scaleY = scale
-            this.rotationX = rotationX
-            cameraDistance = 12f * density
-        }
-    )
+private fun Modifier.graphicsLayer3D(
+    scale: Float,
+    rotationX: Float
+): Modifier = this.then(
+    Modifier.graphicsLayer {
+        scaleX = scale
+        scaleY = scale
+        this.rotationX = rotationX
+        cameraDistance = 12f * density
+    })

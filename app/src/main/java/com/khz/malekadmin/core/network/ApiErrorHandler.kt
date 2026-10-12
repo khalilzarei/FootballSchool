@@ -21,7 +21,7 @@ object ApiErrorHandler {
     fun extractMessage(throwable: Throwable): String {
         return when (throwable) {
             // خطای وضعیت اتصال (اینترنت قطع / فیلترشکن روشن) — پیام آماده دارد
-            is NetworkConnectivityException -> throwable.message
+            is NetworkConnectivityException -> ErrorMessageSanitizer.sanitize(throwable.message)
             is HttpException                -> {
                 val errorBody = throwable.response()
                     ?.errorBody()
@@ -32,8 +32,11 @@ object ApiErrorHandler {
 
             is IOException                  -> "خطا در اتصال به سرور. لطفاً اتصال اینترنت خود را بررسی کنید."
             is JsonSyntaxException          -> "خطا در پردازش پاسخ سرور"
-            else                            -> throwable.message
-                    ?: "خطای ناشناخته"
+            // هر استثنای دیگری: پیام خام ممکن است شامل آدرس API باشد → پاک‌سازی
+            else                            -> ErrorMessageSanitizer.sanitize(
+                throwable.message,
+                "خطای ناشناخته. لطفاً دوباره تلاش کنید."
+            )
         }
     }
 
@@ -44,21 +47,30 @@ object ApiErrorHandler {
                 jsonString,
                 Map::class.java
             )
-            jsonObject?.get("message")
+            val raw = jsonObject?.get("message")
                 ?.toString()
+            if (raw.isNullOrBlank()) {
+                null
+            } else {
+                // پیام سرور هم ممکن است (مثلاً در حالت debug) شامل آدرس یا مسیر فایل باشد
+                ErrorMessageSanitizer.sanitize(
+                    raw,
+                    ErrorMessageSanitizer.NEUTRAL_MESSAGE
+                )
+            }
         } catch (e: Exception) {
             null
         }
     }
 
     private fun defaultHttpMessage(code: Int): String = when (code) {
-        400 -> "درخواست نامعتبر"
-        401 -> "نشست شما منقضی شده است. لطفاً دوباره وارد شوید."
-        403 -> "شما اجازه دسترسی به این بخش را ندارید."
-        404 -> "مورد درخواستی یافت نشد."
-        422 -> "اطلاعات وارد شده نامعتبر است."
-        429 -> "تعداد درخواست‌ها بیش از حد مجاز است. لطفاً صبر کنید."
+        400                -> "درخواست نامعتبر"
+        401                -> "نشست شما منقضی شده است. لطفاً دوباره وارد شوید."
+        403                -> "شما اجازه دسترسی به این بخش را ندارید."
+        404                -> "مورد درخواستی یافت نشد."
+        422                -> "اطلاعات وارد شده نامعتبر است."
+        429                -> "تعداد درخواست‌ها بیش از حد مجاز است. لطفاً صبر کنید."
         500, 502, 503, 504 -> "خطای داخلی سرور. لطفاً بعداً تلاش کنید."
-        else -> "خطای سرور (کد $code)"
+        else               -> "خطای سرور (کد $code)"
     }
 }

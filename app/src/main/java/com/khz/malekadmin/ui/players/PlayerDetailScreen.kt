@@ -133,6 +133,15 @@ private fun PlayerDetailContent(
     var selectedAmount by remember { mutableStateOf(0L) }
     var showResetPasswordDialog by remember { mutableStateOf(false) }
 
+    // تاریخ تولد به شمسی (سرور همیشه میلادی می‌فرستد)
+    // اگر تبدیل ناموفق بود null می‌شود و همان مقدار میلادی نمایش داده می‌شود
+    val birthDateJalali = remember(player?.birthDate) {
+        player?.birthDate?.takeIf { it.isNotBlank() }
+            ?.let { DateUtils.gregorianToJalali(it.take(10)) }
+            ?.takeIf { it.isNotBlank() }
+            ?.let { DateUtils.toPersianDigits(it) }
+    }
+
     val accentColor = when (player?.gender) {
         "female" -> Color(0xFFF06292)
         else     -> Color(0xFF4FC3F7)
@@ -271,8 +280,11 @@ private fun PlayerDetailContent(
                                 InfoRowWithIcon(
                                     icon = Icons.Default.Cake,
                                     label = "تاریخ تولد",
-                                    value = p.birthDate
-                                            ?: "-"
+                                    value = birthDateJalali
+                                            ?: (p.birthDate
+                                                    ?: ""),
+                                    // میلادی به‌صورت کوچک و کم‌رنگ کنار شمسی
+                                    valueSuffix = if (birthDateJalali != null) p.birthDate else null
                                 )
                                 InfoRowWithIcon(
                                     icon = Icons.Default.AccessTime,
@@ -346,7 +358,9 @@ private fun PlayerDetailContent(
                         item {
                             GlassCard3D {
                                 Column(
-                                    Modifier.padding(16.dp),
+                                    Modifier
+                                        .padding(16.dp)
+                                        .fillMaxWidth(),
                                     verticalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
                                     SectionTitle(
@@ -951,7 +965,9 @@ private fun InfoRowWithIcon(
     label: String,
     value: String,
     valueColor: Color = Color.White,
-    isBold: Boolean = false
+    isBold: Boolean = false,
+    /** مقدار فرعیِ کوچک‌تر که کنار [value] نمایش داده می‌شود (مثل تاریخ میلادی) */
+    valueSuffix: String? = null
 ) {
     Row(
         Modifier
@@ -972,14 +988,28 @@ private fun InfoRowWithIcon(
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.weight(0.45f)
         )
-        Text(
-            value,
-            color = valueColor,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal,
+        Column(
             modifier = Modifier.weight(0.55f),
-            textAlign = TextAlign.End
-        )
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.End
+        ) {
+            Text(
+                value,
+                color = valueColor,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal,
+                textAlign = TextAlign.End
+            )
+            if (!valueSuffix.isNullOrBlank()) {
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    valueSuffix,
+                    color = Color.White.copy(0.45f),
+                    style = MaterialTheme.typography.labelSmall,
+                    textAlign = TextAlign.End
+                )
+            }
+        }
     }
 }
 
