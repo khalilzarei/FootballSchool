@@ -39,6 +39,8 @@ import androidx.compose.ui.unit.dp
 import com.khz.malekadmin.MalekAdminApp
 import com.khz.malekadmin.core.network.NetworkResult
 import com.khz.malekadmin.core.util.DateUtils
+import com.khz.malekadmin.core.util.InputValidator
+import com.khz.malekadmin.ui.components.AvatarCropDialog
 import com.khz.malekadmin.ui.components.GlassButton
 import com.khz.malekadmin.ui.components.GlassCard3D
 import com.khz.malekadmin.ui.components.GlassDropdown
@@ -82,6 +84,7 @@ fun PlayerFormScreen(
 
     var currentAvatarUrl by remember { mutableStateOf<String?>(null) }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var cropUri by remember { mutableStateOf<Uri?>(null) }
 
     var loading by remember { mutableStateOf(false) }
     var initialLoading by remember { mutableStateOf(isEditMode) }
@@ -160,7 +163,7 @@ fun PlayerFormScreen(
                     selectedImageUri = selectedImageUri,
                     isUploading = avatarUploading,
                     isEditMode = isEditMode,
-                    onImageSelected = { uri -> selectedImageUri = uri },
+                    onImageSelected = { uri -> cropUri = uri },
                     onRemoveImage = {
                         selectedImageUri = null
                         if (isEditMode && currentAvatarUrl != null) {
@@ -284,27 +287,19 @@ fun PlayerFormScreen(
                 GlassButton(
                     text = if (isEditMode) "ذخیره تغییرات" else "ثبت بازیکن",
                     onClick = {
-                        if (firstName.isBlank()) {
-                            error = "نام الزامی است"; return@GlassButton
-                        }
-                        if (lastName.isBlank()) {
-                            error = "نام خانوادگی الزامی است"; return@GlassButton
-                        }
+                        InputValidator.validateName(firstName, "نام")?.let { error = it; return@GlassButton }
+                        InputValidator.validateName(lastName, "نام خانوادگی")?.let { error = it; return@GlassButton }
                         if (birthDateGregorian.isBlank()) {
                             error = "تاریخ تولد الزامی است"; return@GlassButton
                         }
-                        if (birthDateGregorian > java.time.LocalDate.now().toString()) {
-                            error = "تاریخ تولد نمی‌تواند در آینده باشد"; return@GlassButton
-                        }
-                        if (nationalCode.isNotBlank() && nationalCode.length != 10) {
-                            error = "کد ملی باید ۱۰ رقم باشد"; return@GlassButton
-                        }
+                        InputValidator.validateBirthDate(birthDateGregorian)?.let { error = it; return@GlassButton }
                         if (!isEditMode && nationalCode.isBlank()) {
                             error = "کد ملی الزامی است (شناسه و رمز اولیه‌ی ورود، همان کد ملی می‌شود)"; return@GlassButton
                         }
-                        if (mobile.isNotBlank() && (mobile.length < 10 || mobile.length > 15)) {
-                            error = "شماره موبایل معتبر نیست (۱۰ تا ۱۵ رقم)"; return@GlassButton
+                        if (nationalCode.isNotBlank()) {
+                            InputValidator.validateNationalCode(nationalCode)?.let { error = it; return@GlassButton }
                         }
+                        InputValidator.validateMobile(mobile)?.let { error = it; return@GlassButton }
 
                         loading = true
                         error = null
@@ -374,6 +369,18 @@ fun PlayerFormScreen(
                     }
                 }
             }
+        }
+
+        // دیالوگ کراپ آواتار — تلگرام استایل (خارج از else تا در هر حالتی نمایش داده شود)
+        cropUri?.let { uri ->
+            AvatarCropDialog(
+                uri = uri,
+                onDismiss = { cropUri = null },
+                onConfirm = { file ->
+                    selectedImageUri = Uri.fromFile(file)
+                    cropUri = null
+                }
+            )
         }
     }
 }

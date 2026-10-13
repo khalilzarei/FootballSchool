@@ -33,7 +33,10 @@ class ViewModelFactory(private val container: AppContainer) : ViewModelProvider.
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T = when {
         modelClass.isAssignableFrom(AuthViewModel::class.java)             -> AuthViewModel(container.authRepository) as T
-        modelClass.isAssignableFrom(DashboardViewModel::class.java)        -> DashboardViewModel(container.reportRepository) as T
+        modelClass.isAssignableFrom(DashboardViewModel::class.java)        -> DashboardViewModel(
+            container.reportRepository,
+            container.sessionManager
+        ) as T
 
         modelClass.isAssignableFrom(UserListViewModel::class.java)         -> UserListViewModel(container.userRepository) as T
         modelClass.isAssignableFrom(UserDetailViewModel::class.java)       -> UserDetailViewModel(container.userRepository) as T
@@ -43,6 +46,7 @@ class ViewModelFactory(private val container: AppContainer) : ViewModelProvider.
             container.playerRepository,
             container.userRepository
         ) as T
+
         modelClass.isAssignableFrom(ClassFormViewModel::class.java)        -> {
             ClassFormViewModel(
                 container.classRepository,

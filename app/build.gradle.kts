@@ -17,15 +17,17 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner =
-            "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
-            optimization {
-                enable = false
-            }
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 
@@ -36,6 +38,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -113,6 +116,8 @@ dependencies {
 
     implementation(libs.coil.compose)
 
+    // Exif برای چرخش درست عکس‌های گالری در کراپ آواتار
+    implementation("androidx.exifinterface:exifinterface:1.3.7")
 
     // Pager برای اسلایدر گالری اخبار
     implementation(libs.androidx.compose.foundation)

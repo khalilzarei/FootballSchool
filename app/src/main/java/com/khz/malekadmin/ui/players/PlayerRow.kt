@@ -30,6 +30,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,8 +41,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.khz.malekadmin.core.network.ErrorMessageSanitizer
 import com.khz.malekadmin.core.util.CurrencyUtils
-import com.khz.malekadmin.domain.model.FootballClass
+import com.khz.malekadmin.core.util.DateUtils
 import com.khz.malekadmin.domain.model.GuardianPlayer
 import com.khz.malekadmin.domain.model.Player
 import com.khz.malekadmin.domain.model.PlayerBalance
@@ -89,8 +91,7 @@ fun PlayerRow(
         )
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
 
         ) {
             Row(
@@ -114,16 +115,37 @@ fun PlayerRow(
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
 
-                    )
+                        )
 
-
-
+                    // تاریخ تولد شمسی + میلادی کوچک (یکدست با PlayerDetail)
+                    val birthJalali = remember(player.birthDate) {
+                        player.birthDate?.takeIf { it.isNotBlank() }
+                            ?.let { DateUtils.gregorianToJalali(it.take(10)) }
+                            ?.takeIf { it.isNotBlank() }
+                            ?.let { DateUtils.toPersianDigits(it) }
+                    }
                     Text(
-                        "سن: ${player.age ?: "-"} | ${player.nationalCode ?: "-"}",
+                        buildString {
+                            append("سن: ${player.age?.let { DateUtils.toPersianDigits(it.toString()) } ?: "-"}")
+//                            append(" | ")
+//                            append(player.nationalCode?.let { DateUtils.toPersianDigits(it) }
+//                                    ?: "-")
+                            if (birthJalali != null) {
+                                append(" | ")
+                                append(birthJalali)
+                            }
+                        },
                         modifier = Modifier.padding(vertical = 2.dp),
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.White.copy(0.6f)
                     )
+                    if (birthJalali != null && player.birthDate != null) {
+                        Text(
+                            "${birthJalali}  (${player.birthDate!!.take(10)})",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White.copy(0.45f)
+                        )
+                    }
 
                     Text(
                         "کلاس: ${player.currentClass?.title ?: "ثبت‌نام نشده"}",
@@ -166,10 +188,12 @@ fun PlayerRow(
                         contentDescription = "پیام",
                         enabled = chatUserId != null,
                         onClick = {
-                            Log.d(
-                                "TAG",
-                                "PlayerRow: $chatUserId"
-                            )
+                            if (com.khz.malekadmin.BuildConfig.DEBUG) {
+                                Log.d(
+                                    "PlayerRow",
+                                    "chatUserId=$chatUserId"
+                                )
+                            }
                             if (chatUserId != null) {
                                 onChat(chatUserId)
                             } else {
@@ -197,9 +221,13 @@ fun PlayerRow(
                                     }
                                     context.startActivity(intent)
                                 } catch (e: Exception) {
+                                    val msg = ErrorMessageSanitizer.sanitize(
+                                        e.message,
+                                        "باز کردن تماس ممکن نشد"
+                                    )
                                     Toast.makeText(
                                         context,
-                                        "باز کردن تماس ممکن نشد: ${e.message}",
+                                        msg,
                                         Toast.LENGTH_SHORT
                                     )
                                         .show()
@@ -216,7 +244,6 @@ fun PlayerRow(
                 }
 
                 Spacer(Modifier.width(8.dp))
-
 
             }
 

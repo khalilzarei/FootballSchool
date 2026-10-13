@@ -21,11 +21,18 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import com.khz.malekadmin.ui.theme.GoldPrimary
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,94 +63,109 @@ fun <T> GenericListScreen(
                     }
                 })
         }) { padding ->
-        Box(
-            Modifier
+        var isRefreshing by remember { mutableStateOf(false) }
+        val scope = rememberCoroutineScope()
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = {
+                scope.launch {
+                    isRefreshing = true
+                    onRefresh()
+                    kotlinx.coroutines.delay(500)
+                    isRefreshing = false
+                }
+            },
+            modifier = Modifier
                 .padding(padding)
                 .padding(16.dp)
                 .fillMaxSize()
         ) {
-            when (state) {
-                is ListState.Loading -> {
-                    CircularProgressIndicator(
-                        color = GoldPrimary,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-
-                is ListState.Error   -> {
-                    Column(
-                        Modifier.align(Alignment.Center),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        GlassCard3D {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(
-                                    Icons.Default.Warning,
-                                    null,
-                                    tint = Color(0xFFFF8A80),
-                                    modifier = Modifier.size(32.dp)
-                                )
-                                Spacer(Modifier.height(8.dp))
-                                Text(
-                                    state.message,
-                                    color = Color.White.copy(0.85f)
-                                )
-                            }
-                        }
-                        Spacer(Modifier.height(16.dp))
-                        GlassButton(
-                            text = "تلاش مجدد",
-                            onClick = onRefresh
+            Box(
+                Modifier.fillMaxSize()
+            ) {
+                when (state) {
+                    is ListState.Loading -> {
+                        CircularProgressIndicator(
+                            color = GoldPrimary,
+                            modifier = Modifier.align(Alignment.Center)
                         )
                     }
-                }
 
-                is ListState.Success -> {
-                    if (state.items.isEmpty() && headerContent == null) {
+                    is ListState.Error   -> {
                         Column(
                             Modifier.align(Alignment.Center),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Icon(
-                                Icons.Default.Inbox,
-                                null,
-                                tint = Color.White.copy(0.35f),
-                                modifier = Modifier.size(48.dp)
-                            )
-                            Spacer(Modifier.height(8.dp))
-                            Text(
-                                "موردی یافت نشد",
-                                color = Color.White.copy(0.6f)
+                            GlassCard3D {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(
+                                        Icons.Default.Warning,
+                                        null,
+                                        tint = Color(0xFFFF8A80),
+                                        modifier = Modifier.size(32.dp)
+                                    )
+                                    Spacer(Modifier.height(8.dp))
+                                    Text(
+                                        state.message,
+                                        color = Color.White.copy(0.85f)
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(16.dp))
+                            GlassButton(
+                                text = "تلاش مجدد",
+                                onClick = onRefresh
                             )
                         }
-                    } else {
-                        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            if (headerContent != null) {
-                                item { headerContent() }
+                    }
+
+                    is ListState.Success -> {
+                        if (state.items.isEmpty() && headerContent == null) {
+                            Column(
+                                Modifier.align(Alignment.Center),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(
+                                    Icons.Default.Inbox,
+                                    null,
+                                    tint = Color.White.copy(0.35f),
+                                    modifier = Modifier.size(48.dp)
+                                )
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    "موردی یافت نشد",
+                                    color = Color.White.copy(0.6f)
+                                )
                             }
-                            if (state.items.isEmpty()) {
-                                item {
-                                    Column(
-                                        Modifier
-                                            .fillMaxSize()
-                                            .padding(top = 32.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Inbox,
-                                            null,
-                                            tint = Color.White.copy(0.35f),
-                                            modifier = Modifier.size(48.dp)
-                                        )
-                                        Spacer(Modifier.height(8.dp))
-                                        Text(
-                                            "موردی یافت نشد",
-                                            color = Color.White.copy(0.6f)
-                                        )
-                                    }
+                        } else {
+                            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                if (headerContent != null) {
+                                    item { headerContent() }
                                 }
-                            } else {
-                                items(state.items) { itemContent(it) }
+                                if (state.items.isEmpty()) {
+                                    item {
+                                        Column(
+                                            Modifier
+                                                .fillMaxSize()
+                                                .padding(top = 32.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Inbox,
+                                                null,
+                                                tint = Color.White.copy(0.35f),
+                                                modifier = Modifier.size(48.dp)
+                                            )
+                                            Spacer(Modifier.height(8.dp))
+                                            Text(
+                                                "موردی یافت نشد",
+                                                color = Color.White.copy(0.6f)
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    items(state.items) { itemContent(it) }
+                                }
                             }
                         }
                     }

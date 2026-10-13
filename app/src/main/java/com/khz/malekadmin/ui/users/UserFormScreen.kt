@@ -35,6 +35,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.khz.malekadmin.MalekAdminApp
 import com.khz.malekadmin.core.network.NetworkResult
+import com.khz.malekadmin.core.util.InputValidator
+import com.khz.malekadmin.ui.components.AvatarCropDialog
 import com.khz.malekadmin.ui.components.GlassButton
 import com.khz.malekadmin.ui.components.GlassCard3D
 import com.khz.malekadmin.ui.components.GlassDropdown
@@ -77,6 +79,7 @@ fun UserFormScreen(
     // ─── State های آواتار ───
     var currentAvatarUrl by remember { mutableStateOf<String?>(null) }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var cropUri by remember { mutableStateOf<Uri?>(null) }
     var avatarUploading by remember { mutableStateOf(false) }
 
     // ─── State های کلی ───
@@ -144,7 +147,7 @@ fun UserFormScreen(
                     selectedImageUri = selectedImageUri,
                     isUploading = avatarUploading,
                     isEditMode = isEditMode,
-                    onImageSelected = { uri -> selectedImageUri = uri },
+                    onImageSelected = { uri -> cropUri = uri },
                     onRemoveImage = {
                         selectedImageUri = null
                         // اگر در حالت ویرایش آواتار فعلی وجود دارد، از سرور حذف کن
@@ -246,55 +249,28 @@ fun UserFormScreen(
                 GlassButton(
                     text = if (isEditMode) "ذخیره تغییرات" else "ثبت کاربر",
                     onClick = {
-                        // ─── اعتبارسنجی ───
-                        if (fullName.isBlank()) {
-                            error = "نام و نام خانوادگی الزامی است"
-                            return@GlassButton
-                        }
-                        if (mobile.isBlank()) {
-                            error = "شماره موبایل الزامی است"
-                            return@GlassButton
-                        }
-                        if (mobile.length != 11) {
-                            error = "شماره موبایل باید ۱۱ رقم باشد"
-                            return@GlassButton
-                        }
-                        if (nationalCode.isNotBlank() && nationalCode.length != 10) {
-                            error = "کد ملی باید ۱۰ رقم باشد"
-                            return@GlassButton
-                        }
+                        // ─── اعتبارسنجی متمرکز ───
+                        InputValidator.validateFullName(fullName)
+                            ?.let { error = it; return@GlassButton }
+                        InputValidator.validateMobileRequired(mobile)
+                            ?.let { error = it; return@GlassButton }
                         if (!isEditMode && nationalCode.isBlank()) {
                             error = "کد ملی الزامی است (شناسه و رمز اولیه‌ی ورود، همان کد ملی می‌شود)"
                             return@GlassButton
                         }
+                        if (nationalCode.isNotBlank()) {
+                            InputValidator.validateNationalCode(nationalCode)
+                                ?.let { error = it; return@GlassButton }
+                        }
 
                         loading = true
                         error = null
-                        // ─── لاگ قبل از ارسال ───
-                        android.util.Log.d(
-                            "UserForm",
-                            "=== Submitting Form ==="
-                        )
-                        android.util.Log.d(
-                            "UserForm",
-                            "fullName: '$fullName'"
-                        )
-                        android.util.Log.d(
-                            "UserForm",
-                            "mobile: '$mobile'"
-                        )
-                        android.util.Log.d(
-                            "UserForm",
-                            "nationalCode: '$nationalCode'"
-                        )
-                        android.util.Log.d(
-                            "UserForm",
-                            "selectedRole: '$selectedRole'"
-                        )
-                        android.util.Log.d(
-                            "UserForm",
-                            "selectedImageUri: $selectedImageUri"
-                        )
+                        if (com.khz.malekadmin.BuildConfig.DEBUG) {
+                            android.util.Log.d(
+                                "UserForm",
+                                "=== Submitting Form === $fullName / $selectedRole"
+                            )
+                        }
 
                         scope.launch {
                             val result: NetworkResult<*> = if (isEditMode) {
@@ -355,7 +331,7 @@ fun UserFormScreen(
                 // نمایش خطا
                 // ═════════════════════════════════════════
                 error?.let { errorMessage ->
-                    GlassCard3D(glowColor = Color(0xFFA50044),) {
+                    GlassCard3D(glowColor = Color(0xFFA50044)) {
                         Text(
                             errorMessage,
                             color = Color(0xFFFF8A80),
@@ -366,6 +342,17 @@ fun UserFormScreen(
 
                 Spacer(Modifier.height(16.dp))
             }
+        }
+
+        // دیالوگ کراپ آواتار — تلگرام استایل
+        cropUri?.let { uri ->
+            AvatarCropDialog(
+                uri = uri,
+                onDismiss = { cropUri = null },
+                onConfirm = { file ->
+                    selectedImageUri = Uri.fromFile(file)
+                    cropUri = null
+                })
         }
     }
 }

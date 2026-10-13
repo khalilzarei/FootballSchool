@@ -213,4 +213,14 @@ object DateUtils {
             "-"
         }
     }
+
+    /** امروز به فرمت میلادی YYYY-MM-DD — برای ولیدیشن */
+    fun todayGregorian(): String = java.time.LocalDate.now().toString()
+
+    /** نمایش خوانا: شمسی (پررنگ) + میلادی کوچک — مثل PlayerDetail */
+    fun toJalaliReadable(gregorianDate: String?): String {
+        if (gregorianDate.isNullOrBlank()) return "-"
+        val j = gregorianToJalali(gregorianDate.take(10))
+        return if (j.isNotBlank()) j else gregorianDate.take(10)
+    }
 }

@@ -48,7 +48,14 @@ class AppContainer(context: Context) {
 
     private val loggingInterceptor: HttpLoggingInterceptor by lazy {
         HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            // در انتشار، بدنه‌ی درخواست/پاسخ (شامل توکن و رمز) لاگ نشود
+            level = if (com.khz.malekadmin.BuildConfig.DEBUG) {
+                HttpLoggingInterceptor.Level.BODY
+            } else {
+                HttpLoggingInterceptor.Level.NONE
+            }
+            redactHeader("Authorization")
+            redactHeader("Cookie")
         }
     }
 

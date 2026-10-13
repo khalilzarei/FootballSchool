@@ -19,6 +19,14 @@ class SessionManager(private val context: Context) {
     private val USER_ID_KEY = stringPreferencesKey("user_id")
     private val USER_ROLE_KEY = stringPreferencesKey("user_role")
     private val REMEMBER_ME_KEY = booleanPreferencesKey("remember_me")
+    private val DASHBOARD_CACHE_KEY = stringPreferencesKey("dashboard_cache_json")
+
+    /** کش حافظه‌ای توکن — از runBlocking تکراری روی DataStore جلوگیری می‌کند */
+    @Volatile
+    private var cachedToken: String? = null
+
+    @Volatile
+    private var cachedTokenLoaded = false
 
     val authToken: Flow<String?> = context.dataStore.data.map { preferences -> preferences[TOKEN_KEY] }
 
@@ -27,11 +35,13 @@ class SessionManager(private val context: Context) {
     val userRole: Flow<String?> = context.dataStore.data.map { preferences -> preferences[USER_ROLE_KEY] }
 
     val rememberMe: Flow<Boolean> = context.dataStore.data.map { preferences ->
-            preferences[REMEMBER_ME_KEY]
-                    ?: false
-        }
+        preferences[REMEMBER_ME_KEY]
+                ?: false
+    }
 
     suspend fun saveToken(token: String) {
+        cachedToken = token
+        cachedTokenLoaded = true
         context.dataStore.edit { preferences ->
             preferences[TOKEN_KEY] = token
         }
@@ -54,6 +64,8 @@ class SessionManager(private val context: Context) {
     }
 
     suspend fun clearSession() {
+        cachedToken = null
+        cachedTokenLoaded = true
         context.dataStore.edit { preferences ->
             // فقط توکن و اطلاعات کاربر را پاک کن، rememberMe را نگه دار
             preferences.remove(TOKEN_KEY)
@@ -72,10 +84,29 @@ class SessionManager(private val context: Context) {
      * پاک‌سازی کامل (برای logout واقعی)
      */
     suspend fun clearAll() {
+        cachedToken = null
+        cachedTokenLoaded = true
         context.dataStore.edit { preferences ->
             preferences.clear()
         }
     }
 
-    suspend fun getTokenSync(): String? = authToken.first()
+    /** خواندن sync توکن فعلی (برای AuthInterceptor) — کش حافظه‌ای اولویت دارد */
+    suspend fun getTokenSync(): String? {
+        if (cachedTokenLoaded) return cachedToken
+        val t = authToken.first()
+        cachedToken = t
+        cachedTokenLoaded = true
+        return t
+    }
+
+    // ─── کش داشبورد برای حالت آفلاین ───
+    suspend fun saveDashboardCache(json: String) {
+        context.dataStore.edit { it[DASHBOARD_CACHE_KEY] = json }
+    }
+
+    suspend fun getDashboardCache(): String? {
+        return context.dataStore.data.map { it[DASHBOARD_CACHE_KEY] }
+            .first()
+    }
 }

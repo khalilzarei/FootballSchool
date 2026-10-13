@@ -1,12 +1,16 @@
 package com.khz.malekadmin.ui.components
 
 import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,11 +25,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.khz.malekadmin.R
 import com.khz.malekadmin.core.util.Constants
 import com.khz.malekadmin.ui.theme.GoldPrimary
 
@@ -64,12 +70,18 @@ fun AvatarView(
 ) {
     // ساخت URL کامل از مسیر نسبی (با کش)
     val fullUrl = remember(avatarUrl) { buildFullUrl(avatarUrl) }
+    val wasServerDefault = remember(avatarUrl) {
+        avatarUrl?.lowercase()
+            ?.contains("default_avatars") == true || avatarUrl?.lowercase()
+            ?.contains("player_default") == true || avatarUrl?.lowercase()
+            ?.contains("user_default") == true
+    }
 
     // تعیین منبع تصویر بر اساس اولویت
     val imageSource: Any? = when {
         localUri != null -> localUri              // ← اولویت اول: عکس محلی انتخاب‌شده
         !fullUrl.isNullOrBlank() -> fullUrl       // ← اولویت دوم: آواتار سرور
-        else -> null                              // ← حالت پیش‌فرض: حرف اول نام
+        else -> null                              // ← حالت پیش‌فرض: لوکال (بدون شبکه)
     }
 
     // فقط وقتی عکسی برای نمایش وجود دارد لمس معنا دارد
@@ -122,14 +134,27 @@ fun AvatarView(
                     .clip(CircleShape)
             )
         } else {
-            // ─── حالت پیش‌فرض: حرف اول نام ───
-            Text(
-                text = name.take(1)
-                    .uppercase(),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
+            // ─── حالت پیش‌فرض لوکال (بدون شبکه) ───
+            if (wasServerDefault) {
+                // سرور عکس پیش‌فرض داده — همان تصویر را لوکال (باندل‌شده) نشان بده، بدون اینترنت
+                Image(
+                    painter = painterResource(id = R.drawable.player_default),
+                    contentDescription = name,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(size)
+                        .clip(CircleShape)
+                )
+            } else {
+                // واقعا بدون عکس — حرف اول نام
+                Text(
+                    text = name.take(1)
+                        .uppercase(),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
         }
     }
 
@@ -143,26 +168,29 @@ fun AvatarView(
 }
 
 /**
- * ساخت URL کامل برای آواتار
- *
- * حالت‌های ورودی:
- * - `null` یا خالی → `null` (حالت حرف اول)
- * - `http://...` یا `https://...` → همان URL (بدون تغییر)
- * - `avatars/users/1_abc.jpg` → `STORAGE_URL/avatars/users/1_abc.jpg`
- * - `/storage/avatars/users/1_abc.jpg` → `STORAGE_URL/storage/avatars/users/1_abc.jpg`
+ * تشخیص آواتار پیش‌فرض سرور — برای این URLها هیچ درخواستی به شبکه نمی‌رویم
+ * و مستقیم حرف اول نام را نشان می‌دهیم (صفر مصرف اینترنت، فوری).
+ * نمونه: https://api.malekashtarkaz.ir/storage/default_avatars/player_default.png
  */
-private fun buildFullUrl(avatarUrl: String?): String? {
-    if (avatarUrl.isNullOrBlank()) return null
+private fun isDefaultAvatarUrl(url: String?): Boolean {
+    if (url.isNullOrBlank()) return true
+    val low = url.lowercase()
+    return low.contains("default_avatars") || low.contains("player_default") || low.contains("user_default") || low.contains("default.png")
+}
 
-    return when {
-        // URL کامل - بدون تغییر
-        avatarUrl.startsWith("http://") || avatarUrl.startsWith("https://") -> avatarUrl
-
-        // مسیر نسبی - اضافه کردن STORAGE_URL
-        else                                                                -> {
-            val storageUrl = Constants.STORAGE_URL.trimEnd('/')
-            val path = avatarUrl.trimStart('/')
-            "$storageUrl/$path"
-        }
+private fun normalizeAvatarUrl(raw: String?): String? {
+    if (isDefaultAvatarUrl(raw)) return null
+    val v = raw!!.trim()
+    if (v.isBlank()) return null
+    return if (v.startsWith("http://") || v.startsWith("https://")) v
+    else {
+        val storageUrl = Constants.STORAGE_URL.trimEnd('/')
+        val path = v.trimStart('/')
+        "$storageUrl/$path"
     }
 }
+
+/**
+ * ساخت URL کامل برای آواتار — نسخه‌ی قدیمی برای سازگاری (حالا normalizeAvatarUrl را صدا می‌زند)
+ */
+private fun buildFullUrl(avatarUrl: String?): String? = normalizeAvatarUrl(avatarUrl)

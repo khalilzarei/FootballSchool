@@ -24,6 +24,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -51,6 +57,8 @@ fun UserListScreen(
     val query by viewModel.query.collectAsState()
     val roleFilter by viewModel.roleFilter.collectAsState()
 
+    var isRefreshing by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
     // هر بار که صفحه دوباره بالا بیاید (مثلاً بعد از افزودن/ویرایش کاربر)
     // لیست به‌صورت خاموش (بدون اسپینر) تازه‌بارگذاری شود
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -118,53 +126,66 @@ fun UserListScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // ─── محتوا ───
-            when (val s = state) {
-                is UserListState.Loading -> Box(
-                    Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = GoldPrimary)
-                }
-
-                is UserListState.Error   -> Column(
-                    Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    GlassCard3D(glowColor = Color(0x66A50044),) {
-                        Text(
-                            s.message,
-                            color = Color.White.copy(0.85f),
-                            modifier = Modifier.padding(16.dp)
-                        )
+            // ─── محتوا با PullToRefresh ───
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = {
+                    scope.launch {
+                        isRefreshing = true
+                        viewModel.load()
+                        kotlinx.coroutines.delay(400)
+                        isRefreshing = false
                     }
-                    Spacer(Modifier.height(12.dp))
-                    GlassButton(
-                        text = "تلاش مجدد",
-                        onClick = { viewModel.load() })
-                }
+                },
+                modifier = Modifier.fillMaxSize()
+            ) {
+                when (val s = state) {
+                    is UserListState.Loading -> Box(
+                        Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = GoldPrimary)
+                    }
 
-                is UserListState.Success -> {
-                    if (s.users.isEmpty()) {
-                        Box(
-                            Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
+                    is UserListState.Error   -> Column(
+                        Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        GlassCard3D(glowColor = Color(0x66A50044)) {
                             Text(
-                                "کاربری یافت نشد",
-                                color = Color.White.copy(0.6f)
+                                s.message,
+                                color = Color.White.copy(0.85f),
+                                modifier = Modifier.padding(16.dp)
                             )
                         }
-                    } else {
-                        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            items(s.users) { user ->
-                                UserRow(
-                                    user = user,
-                                    onClick = { onUserClick(user.id) },
-                                    onToggle = { viewModel.toggleStatus(user) },
-                                    onChat = { onChat(user.id) }, // ← اضافه شد
+                        Spacer(Modifier.height(12.dp))
+                        GlassButton(
+                            text = "تلاش مجدد",
+                            onClick = { viewModel.load() })
+                    }
+
+                    is UserListState.Success -> {
+                        if (s.users.isEmpty()) {
+                            Box(
+                                Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    "کاربری یافت نشد",
+                                    color = Color.White.copy(0.6f)
                                 )
+                            }
+                        } else {
+                            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                items(s.users) { user ->
+                                    UserRow(
+                                        user = user,
+                                        onClick = { onUserClick(user.id) },
+                                        onToggle = { viewModel.toggleStatus(user) },
+                                        onChat = { onChat(user.id) }, // ← اضافه شد
+                                    )
+                                }
                             }
                         }
                     }

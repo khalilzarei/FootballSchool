@@ -81,6 +81,11 @@ fun AuthenticatedAsyncImage(
                 }
             }
             .crossfade(true)
+            .memoryCachePolicy(coil.request.CachePolicy.ENABLED)
+            .diskCachePolicy(coil.request.CachePolicy.ENABLED)
+            .networkCachePolicy(coil.request.CachePolicy.ENABLED)
+            .memoryCacheKey(url)
+            .diskCacheKey(url)
             .build()
     }
 
@@ -128,11 +133,11 @@ fun MediaCover(
 ) {
     Box(
         modifier = modifier.clip(
-                RoundedCornerShape(
-                    topStart = 20.dp,
-                    topEnd = 20.dp
-                )
+            RoundedCornerShape(
+                topStart = 20.dp,
+                topEnd = 20.dp
             )
+        )
     ) {
         when {
             media.isImage -> {
@@ -204,7 +209,8 @@ fun MediaCover(
                         text = dur,
                         color = Color.White,
                         style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.align(Alignment.BottomEnd)
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
                             .padding(8.dp)
                             .clip(RoundedCornerShape(6.dp))
                             .background(Color.Black.copy(alpha = 0.6f))
